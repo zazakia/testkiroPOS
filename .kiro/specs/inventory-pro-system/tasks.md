@@ -62,7 +62,13 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
 
 
 
-  - [ ] 3.2 Create main layout with sidebar navigation
+  - [x] 3.2 Create main layout with sidebar navigation
+
+
+
+
+
+
 
 
 
