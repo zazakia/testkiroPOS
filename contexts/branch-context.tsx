@@ -34,7 +34,8 @@ export function BranchProvider({ children }: { children: ReactNode }) {
       try {
         const response = await fetch('/api/branches');
         if (response.ok) {
-          const data = await response.json();
+          const result = await response.json();
+          const data = result.success ? result.data : [];
           setBranches(data);
 
           // Load selected branch from localStorage

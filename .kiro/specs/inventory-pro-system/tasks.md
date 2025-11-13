@@ -82,7 +82,12 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
 
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 15.17, 15.18_
 
-  - [ ] 3.3 Create shared UI components
+  - [x] 3.3 Create shared UI components
+
+
+
+
+
     - Build loading skeleton components
     - Create toast notification system using shadcn/ui Toast
     - Build confirmation dialog component using shadcn/ui Alert Dialog
@@ -92,21 +97,34 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create page header component with title and breadcrumbs
     - _Requirements: 12.6, 12.7, 12.8, 12.9, 16.13, 16.14, 16.15, 16.18_
 
-  - [ ] 3.4 Create branch context provider
+  - [x] 3.4 Create branch context provider
+
+
+
+
+
     - Implement React context for active branch selection
     - Persist selected branch in localStorage
     - Provide branch data to all components
     - _Requirements: 15.17, 15.18_
 
 
-- [ ] 4. Branch Management Module
-  - [ ] 4.1 Create Branch repository and service
+- [x] 4. Branch Management Module
+
+
+
+
+  - [x] 4.1 Create Branch repository and service
+
+
     - Create branch repository with CRUD operations (findAll, findById, create, update, delete)
     - Create branch service with business logic and validation
     - Implement branch validation using Zod schema
     - _Requirements: 15.1, 15.2, 15.3_
 
-  - [ ] 4.2 Create Branch API routes
+  - [x] 4.2 Create Branch API routes
+
+
     - Create GET /api/branches route to fetch all branches
     - Create GET /api/branches/[id] route to fetch single branch
     - Create POST /api/branches route to create branch
@@ -114,7 +132,10 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create DELETE /api/branches/[id] route to delete branch
     - _Requirements: 15.1, 15.4, 15.5_
 
-  - [ ] 4.3 Build Branch management UI
+  - [x] 4.3 Build Branch management UI
+
+
+
     - Create branch list page with table showing name, code, location, manager, status
     - Build branch create/edit form with validation
     - Add branch status toggle (active/inactive)
@@ -122,15 +143,23 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Add delete confirmation dialog
     - _Requirements: 15.4, 15.5_
 
-- [ ] 5. Product Management Module
-  - [ ] 5.1 Create Product repository and service
+- [x] 5. Product Management Module
+
+
+
+
+  - [x] 5.1 Create Product repository and service
+
+
     - Create product repository with CRUD operations including UOM management
     - Create product service with business logic
     - Implement product validation using Zod schema (name, category, basePrice, minStockLevel, UOMs)
     - Add methods to handle alternate UOM creation, update, and deletion
     - _Requirements: 2.1, 2.2, 2.6, 2.11_
 
-  - [ ] 5.2 Create Product API routes
+  - [x] 5.2 Create Product API routes
+
+
     - Create GET /api/products route to fetch all products with filters
     - Create GET /api/products/[id] route to fetch single product with UOMs
     - Create POST /api/products route to create product with UOMs
@@ -138,7 +167,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create DELETE /api/products/[id] route to delete product (inactive only)
     - _Requirements: 2.1, 2.5, 2.9, 2.10_
 
-  - [ ] 5.3 Create Product list page
+  - [x] 5.3 Create Product list page
+
+
     - Build product table with name, category, base price, base UOM, status
     - Add search by product name (real-time filtering)
     - Implement category filter dropdown
@@ -147,7 +178,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Add action buttons (Edit, Delete)
     - _Requirements: 2.10, 2.12_
 
-  - [ ] 5.4 Build Product create/edit form
+  - [x] 5.4 Build Product create/edit form
+
+
     - Create form with product details fields (name, description, category, basePrice, baseUOM, minStockLevel, shelfLifeDays)
     - Add dynamic UOM fields (add/remove alternate UOMs)
     - Implement conversion factor and selling price inputs per UOM
@@ -155,14 +188,27 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Display validation errors inline
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.7, 2.8_
 
-  - [ ]* 5.5 Add product image upload (Optional)
+  - [x] 5.5 Add product image upload (Optional)
+
+
+
+
+
+
     - Integrate file upload for product images
     - Store image URLs in database
     - Display images in product list and forms
     - _Requirements: 2.1_
 
-- [ ] 6. Warehouse Management Module
-  - [ ] 6.1 Create Warehouse repository and service
+- [x] 6. Warehouse Management Module
+
+
+
+
+
+  - [x] 6.1 Create Warehouse repository and service
+
+
     - Create warehouse repository with CRUD operations
     - Create warehouse service with business logic
     - Implement capacity validation logic
@@ -170,7 +216,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create getWarehouseAlerts for capacity warnings (60% yellow, 80% red)
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.6, 4.9, 15.16_
 
-  - [ ] 6.2 Create Warehouse API routes
+  - [x] 6.2 Create Warehouse API routes
+
+
     - Create GET /api/warehouses route to fetch all warehouses with utilization
     - Create GET /api/warehouses/[id] route to fetch single warehouse
     - Create POST /api/warehouses route to create warehouse
@@ -178,7 +226,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create DELETE /api/warehouses/[id] route to delete warehouse
     - _Requirements: 4.1, 4.7, 4.8_
 
-  - [ ] 6.3 Create Warehouse list page
+  - [x] 6.3 Create Warehouse list page
+
+
     - Build warehouse table with name, location, branch, capacity, utilization
     - Display utilization percentage with color coding (yellow 60%, red 80%)
     - Show product distribution per warehouse in expandable row
@@ -186,7 +236,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Add action buttons (Edit, Delete)
     - _Requirements: 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 6.4 Build Warehouse create/edit form
+  - [x] 6.4 Build Warehouse create/edit form
+
+
     - Create form with warehouse details (name, location, manager, maxCapacity)
     - Add capacity input with validation (must be > 0)
     - Implement branch assignment dropdown
@@ -194,8 +246,14 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - _Requirements: 4.1, 4.7, 4.8_
 
 
-- [ ] 7. Supplier Management Module
-  - [ ] 7.1 Create Supplier repository and service
+- [x] 7. Supplier Management Module
+
+
+
+
+  - [x] 7.1 Create Supplier repository and service
+
+
     - Create supplier repository with CRUD operations
     - Create supplier service with business logic
     - Implement email and phone validation using Zod
@@ -203,7 +261,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Implement soft delete (set status to inactive)
     - _Requirements: 5.1, 5.3, 5.4, 5.5, 5.7_
 
-  - [ ] 7.2 Create Supplier API routes
+  - [x] 7.2 Create Supplier API routes
+
+
     - Create GET /api/suppliers route to fetch all suppliers with filters
     - Create GET /api/suppliers/[id] route to fetch single supplier
     - Create POST /api/suppliers route to create supplier
@@ -211,29 +271,52 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create DELETE /api/suppliers/[id] route to soft delete supplier
     - _Requirements: 5.1, 5.4, 5.5_
 
-  - [ ] 7.3 Create Supplier list page
+  - [x] 7.3 Create Supplier list page
+
+
     - Build supplier table with company name, contact person, phone, email, payment terms, status
     - Add search by company name (real-time filtering)
     - Implement status filter (active/inactive)
     - Add action buttons (Edit, Delete)
     - _Requirements: 5.6, 5.7_
 
-  - [ ] 7.4 Build Supplier create/edit form
+  - [x] 7.4 Build Supplier create/edit form
+
+
     - Create form with supplier details (companyName, contactPerson, phone, email, paymentTerms)
     - Add payment terms dropdown (Net 15, Net 30, Net 60, COD)
     - Implement email and phone validation
     - Add form validation using react-hook-form and Zod
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 8. Inventory Module with Average Costing
-  - [ ] 8.1 Create Inventory repository and service
+- [-] 8. Inventory Module with Average Costing
+
+
+
+
+
+  - [x] 8.1 Create Inventory repository and service
+
+
+
+
     - Create inventory batch repository with CRUD operations
     - Create stock movement repository
     - Create inventory service with business logic
     - Add helper methods for batch number generation
     - _Requirements: 3.1, 3.7, 3.8_
 
-  - [ ] 8.2 Implement weighted average cost calculation
+
+
+
+
+  - [x] 8.2 Implement weighted average cost calculation
+
+
+
+
+
+
     - Create calculateWeightedAverageCost service method
     - Calculate total cost (sum of quantity × unitCost for all active batches)
     - Calculate total quantity (sum of quantity for all active batches)
@@ -241,7 +324,8 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Handle edge case when no batches exist (return 0)
     - _Requirements: 3.2, 3.3, 3.12_
 
-  - [ ] 8.3 Implement UOM conversion logic
+  - [x] 8.3 Implement UOM conversion logic
+
     - Create convertToBaseUOM service method
     - Fetch product with alternate UOMs
     - If UOM is base UOM, return quantity as-is
@@ -249,16 +333,28 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Validate UOM exists for product (throw error if not found)
     - _Requirements: 3.2, 3.5_
 
-  - [ ] 8.4 Build add stock functionality
+  - [x] 8.4 Build add stock functionality
+
     - Create addStock service method
     - Convert quantity to base UOM using convertToBaseUOM
     - Generate unique batch number
     - Calculate expiry date (receivedDate + product.shelfLifeDays)
     - Create inventory batch with quantity, unitCost, expiryDate
     - Record stock movement (type: IN, quantity, referenceId, referenceType)
+
+
+
+
     - _Requirements: 3.1, 3.2, 3.7_
 
-  - [ ] 8.5 Build deduct stock functionality
+
+  - [x] 8.5 Build deduct stock functionality
+
+
+
+
+
+
     - Create deductStock service method
     - Convert quantity to base UOM
     - Fetch active batches ordered by expiryDate ASC (FIFO for physical stock)
@@ -268,7 +364,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Validate sufficient stock available (throw InsufficientStockError if not)
     - _Requirements: 3.4, 3.5, 3.6, 3.11_
 
-  - [ ] 8.6 Create Inventory API routes
+  - [x] 8.6 Create Inventory API routes
+
+
     - Create GET /api/inventory route to fetch all batches with filters
     - Create GET /api/inventory/[id] route to fetch single batch
     - Create POST /api/inventory/add-stock route to add stock
@@ -277,7 +375,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create GET /api/inventory/movements route to fetch stock movements
     - _Requirements: 3.1, 3.4, 3.7, 3.8_
 
-  - [ ] 8.7 Create Inventory list page
+
+  - [x] 8.7 Create Inventory list page
+
     - Build inventory table showing batches by product and warehouse
     - Display batch number, product name, warehouse, quantity in base UOM, unit cost, expiry date, status
     - Show weighted average cost per product per warehouse in summary section
@@ -286,14 +386,26 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Add action buttons (Adjust Stock, Transfer)
     - _Requirements: 3.9, 3.10, 3.12_
 
-  - [ ] 8.8 Build stock movement history view
+
+  - [x] 8.8 Build stock movement history view
+
+
+
+
+
     - Create stock movement table with type, product, warehouse, quantity, reason, reference, timestamp
     - Filter by product, warehouse, date range, movement type (IN, OUT, TRANSFER, ADJUSTMENT)
     - Show reference links to PO/SO/POS based on referenceType
     - Add export to CSV functionality
     - _Requirements: 3.7, 3.8_
 
-  - [ ] 8.9 Implement transfer between warehouses
+
+  - [x] 8.9 Implement transfer between warehouses
+
+
+
+
+
     - Create transferStock service method
     - Deduct from source warehouse using deductStock
     - Add to destination warehouse using addStock
@@ -366,8 +478,15 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Redirect to inventory page or show batch details
     - _Requirements: 6.5, 6.6, 6.7, 6.8_
 
-- [ ] 10. Sales Order Module
-  - [ ] 10.1 Create Sales Order repository and service
+- [x] 10. Sales Order Module
+
+
+
+
+
+  - [x] 10.1 Create Sales Order repository and service
+
+
     - Create SO repository with CRUD operations
     - Create SO item repository
     - Create SO service with business logic
@@ -375,7 +494,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Add method to validate stock availability for all items
     - _Requirements: 7.1, 7.9, 7.12, 15.7_
 
-  - [ ] 10.2 Implement Sales Order creation and management
+  - [x] 10.2 Implement Sales Order creation and management
+
+
     - Implement createSalesOrder with auto-generated order number
     - Validate customer email and phone formats using Zod
     - Validate sufficient stock in warehouse for all items
@@ -385,7 +506,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create cancelSalesOrder (update status to Cancelled)
     - _Requirements: 7.1, 7.3, 7.4, 7.5, 7.6, 7.7_
 
-  - [ ] 10.3 Create Sales Order API routes
+  - [x] 10.3 Create Sales Order API routes
+
+
     - Create GET /api/sales-orders route to fetch all SOs with filters
     - Create GET /api/sales-orders/[id] route to fetch single SO with items
     - Create POST /api/sales-orders route to create SO
@@ -393,7 +516,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create POST /api/sales-orders/[id]/cancel route to cancel SO
     - _Requirements: 7.1, 7.2, 7.10, 7.11_
 
-  - [ ] 10.4 Create Sales Order list page
+  - [x] 10.4 Create Sales Order list page
+
+
     - Build SO table with order number, customer name, customer phone, total, status, salesOrderStatus, delivery date, created date
     - Add status filter (Draft, Pending, Converted, Cancelled)
     - Show conversion status badge (Converted badge when salesOrderStatus is "converted")
@@ -403,7 +528,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Link to POS sale if converted (show convertedToSaleId)
     - _Requirements: 7.2, 7.8, 7.9, 7.10, 7.11, 15.7_
 
-  - [ ] 10.5 Build Sales Order create/edit form
+  - [x] 10.5 Build Sales Order create/edit form
+
+
     - Create form with customer details (customerName, customerPhone, customerEmail, deliveryAddress)
     - Add warehouse and branch selection dropdowns
     - Build dynamic items table (add/remove products with quantity and UOM selection)
@@ -415,15 +542,25 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - _Requirements: 7.1, 7.3, 7.4, 7.5, 7.6, 7.7_
 
 
-- [ ] 11. Point of Sale (POS) Module
-  - [ ] 11.1 Create POS repository and service
+- [x] 11. Point of Sale (POS) Module
+
+
+
+
+
+
+  - [x] 11.1 Create POS repository and service
+
     - Create POS sale repository with CRUD operations
     - Create POS sale item repository
     - Create POS service with business logic
     - Add helper method to generate receipt number (RCP-YYYYMMDD-XXXX format)
     - _Requirements: 8.21, 8.22, 15.8_
 
-  - [ ] 11.2 Implement POS sale processing
+
+
+  - [x] 11.2 Implement POS sale processing
+
     - Implement processSale service method with Prisma transaction
     - Calculate subtotal (sum of item subtotals)
     - Calculate tax (subtotal × 0.12 for 12% VAT)
@@ -437,7 +574,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - If convertedFromOrderId provided: update sales order status to "converted" and set convertedToSaleId
     - _Requirements: 8.7, 8.8, 8.9, 8.10, 8.13, 8.14, 8.15, 8.16, 8.19_
 
-  - [ ] 11.3 Create POS API routes
+
+  - [x] 11.3 Create POS API routes
+
     - Create GET /api/pos/products route to fetch active products with stock
     - Create POST /api/pos/sales route to process sale
     - Create GET /api/pos/sales route to fetch sales with filters
@@ -446,7 +585,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Create GET /api/pos/pending-orders route to fetch pending sales orders
     - _Requirements: 8.1, 8.13, 8.18, 8.20_
 
-  - [ ] 11.4 Create POS product grid interface
+
+  - [x] 11.4 Create POS product grid interface
+
     - Build product grid with images, names, and base prices
     - Display all available UOMs with selling prices per product (as buttons or dropdown)
     - Show stock availability indicator (green if in stock, red if out of stock)
@@ -456,7 +597,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Make product cards clickable to add to cart
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-  - [ ] 11.5 Build POS shopping cart
+
+  - [x] 11.5 Build POS shopping cart
+
     - Create cart component with item list table
     - Allow quantity adjustment per item (+ and - buttons)
     - Add UOM selection dropdown per item (show all available UOMs with prices)
@@ -467,7 +610,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Show empty cart state when no items
     - _Requirements: 8.5, 8.6, 8.7, 8.8, 8.9, 8.10_
 
-  - [ ] 11.6 Implement payment processing
+  - [x] 11.6 Implement payment processing
+
+
     - Create payment method selection (Cash, Card, Check, GCash, Online Transfer)
     - For Cash: add amount received input field
     - For Cash: calculate and display change (amountReceived - total)
@@ -477,6 +622,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Process sale on payment confirmation (call processSale API)
     - Show loading state during processing
     - _Requirements: 8.11, 8.12, 8.13_
+
+
+
 
   - [ ] 11.7 Build receipt preview and generation
     - Create receipt component with all sale details
@@ -489,6 +637,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - Add "Print Receipt" and "New Sale" buttons
     - _Requirements: 8.16, 8.17_
 
+
+
+
   - [ ] 11.8 Create sales order conversion feature
     - Display pending sales orders section in POS (collapsible panel)
     - Show SO table with order number, customer name, total, delivery date
@@ -499,7 +650,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - After processing sale: mark orders as "Converted" and link to POS sale
     - _Requirements: 8.18, 8.19_
 
-  - [ ] 11.9 Build today's POS summary widget
+
+  - [x] 11.9 Build today's POS summary widget
+
     - Display transaction count for today (count of sales where createdAt is today)
     - Show total revenue for today (sum of totalAmount for today's sales)
     - Calculate and display average sale value (total revenue / transaction count)
