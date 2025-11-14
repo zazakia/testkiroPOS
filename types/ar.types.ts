@@ -34,6 +34,7 @@ export interface ARAgingReport {
 
 export interface CreateARInput {
   branchId: string;
+  customerId?: string;
   customerName: string;
   salesOrderId?: string;
   totalAmount: number;

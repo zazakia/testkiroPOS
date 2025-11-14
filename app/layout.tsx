@@ -13,6 +13,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "InventoryPro - Inventory Management System",
   description: "Comprehensive inventory management and POS system for wholesale delivery companies",
+  other: {
+    'color-scheme': 'light',
+  },
 };
 
 export default function RootLayout({
@@ -22,6 +25,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="darkreader-lock" content="true" />
+        <meta name="color-scheme" content="light" />
+      </head>
       <body className={inter.className} suppressHydrationWarning>
         <QueryProvider>
           <ErrorBoundary>

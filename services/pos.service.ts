@@ -3,6 +3,7 @@ import { posRepository } from '@/repositories/pos.repository';
 import { inventoryService } from '@/services/inventory.service';
 import { salesOrderService } from '@/services/sales-order.service';
 import { productService } from '@/services/product.service';
+import { arService } from '@/services/ar.service';
 import { prisma } from '@/lib/prisma';
 import {
   CreatePOSSaleInput,
@@ -122,9 +123,33 @@ export class POSService {
   }
 
   /**
-   * Process a POS sale with inventory deduction and COGS calculation
+   * Process a POS sale with inventory deduction, COGS calculation, and AR creation for credit sales
    */
   async processSale(data: CreatePOSSaleInput): Promise<POSSaleWithItems> {
+    // Validate credit sale
+    if (data.paymentMethod === 'credit') {
+      if (!data.customerId || !data.customerName) {
+        throw new ValidationError('Customer information is required for credit sales', {
+          customerId: 'Required for credit payment',
+          customerName: 'Required for credit payment',
+        });
+      }
+
+      // Validate partial payment
+      if (data.partialPayment) {
+        if (data.partialPayment < 0) {
+          throw new ValidationError('Partial payment cannot be negative', {
+            partialPayment: 'Must be positive',
+          });
+        }
+        if (data.partialPayment >= data.totalAmount) {
+          throw new ValidationError('Partial payment must be less than total amount', {
+            partialPayment: `Must be less than ${data.totalAmount}`,
+          });
+        }
+      }
+    }
+
     // Validate payment method
     if (data.paymentMethod === 'cash') {
       if (!data.amountReceived) {
@@ -204,6 +229,51 @@ export class POSService {
       // If converted from sales order, mark it as converted
       if (data.convertedFromOrderId) {
         await salesOrderService.markAsConverted(data.convertedFromOrderId, sale.id);
+      }
+
+      // Create AR record for credit sales
+      if (data.paymentMethod === 'credit' && data.customerId && data.customerName) {
+        const outstandingBalance = data.totalAmount - (data.partialPayment || 0);
+
+        // Get customer to determine payment terms
+        const customer = await tx.customer.findUnique({
+          where: { id: data.customerId },
+        });
+
+        // Calculate due date based on payment terms
+        let dueDate = new Date();
+        if (customer?.paymentTerms) {
+          const terms = customer.paymentTerms;
+          if (terms === 'Net 15') {
+            dueDate.setDate(dueDate.getDate() + 15);
+          } else if (terms === 'Net 30') {
+            dueDate.setDate(dueDate.getDate() + 30);
+          } else if (terms === 'Net 60') {
+            dueDate.setDate(dueDate.getDate() + 60);
+          } else if (terms === 'COD') {
+            dueDate.setDate(dueDate.getDate() + 1);
+          }
+        } else {
+          // Default to Net 30
+          dueDate.setDate(dueDate.getDate() + 30);
+        }
+
+        // Create AR record
+        await arService.createAR({
+          branchId: data.branchId,
+          customerId: data.customerId,
+          customerName: data.customerName,
+          salesOrderId: undefined, // Not from sales order, from POS
+          totalAmount: outstandingBalance,
+          dueDate,
+        });
+
+        // If partial payment was made, record it as initial payment
+        if (data.partialPayment && data.partialPayment > 0) {
+          // Note: This would require recording the partial payment separately
+          // For now, we'll just create the AR with the outstanding balance
+          // The partial payment is already reflected in the POS sale record
+        }
       }
 
       return sale;

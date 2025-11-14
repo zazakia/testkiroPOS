@@ -9,6 +9,7 @@ export class ARService {
 
     return await arRepository.create({
       branch: { connect: { id: data.branchId } },
+      customer: data.customerId ? { connect: { id: data.customerId } } : undefined,
       customerName: data.customerName,
       salesOrderId: data.salesOrderId,
       totalAmount: data.totalAmount,
