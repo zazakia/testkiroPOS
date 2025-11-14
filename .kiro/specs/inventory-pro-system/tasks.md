@@ -295,8 +295,12 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
 
 
 
+<<<<<<< HEAD
   - [x] 8.1 Create Inventory repository and service
 
+=======
+  - [-] 8.1 Create Inventory repository and service
+>>>>>>> 6985753057f50888854ad885e94b8e2e15e01df3
 
 
 
@@ -307,6 +311,7 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - _Requirements: 3.1, 3.7, 3.8_
 
 
+<<<<<<< HEAD
 
 
 
@@ -316,6 +321,9 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
 
 
 
+=======
+  - [ ] 8.2 Implement weighted average cost calculation
+>>>>>>> 6985753057f50888854ad885e94b8e2e15e01df3
 
     - Create calculateWeightedAverageCost service method
     - Calculate total cost (sum of quantity × unitCost for all active batches)
@@ -348,12 +356,16 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - _Requirements: 3.1, 3.2, 3.7_
 
 
+<<<<<<< HEAD
   - [x] 8.5 Build deduct stock functionality
 
 
 
 
 
+=======
+  - [ ] 8.5 Build deduct stock functionality
+>>>>>>> 6985753057f50888854ad885e94b8e2e15e01df3
 
     - Create deductStock service method
     - Convert quantity to base UOM
@@ -390,9 +402,12 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
   - [x] 8.8 Build stock movement history view
 
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 6985753057f50888854ad885e94b8e2e15e01df3
     - Create stock movement table with type, product, warehouse, quantity, reason, reference, timestamp
     - Filter by product, warehouse, date range, movement type (IN, OUT, TRANSFER, ADJUSTMENT)
     - Show reference links to PO/SO/POS based on referenceType
@@ -400,11 +415,15 @@ This implementation plan breaks down the InventoryPro system into discrete, mana
     - _Requirements: 3.7, 3.8_
 
 
+<<<<<<< HEAD
   - [x] 8.9 Implement transfer between warehouses
 
 
 
 
+=======
+  - [ ] 8.9 Implement transfer between warehouses
+>>>>>>> 6985753057f50888854ad885e94b8e2e15e01df3
 
     - Create transferStock service method
     - Deduct from source warehouse using deductStock
