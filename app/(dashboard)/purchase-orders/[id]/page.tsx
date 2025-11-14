@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, CheckCircle, Edit, XCircle, Send } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit, XCircle, Send, Printer } from 'lucide-react';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +32,7 @@ import { PurchaseOrderWithDetails } from '@/types/purchase-order.types';
 import { TableSkeleton } from '@/components/shared/loading-skeleton';
 import { toast } from '@/hooks/use-toast';
 import { ReceivingVoucherDialog } from '@/components/receiving-vouchers/receiving-voucher-dialog';
+import { PurchaseOrderPrint } from '@/components/purchase-orders/purchase-order-print';
 
 export default function PurchaseOrderDetailPage({
   params,
@@ -46,6 +47,7 @@ export default function PurchaseOrderDetailPage({
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchPurchaseOrder();
@@ -215,6 +217,10 @@ export default function PurchaseOrderDetailPage({
             <Button variant="outline" onClick={() => router.push('/purchase-orders')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
+            </Button>
+            <Button variant="outline" onClick={() => setPrintDialogOpen(true)}>
+              <Printer className="h-4 w-4 mr-2" />
+              Print
             </Button>
             {(purchaseOrder.status === 'draft' || purchaseOrder.status === 'pending') && (
               <>
@@ -435,6 +441,15 @@ export default function PurchaseOrderDetailPage({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Purchase Order Print Dialog */}
+      {purchaseOrder && (
+        <PurchaseOrderPrint
+          purchaseOrder={purchaseOrder}
+          open={printDialogOpen}
+          onClose={() => setPrintDialogOpen(false)}
+        />
+      )}
     </div>
   );
 }

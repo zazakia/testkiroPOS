@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreHorizontal, Eye, Edit, XCircle, ShoppingCart } from 'lucide-react';
+import { MoreHorizontal, Eye, Edit, XCircle, ShoppingCart, FileText, Truck } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Table,
@@ -32,12 +32,15 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { SalesOrderWithItems } from '@/types/sales-order.types';
+import { SalesOrderInvoicePrint } from './sales-order-invoice-print';
 
 interface SalesOrderTableProps {
   salesOrders: SalesOrderWithItems[];
   onEdit: (salesOrder: SalesOrderWithItems) => void;
   onCancel: (id: string) => Promise<boolean>;
   onConvertToPOS?: (salesOrder: SalesOrderWithItems) => void;
+  onPrintInvoice?: (salesOrder: SalesOrderWithItems) => void;
+  onPrintDeliveryNote?: (salesOrder: SalesOrderWithItems) => void;
 }
 
 export function SalesOrderTable({
@@ -45,9 +48,14 @@ export function SalesOrderTable({
   onEdit,
   onCancel,
   onConvertToPOS,
+  onPrintInvoice,
+  onPrintDeliveryNote,
 }: SalesOrderTableProps) {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [printInvoiceDialogOpen, setPrintInvoiceDialogOpen] = useState(false);
+  const [printDeliveryDialogOpen, setPrintDeliveryDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<SalesOrderWithItems | null>(null);
 
   const handleCancelClick = (id: string) => {
     setSelectedOrderId(id);
@@ -60,6 +68,16 @@ export function SalesOrderTable({
       setCancelDialogOpen(false);
       setSelectedOrderId(null);
     }
+  };
+
+  const handlePrintInvoice = (order: SalesOrderWithItems) => {
+    setSelectedOrder(order);
+    setPrintInvoiceDialogOpen(true);
+  };
+
+  const handlePrintDeliveryNote = (order: SalesOrderWithItems) => {
+    setSelectedOrder(order);
+    setPrintDeliveryDialogOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -147,6 +165,15 @@ export function SalesOrderTable({
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handlePrintInvoice(order)}>
+                          <FileText className="h-4 w-4 mr-2" />
+                          Print Invoice
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handlePrintDeliveryNote(order)}>
+                          <Truck className="h-4 w-4 mr-2" />
+                          Print Delivery Note
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
@@ -202,6 +229,32 @@ export function SalesOrderTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Print Invoice Dialog */}
+      {selectedOrder && (
+        <SalesOrderInvoicePrint
+          salesOrder={selectedOrder}
+          open={printInvoiceDialogOpen}
+          onClose={() => {
+            setPrintInvoiceDialogOpen(false);
+            setSelectedOrder(null);
+          }}
+          documentType="invoice"
+        />
+      )}
+
+      {/* Print Delivery Note Dialog */}
+      {selectedOrder && (
+        <SalesOrderInvoicePrint
+          salesOrder={selectedOrder}
+          open={printDeliveryDialogOpen}
+          onClose={() => {
+            setPrintDeliveryDialogOpen(false);
+            setSelectedOrder(null);
+          }}
+          documentType="delivery-note"
+        />
+      )}
     </>
   );
 }

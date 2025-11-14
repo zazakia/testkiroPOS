@@ -33,6 +33,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useWarehouses } from '@/hooks/use-warehouses';
 import { InventoryBatchWithRelations } from '@/types/inventory.types';
+import { TransferSlipPrint } from './transfer-slip-print';
 
 const transferStockSchema = z.object({
   sourceWarehouseId: z.string().min(1, 'Source warehouse is required'),
@@ -65,6 +66,8 @@ export function TransferStockDialog({
   const { toast } = useToast();
   const { warehouses } = useWarehouses();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTransferSlip, setShowTransferSlip] = useState(false);
+  const [transferData, setTransferData] = useState<any>(null);
 
   const form = useForm<TransferStockFormData>({
     resolver: zodResolver(transferStockSchema),
@@ -109,11 +112,34 @@ export function TransferStockDialog({
       const result = await response.json();
 
       if (result.success) {
+        // Prepare transfer slip data
+        const sourceWH = warehouses.find(w => w.id === data.sourceWarehouseId);
+        const destWH = warehouses.find(w => w.id === data.destinationWarehouseId);
+        
+        setTransferData({
+          transferNumber: `TSF-${Date.now()}`,
+          transferDate: new Date(),
+          productName: batch.product.name,
+          batchNumber: batch.batchNumber,
+          quantity: data.quantity,
+          uom: batch.product.baseUOM,
+          sourceWarehouse: {
+            name: sourceWH?.name || 'Unknown',
+            location: sourceWH?.location || '',
+          },
+          destinationWarehouse: {
+            name: destWH?.name || 'Unknown',
+            location: destWH?.location || '',
+          },
+          reason: data.reason,
+        });
+        
         toast({
           title: 'Success',
           description: 'Stock transferred successfully',
         });
         onOpenChange(false);
+        setShowTransferSlip(true);
         form.reset();
         onSuccess();
       } else {
@@ -140,6 +166,7 @@ export function TransferStockDialog({
   const availableQuantity = Number(batch.quantity);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -277,5 +304,18 @@ export function TransferStockDialog({
         </Form>
       </DialogContent>
     </Dialog>
+
+    {/* Transfer Slip Print Dialog */}
+    {transferData && (
+      <TransferSlipPrint
+        transfer={transferData}
+        open={showTransferSlip}
+        onClose={() => {
+          setShowTransferSlip(false);
+          setTransferData(null);
+        }}
+      />
+    )}
+    </>
   );
 }
