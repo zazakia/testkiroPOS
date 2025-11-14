@@ -460,7 +460,7 @@ export function SalesOrderDialog({
 
               {fields.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                  No items added yet. Click "Add Item" to get started.
+                  No items added yet. Click &quot;Add Item&quot; to get started.
                 </div>
               ) : (
                 <div className="space-y-4">

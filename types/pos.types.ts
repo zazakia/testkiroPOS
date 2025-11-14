@@ -26,7 +26,33 @@ export interface CreatePOSSaleInput {
 }
 
 export type POSSaleWithItems = POSSale & {
-  items: POSSaleItem[];
+  items: (POSSaleItem & {
+    product: {
+      id: string;
+      name: string;
+      description: string | null;
+      category: string;
+      imageUrl: string | null;
+      basePrice: any;
+      baseUOM: string;
+      minStockLevel: number;
+      shelfLifeDays: number;
+      status: string;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  })[];
+  branch?: {
+    id: string;
+    name: string;
+    code: string;
+    location: string;
+    manager: string;
+    phone: string;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null;
 };
 
 export interface POSSaleFilters {

@@ -57,3 +57,37 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Print styles for receipts */
+@media print {
+  /* Hide everything except the receipt content */
+  body * {
+    visibility: hidden;
+  }
+  
+  #receipt-content,
+  #receipt-content * {
+    visibility: visible;
+  }
+  
+  #receipt-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  /* Hide dialog overlay and other UI elements */
+  [role="dialog"],
+  [data-radix-dialog-overlay],
+  button {
+    display: none !important;
+  }
+  
+  /* Show only receipt content */
+  #receipt-content {
+    display: block !important;
+  }
+}

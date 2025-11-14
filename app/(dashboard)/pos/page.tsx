@@ -11,6 +11,7 @@ import { POSReceipt } from '@/components/pos/pos-receipt';
 import { useBranch } from '@/hooks/use-branch';
 import { ProductWithStock } from '@/types/pos.types';
 import { SalesOrderWithItems } from '@/types/sales-order.types';
+import { toast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -51,6 +52,7 @@ export default function POSPage() {
   const [completedSale, setCompletedSale] = useState<any>(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [convertingOrder, setConvertingOrder] = useState<SalesOrderWithItems | null>(null);
+  const [convertingOrderIds, setConvertingOrderIds] = useState<string[]>([]);
 
   // Fetch warehouses for the selected branch
   useEffect(() => {
@@ -155,6 +157,7 @@ export default function POSPage() {
     setCart([]);
     setShowPayment(false);
     setConvertingOrder(null);
+    setConvertingOrderIds([]);
   };
 
   const handleCheckout = () => {
@@ -168,21 +171,72 @@ export default function POSPage() {
     handleClearCart();
   };
 
-  const handleConvertOrder = (order: SalesOrderWithItems) => {
-    // Pre-populate cart with order items
-    const cartItems: CartItem[] = order.items.map((item) => ({
-      productId: item.productId,
-      productName: item.product.name,
-      quantity: Number(item.quantity),
-      uom: item.uom,
-      unitPrice: Number(item.unitPrice),
-      subtotal: Number(item.subtotal),
-      availableStock: 0, // Will be validated on checkout
-      availableUOMs: [], // Will be populated from product data
-    }));
+  const handleConvertOrder = async (order: SalesOrderWithItems) => {
+    try {
+      // Fetch product details to get available UOMs and stock
+      const productIds = [...new Set(order.items.map(item => item.productId))];
+      const productsResponse = await fetch(`/api/pos/products?warehouseId=${selectedWarehouse}`);
+      const productsData = await productsResponse.json();
+      
+      if (!productsData.success) {
+        toast({
+          title: 'Error',
+          description: 'Failed to load product details',
+          variant: 'destructive',
+        });
+        return;
+      }
 
-    setCart(cartItems);
-    setConvertingOrder(order);
+      const productsMap = new Map(productsData.data.map((p: any) => [p.id, p]));
+
+      // Pre-populate cart with order items
+      const cartItems: CartItem[] = order.items.map((item) => {
+        const product = productsMap.get(item.productId);
+        
+        return {
+          productId: item.productId,
+          productName: item.product?.name || 'Unknown Product',
+          quantity: Number(item.quantity),
+          uom: item.uom,
+          unitPrice: Number(item.unitPrice),
+          subtotal: Number(item.subtotal),
+          availableStock: product?.currentStock || 0,
+          availableUOMs: product ? [
+            { name: product.baseUOM, sellingPrice: product.basePrice },
+            ...product.alternateUOMs.map((u: any) => ({
+              name: u.name,
+              sellingPrice: u.sellingPrice,
+            })),
+          ] : [],
+        };
+      });
+
+      setCart(cartItems);
+      setConvertingOrder(order);
+      
+      // Check if this is a bulk conversion (order number starts with BULK-)
+      if (order.orderNumber.startsWith('BULK-')) {
+        // Extract order IDs from the bulk order number
+        const orderNumbers = order.orderNumber.replace('BULK-', '').split(',');
+        // We need to fetch the actual order IDs - for now, we'll just not set a single convertedFromOrderId
+        setConvertingOrderIds([]);
+      } else {
+        // Single order conversion
+        setConvertingOrderIds([order.id]);
+      }
+      
+      toast({
+        title: 'Order Loaded',
+        description: `${order.items.length} item${order.items.length > 1 ? 's' : ''} added to cart`,
+      });
+    } catch (error) {
+      console.error('Error converting order:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to convert order',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleNewSale = () => {
@@ -311,7 +365,7 @@ export default function POSPage() {
               cart={cart}
               branchId={selectedBranch?.id || ''}
               warehouseId={selectedWarehouse}
-              convertedFromOrderId={convertingOrder?.id}
+              convertedFromOrderId={convertingOrderIds.length === 1 ? convertingOrderIds[0] : undefined}
               onComplete={handlePaymentComplete}
               onCancel={() => setShowPayment(false)}
             />

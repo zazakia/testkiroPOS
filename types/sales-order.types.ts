@@ -42,7 +42,14 @@ export interface UpdateSalesOrderInput {
 }
 
 export type SalesOrderWithItems = SalesOrder & {
-  items: SalesOrderItem[];
+  items: (SalesOrderItem & {
+    product?: {
+      id: string;
+      name: string;
+      baseUOM: string;
+      basePrice: number;
+    };
+  })[];
 };
 
 export interface SalesOrderFilters {
