@@ -19,10 +19,14 @@ import {
   Menu,
   X,
   BoxIcon,
+  Shield,
+  UserCog,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/auth.context';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -40,9 +44,19 @@ const navigation = [
   { name: 'Reports', href: '/reports', icon: BarChart3 },
 ];
 
+const settingsNavigation = [
+  { name: 'Users', href: '/users', icon: UserCog },
+  { name: 'Roles', href: '/roles', icon: Shield },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <>
@@ -122,10 +136,66 @@ export function Sidebar() {
               </Link>
             );
           })}
+
+          <Separator className="my-3" />
+          <div className="pt-2">
+            <p className="px-3 text-xs font-semibold text-muted-foreground mb-2">Settings</p>
+            {settingsNavigation.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    'min-h-[44px]',
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t">
+        <div className="p-4 border-t space-y-3">
+          {/* User Info */}
+          {user && (
+            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-semibold text-sm">
+                {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Logout Button */}
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={handleLogout}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
+
+          {/* App Version */}
           <div className="text-xs text-muted-foreground text-center">
             <p>© 2024 InventoryPro</p>
             <p className="mt-1">v1.0.0</p>

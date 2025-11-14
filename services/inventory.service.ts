@@ -383,6 +383,53 @@ export class InventoryService {
   }
 
   /**
+   * Adjust stock quantity for a specific batch
+   */
+  async adjustStock(data: {
+    batchId: string;
+    newQuantity: number;
+    reason: string;
+  }): Promise<void> {
+    // Validate batch exists
+    const batch = await inventoryRepository.findBatchById(data.batchId);
+    if (!batch) {
+      throw new NotFoundError('Inventory batch');
+    }
+
+    // Validate new quantity
+    if (data.newQuantity < 0) {
+      throw new ValidationError('Quantity cannot be negative', {
+        newQuantity: 'Invalid quantity',
+      });
+    }
+
+    const currentQuantity = Number(batch.quantity);
+    const quantityDifference = data.newQuantity - currentQuantity;
+
+    // Update batch and record movement in transaction
+    await prisma.$transaction(async (tx) => {
+      // Update batch quantity and status
+      await tx.inventoryBatch.update({
+        where: { id: data.batchId },
+        data: {
+          quantity: data.newQuantity,
+          status: data.newQuantity === 0 ? 'depleted' : batch.status,
+        },
+      });
+
+      // Record stock movement
+      await tx.stockMovement.create({
+        data: {
+          batchId: data.batchId,
+          type: 'ADJUSTMENT',
+          quantity: Math.abs(quantityDifference),
+          reason: data.reason,
+        },
+      });
+    });
+  }
+
+  /**
    * Get all inventory batches with filters
    */
   async getAllBatches(filters?: InventoryBatchFilters): Promise<InventoryBatchWithRelations[]> {
@@ -405,6 +452,84 @@ export class InventoryService {
    */
   async getAllMovements(filters?: StockMovementFilters): Promise<StockMovementWithRelations[]> {
     return await inventoryRepository.findAllMovements(filters);
+  }
+
+  /**
+   * Get stock levels for all products in a warehouse or all warehouses
+   */
+  async getStockLevels(warehouseId?: string): Promise<StockLevel[]> {
+    // Get all active batches grouped by product and warehouse
+    const batches = await prisma.inventoryBatch.findMany({
+      where: {
+        status: 'active',
+        ...(warehouseId && { warehouseId }),
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            baseUOM: true,
+          },
+        },
+        warehouse: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: [
+        { productId: 'asc' },
+        { warehouseId: 'asc' },
+        { expiryDate: 'asc' },
+      ],
+    });
+
+    // Group batches by product and warehouse
+    const grouped = batches.reduce((acc, batch) => {
+      const key = `${batch.productId}-${batch.warehouseId}`;
+      if (!acc[key]) {
+        acc[key] = {
+          productId: batch.productId,
+          productName: batch.product.name,
+          warehouseId: batch.warehouseId,
+          warehouseName: batch.warehouse.name,
+          baseUOM: batch.product.baseUOM,
+          batches: [],
+          totalQuantity: 0,
+          totalCost: 0,
+        };
+      }
+      
+      const quantity = Number(batch.quantity);
+      const unitCost = Number(batch.unitCost);
+      
+      acc[key].batches.push({
+        batchNumber: batch.batchNumber,
+        quantity,
+        unitCost,
+        expiryDate: batch.expiryDate,
+        status: batch.status,
+      });
+      
+      acc[key].totalQuantity += quantity;
+      acc[key].totalCost += quantity * unitCost;
+      
+      return acc;
+    }, {} as Record<string, any>);
+
+    // Calculate weighted average cost and format results
+    return Object.values(grouped).map((item: any) => ({
+      productId: item.productId,
+      productName: item.productName,
+      warehouseId: item.warehouseId,
+      warehouseName: item.warehouseName,
+      totalQuantity: item.totalQuantity,
+      baseUOM: item.baseUOM,
+      weightedAverageCost: item.totalQuantity > 0 ? item.totalCost / item.totalQuantity : 0,
+      batches: item.batches,
+    }));
   }
 
   /**

@@ -14,18 +14,23 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { InventoryTable } from '@/components/inventory/inventory-table';
+import { TransferStockDialog } from '@/components/inventory/transfer-stock-dialog';
+import { AdjustStockDialog } from '@/components/inventory/adjust-stock-dialog';
 import { useInventory } from '@/hooks/use-inventory';
 import { useProducts } from '@/hooks/use-products';
 import { useWarehouses } from '@/hooks/use-warehouses';
 import { TableSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
-import { BatchStatus, BatchWithRelations, StockLevel } from '@/types/inventory.types';
+import { InventoryBatchStatus, InventoryBatchWithRelations, StockLevel } from '@/types/inventory.types';
 
 export default function InventoryPage() {
   const [productFilter, setProductFilter] = useState<string>('all');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<BatchStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<InventoryBatchStatus | 'all'>('all');
   const [expiryFilter, setExpiryFilter] = useState<'all' | 'expiring' | 'expired'>('all');
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<InventoryBatchWithRelations | null>(null);
 
   const filters = {
     productId: productFilter !== 'all' ? productFilter : undefined,
@@ -39,13 +44,28 @@ export default function InventoryPage() {
       : undefined,
   };
 
-  const { batches, stockLevels, loading, fetchStockLevels } = useInventory(filters);
+  const { batches, stockLevels, loading, refetch, fetchStockLevels } = useInventory(filters);
   const { products } = useProducts({ status: 'active' });
   const { warehouses } = useWarehouses();
 
   useEffect(() => {
     fetchStockLevels(warehouseFilter !== 'all' ? warehouseFilter : undefined);
   }, [warehouseFilter]);
+
+  const handleTransfer = (batch: InventoryBatchWithRelations) => {
+    setSelectedBatch(batch);
+    setTransferDialogOpen(true);
+  };
+
+  const handleAdjust = (batch: InventoryBatchWithRelations) => {
+    setSelectedBatch(batch);
+    setAdjustDialogOpen(true);
+  };
+
+  const handleSuccess = () => {
+    refetch();
+    fetchStockLevels(warehouseFilter !== 'all' ? warehouseFilter : undefined);
+  };
 
   // Calculate summary statistics
   const calculateSummary = () => {
@@ -180,7 +200,7 @@ export default function InventoryPage() {
 
         <Select
           value={statusFilter}
-          onValueChange={(value) => setStatusFilter(value as BatchStatus | 'all')}
+          onValueChange={(value) => setStatusFilter(value as InventoryBatchStatus | 'all')}
         >
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Status" />
@@ -222,8 +242,28 @@ export default function InventoryPage() {
           description="Try adjusting your filters"
         />
       ) : (
-        <InventoryTable batches={batches} />
+        <InventoryTable 
+          batches={batches} 
+          onTransfer={handleTransfer}
+          onAdjust={handleAdjust}
+        />
       )}
+
+      {/* Transfer Dialog */}
+      <TransferStockDialog
+        open={transferDialogOpen}
+        onOpenChange={setTransferDialogOpen}
+        batch={selectedBatch}
+        onSuccess={handleSuccess}
+      />
+
+      {/* Adjust Dialog */}
+      <AdjustStockDialog
+        open={adjustDialogOpen}
+        onOpenChange={setAdjustDialogOpen}
+        batch={selectedBatch}
+        onSuccess={handleSuccess}
+      />
     </div>
   );
 }

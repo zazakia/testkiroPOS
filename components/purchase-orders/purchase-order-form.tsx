@@ -304,7 +304,7 @@ export function PurchaseOrderForm({
                   />
 
                   <div>
-                    <FormLabel>Subtotal</FormLabel>
+                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Subtotal</label>
                     <div className="text-lg font-semibold mt-2">
                       {formatCurrency(calculateItemSubtotal(index))}
                     </div>

@@ -106,20 +106,22 @@ export class SalesOrderService {
    * Create a new sales order
    */
   async createSalesOrder(data: CreateSalesOrderInput): Promise<SalesOrderWithItems> {
-    // Validate input
-    const validationResult = salesOrderSchema.safeParse(data);
+    // Generate order number first
+    const orderNumber = await this.generateOrderNumber();
+
+    // Validate input with order number included
+    const validationResult = salesOrderSchema.safeParse({
+      ...data,
+      orderNumber,
+    });
+    
     if (!validationResult.success) {
       const errors = validationResult.error.flatten().fieldErrors;
       throw new ValidationError('Invalid sales order data', errors as Record<string, string>);
     }
 
-    // Generate order number if not provided
-    if (!data.orderNumber) {
-      data.orderNumber = await this.generateOrderNumber();
-    }
-
     // Check if order number already exists
-    const existingOrder = await salesOrderRepository.findByOrderNumber(data.orderNumber);
+    const existingOrder = await salesOrderRepository.findByOrderNumber(orderNumber);
     if (existingOrder) {
       throw new ValidationError('Order number already exists', {
         orderNumber: 'Order number must be unique',
@@ -152,9 +154,11 @@ export class SalesOrderService {
     // Calculate total amount
     const totalAmount = itemsWithPrices.reduce((sum, item) => sum + item.subtotal, 0);
 
-    // Create sales order
+    // Create sales order with explicit orderNumber
+    const { orderNumber: _, ...dataWithoutOrderNumber } = validationResult.data;
     const salesOrder = await salesOrderRepository.create({
-      ...validationResult.data,
+      ...dataWithoutOrderNumber,
+      orderNumber, // Explicitly set orderNumber (not from validation)
       items: itemsWithPrices,
       totalAmount,
     });

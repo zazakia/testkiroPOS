@@ -1,12 +1,24 @@
 import { PrismaClient } from '@prisma/client';
+import { seedPermissions } from './seeds/permissions.seed';
+import { seedRoles } from './seeds/roles.seed';
+import { seedRolePermissions } from './seeds/role-permissions.seed';
+import { seedAdminUser } from './seeds/admin-user.seed';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Starting seed...');
 
-  // Create Branches
-  const branch1 = await prisma.branch.create({
+  // Seed authentication data
+  await seedPermissions();
+  await seedRoles();
+  await seedRolePermissions();
+  await seedAdminUser();
+
+  // Create Branches (check if they exist first)
+  let branch1 = await prisma.branch.findUnique({ where: { code: 'MNL-001' } });
+  if (!branch1) {
+    branch1 = await prisma.branch.create({
     data: {
       name: 'Manila Main Branch',
       code: 'MNL-001',
@@ -16,8 +28,11 @@ async function main() {
       status: 'active',
     },
   });
+  }
 
-  const branch2 = await prisma.branch.create({
+  let branch2 = await prisma.branch.findUnique({ where: { code: 'QC-001' } });
+  if (!branch2) {
+    branch2 = await prisma.branch.create({
     data: {
       name: 'Quezon City Branch',
       code: 'QC-001',
@@ -243,7 +258,11 @@ async function main() {
 
   console.log('Created inventory batches');
 
-  console.log('Seed completed successfully!');
+  console.log('\n=== Seed completed successfully! ===');
+  console.log('\nDefault Admin Credentials:');
+  console.log('Email: admin@inventorypro.com');
+  console.log('Password: Admin@123456!');
+  console.log('\n⚠️  Please change the admin password on first login!\n');
 }
 
 main()

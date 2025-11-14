@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { BranchProvider } from "@/contexts/branch-context";
+import { AuthProvider } from "@/contexts/auth.context";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "sonner";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,10 +23,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <BranchProvider>
-          {children}
-          <Toaster />
-        </BranchProvider>
+        <QueryProvider>
+          <ErrorBoundary>
+            <AuthProvider>
+              <BranchProvider>
+                {children}
+                <Toaster />
+                <Sonner position="top-right" richColors />
+              </BranchProvider>
+            </AuthProvider>
+          </ErrorBoundary>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -22,16 +23,19 @@ model Branch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  warehouses         Warehouse[]
-  purchaseOrders     PurchaseOrder[]
-  salesOrders        SalesOrder[]
-  posSales           POSSale[]
-  expenses           Expense[]
-  arRecords          AccountsReceivable[]
-  apRecords          AccountsPayable[]
+  warehouses       Warehouse[]
+  purchaseOrders   PurchaseOrder[]
+  salesOrders      SalesOrder[]
+  posSales         POSSale[]
+  expenses         Expense[]
+  arRecords        AccountsReceivable[]
+  apRecords        AccountsPayable[]
+  users            User[]
+  userBranchAccess UserBranchAccess[]
 
   @@index([status])
   @@index([code])
+  @@index([createdAt])
 }
 
 // Product Model
@@ -58,6 +62,8 @@ model Product {
   @@index([status])
   @@index([category])
   @@index([name])
+  @@index([category, status])
+  @@index([createdAt])
 }
 
 // Product UOM Model
@@ -92,6 +98,7 @@ model Warehouse {
   salesOrders      SalesOrder[]
 
   @@index([branchId])
+  @@index([branchId, name])
 }
 
 // Inventory Batch Model
@@ -116,6 +123,9 @@ model InventoryBatch {
   @@index([expiryDate])
   @@index([status])
   @@index([batchNumber])
+  @@index([productId, status])
+  @@index([warehouseId, status])
+  @@index([expiryDate, status])
 }
 
 // Stock Movement Model
@@ -267,6 +277,8 @@ model POSSale {
   @@index([receiptNumber])
   @@index([createdAt])
   @@index([paymentMethod])
+  @@index([branchId, createdAt])
+  @@index([branchId, paymentMethod])
 }
 
 // POS Sale Item Model
@@ -294,7 +306,7 @@ model AccountsReceivable {
   customerName String
   salesOrderId String?
   totalAmount  Decimal  @db.Decimal(10, 2)
-  paidAmount   Decimal  @db.Decimal(10, 2) @default(0)
+  paidAmount   Decimal  @default(0) @db.Decimal(10, 2)
   balance      Decimal  @db.Decimal(10, 2)
   dueDate      DateTime
   status       String   @default("pending")
@@ -308,6 +320,9 @@ model AccountsReceivable {
   @@index([status])
   @@index([dueDate])
   @@index([createdAt])
+  @@index([branchId, status])
+  @@index([status, dueDate])
+  @@index([customerName])
 }
 
 // AR Payment Model
@@ -333,7 +348,7 @@ model AccountsPayable {
   supplierId      String
   purchaseOrderId String?
   totalAmount     Decimal  @db.Decimal(10, 2)
-  paidAmount      Decimal  @db.Decimal(10, 2) @default(0)
+  paidAmount      Decimal  @default(0) @db.Decimal(10, 2)
   balance         Decimal  @db.Decimal(10, 2)
   dueDate         DateTime
   status          String   @default("pending")
@@ -349,6 +364,9 @@ model AccountsPayable {
   @@index([status])
   @@index([dueDate])
   @@index([createdAt])
+  @@index([branchId, status])
+  @@index([supplierId, status])
+  @@index([status, dueDate])
 }
 
 // AP Payment Model
@@ -387,4 +405,188 @@ model Expense {
   @@index([category])
   @@index([expenseDate])
   @@index([createdAt])
+  @@index([branchId, category])
+  @@index([branchId, expenseDate])
+  @@index([category, expenseDate])
+}
+
+// User Model
+model User {
+  id                String     @id @default(uuid())
+  email             String     @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  phone             String?
+  roleId            String
+  branchId          String?
+  status            UserStatus @default(ACTIVE)
+  emailVerified     Boolean    @default(false)
+  lastLoginAt       DateTime?
+  passwordChangedAt DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  role                Role                 @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  branch              Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  sessions            Session[]
+  auditLogs           AuditLog[]
+  branchAccess        UserBranchAccess[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([email], map: "idx_user_email")
+  @@index([roleId], map: "idx_user_role")
+  @@index([branchId], map: "idx_user_branch")
+  @@index([status], map: "idx_user_status")
+  @@index([emailVerified], map: "idx_user_email_verified")
+  @@map("User")
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+// Role Model
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@index([name], map: "idx_role_name")
+  @@index([isSystem], map: "idx_role_is_system")
+  @@map("Role")
+}
+
+// Permission Model
+model Permission {
+  id          String             @id @default(uuid())
+  resource    PermissionResource
+  action      PermissionAction
+  description String?
+  createdAt   DateTime           @default(now())
+
+  roles RolePermission[]
+
+  @@unique([resource, action], map: "unique_permission_resource_action")
+  @@index([resource], map: "idx_permission_resource")
+  @@index([action], map: "idx_permission_action")
+  @@map("Permission")
+}
+
+enum PermissionResource {
+  USERS
+  ROLES
+  PRODUCTS
+  INVENTORY
+  SALES
+  PURCHASES
+  ACCOUNTING
+  REPORTS
+  BRANCHES
+  SETTINGS
+}
+
+enum PermissionAction {
+  READ
+  CREATE
+  UPDATE
+  DELETE
+  MANAGE
+}
+
+// RolePermission Junction Model
+model RolePermission {
+  id           String   @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId], map: "unique_role_permission")
+  @@index([roleId], map: "idx_role_permission_role")
+  @@index([permissionId], map: "idx_role_permission_permission")
+  @@map("RolePermission")
+}
+
+// Session Model
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  ipAddress String?
+  userAgent String?  @db.VarChar(500)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_session_user")
+  @@index([token], map: "idx_session_token")
+  @@index([expiresAt], map: "idx_session_expires")
+  @@map("Session")
+}
+
+// AuditLog Model
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String   @db.VarChar(100)
+  resource   String   @db.VarChar(100)
+  resourceId String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?  @db.VarChar(500)
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_audit_log_user")
+  @@index([resource], map: "idx_audit_log_resource")
+  @@index([resourceId], map: "idx_audit_log_resource_id")
+  @@index([createdAt], map: "idx_audit_log_created")
+  @@index([action], map: "idx_audit_log_action")
+  @@map("AuditLog")
+}
+
+// UserBranchAccess Model
+model UserBranchAccess {
+  id        String   @id @default(uuid())
+  userId    String
+  branchId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, branchId], map: "unique_user_branch_access")
+  @@index([userId], map: "idx_user_branch_access_user")
+  @@index([branchId], map: "idx_user_branch_access_branch")
+  @@map("UserBranchAccess")
+}
+
+// PasswordResetToken Model
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_password_reset_user")
+  @@index([token], map: "idx_password_reset_token")
+  @@index([expiresAt], map: "idx_password_reset_expires")
+  @@map("PasswordResetToken")
 }
