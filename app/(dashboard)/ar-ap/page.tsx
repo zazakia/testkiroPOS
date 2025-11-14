@@ -3,201 +3,158 @@
 import { useState } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { FileText, DollarSign } from 'lucide-react';
+import { useBranch } from '@/hooks/use-branch';
 import { useAR } from '@/hooks/use-ar';
 import { useAP } from '@/hooks/use-ap';
-import { useBranch } from '@/hooks/use-branch';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { ARTable } from '@/components/ar/ar-table';
+import { ARPaymentDialog } from '@/components/ar/ar-payment-dialog';
+import { APTable } from '@/components/ap/ap-table';
+import { APPaymentDialog } from '@/components/ap/ap-payment-dialog';
+import { ARWithPayments } from '@/types/ar.types';
+import { APWithPayments } from '@/types/ap.types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DollarSign } from 'lucide-react';
-import { toast } from 'sonner';
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-  }).format(amount);
-};
-
-const formatDate = (date: Date | string) => {
-  return new Date(date).toLocaleDateString('en-PH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ARAPPage() {
+  const [activeTab, setActiveTab] = useState('ar');
   const { selectedBranch } = useBranch();
-  const { records: arRecords, loading: arLoading } = useAR({ branchId: selectedBranch?.id });
-  const { records: apRecords, loading: apLoading } = useAP({ branchId: selectedBranch?.id });
+  
+  // AR State
+  const [arStatusFilter, setArStatusFilter] = useState<string | undefined>(undefined);
+  const { records: arRecords, loading: arLoading, refetch: refetchAR } = useAR({ 
+    branchId: selectedBranch?.id,
+    status: arStatusFilter,
+  });
+  const [selectedARRecord, setSelectedARRecord] = useState<ARWithPayments | null>(null);
+  const [arPaymentDialogOpen, setArPaymentDialogOpen] = useState(false);
 
-  const handleRecordPayment = (id: string, type: 'ar' | 'ap') => {
-    // TODO: Open payment dialog/modal
-    toast.info(`Record payment feature for ${type.toUpperCase()} ID: ${id} - Coming soon`);
+  // AP State
+  const [apStatusFilter, setApStatusFilter] = useState<string | undefined>(undefined);
+  const { records: apRecords, loading: apLoading, refetch: refetchAP } = useAP({ 
+    branchId: selectedBranch?.id,
+    status: apStatusFilter,
+  });
+  const [selectedAPRecord, setSelectedAPRecord] = useState<APWithPayments | null>(null);
+  const [apPaymentDialogOpen, setApPaymentDialogOpen] = useState(false);
+
+  const handleARPayment = (record: ARWithPayments) => {
+    setSelectedARRecord(record);
+    setArPaymentDialogOpen(true);
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive'> = {
-      pending: 'secondary',
-      partial: 'default',
-      paid: 'default',
-      overdue: 'destructive',
-    };
-
-    return (
-      <Badge variant={variants[status] || 'default'}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
+  const handleAPPayment = (record: APWithPayments) => {
+    setSelectedAPRecord(record);
+    setApPaymentDialogOpen(true);
   };
 
-  const getAgingColor = (dueDate: Date | string, status: string) => {
-    if (status === 'paid') return 'text-green-600';
-    
-    const today = new Date();
-    const daysOverdue = Math.floor((today.getTime() - new Date(dueDate).getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysOverdue <= 30) return 'text-green-600';
-    if (daysOverdue <= 60) return 'text-yellow-600';
-    if (daysOverdue <= 90) return 'text-orange-600';
-    return 'text-red-600';
-  };
   return (
     <div className="p-6">
       <PageHeader
-        title="Accounts Receivable / Payable"
-        description="Manage accounts receivable and payable"
+        title="Accounts Receivable & Payable"
+        description="Manage customer receivables and supplier payables"
         breadcrumbs={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'AR/AP' },
         ]}
       />
 
-      <Tabs defaultValue="ar" className="mt-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
-          <TabsTrigger value="ar">Accounts Receivable</TabsTrigger>
-          <TabsTrigger value="ap">Accounts Payable</TabsTrigger>
+          <TabsTrigger value="ar" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Accounts Receivable
+          </TabsTrigger>
+          <TabsTrigger value="ap" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Accounts Payable
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="ar" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              {arLoading ? (
-                <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))}
-                </div>
-              ) : arRecords.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No accounts receivable records found
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Total Amount</TableHead>
-                      <TableHead>Paid Amount</TableHead>
-                      <TableHead>Balance</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {arRecords.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell className="font-medium">{record.customerName}</TableCell>
-                        <TableCell>{formatCurrency(Number(record.totalAmount))}</TableCell>
-                        <TableCell>{formatCurrency(Number(record.paidAmount))}</TableCell>
-                        <TableCell className="font-semibold">{formatCurrency(Number(record.balance))}</TableCell>
-                        <TableCell className={getAgingColor(record.dueDate, record.status)}>
-                          {formatDate(record.dueDate)}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(record.status)}</TableCell>
-                        <TableCell>
-                          {record.status !== 'paid' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleRecordPayment(record.id, 'ar')}
-                            >
-                              <DollarSign className="h-4 w-4 mr-2" />
-                              Record Payment
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
+        <TabsContent value="ar" className="space-y-4">
+          <div className="flex gap-4 items-center">
+            <Select value={arStatusFilter || 'all'} onValueChange={(v) => setArStatusFilter(v === 'all' ? undefined : v)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="partial">Partial</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Card className="p-6">
+            {arLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : (
+              <ARTable 
+                records={arRecords} 
+                onRecordPayment={handleARPayment}
+              />
+            )}
           </Card>
         </TabsContent>
 
-        <TabsContent value="ap" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              {apLoading ? (
-                <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))}
-                </div>
-              ) : apRecords.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No accounts payable records found
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Supplier</TableHead>
-                      <TableHead>Total Amount</TableHead>
-                      <TableHead>Paid Amount</TableHead>
-                      <TableHead>Balance</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {apRecords.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell className="font-medium">{record.supplier.companyName}</TableCell>
-                        <TableCell>{formatCurrency(Number(record.totalAmount))}</TableCell>
-                        <TableCell>{formatCurrency(Number(record.paidAmount))}</TableCell>
-                        <TableCell className="font-semibold">{formatCurrency(Number(record.balance))}</TableCell>
-                        <TableCell className={getAgingColor(record.dueDate, record.status)}>
-                          {formatDate(record.dueDate)}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(record.status)}</TableCell>
-                        <TableCell>
-                          {record.status !== 'paid' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleRecordPayment(record.id, 'ap')}
-                            >
-                              <DollarSign className="h-4 w-4 mr-2" />
-                              Record Payment
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
+        <TabsContent value="ap" className="space-y-4">
+          <div className="flex gap-4 items-center">
+            <Select value={apStatusFilter || 'all'} onValueChange={(v) => setApStatusFilter(v === 'all' ? undefined : v)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="partial">Partial</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Card className="p-6">
+            {apLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : (
+              <APTable 
+                records={apRecords} 
+                onRecordPayment={handleAPPayment}
+              />
+            )}
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Payment Dialogs */}
+      <ARPaymentDialog
+        open={arPaymentDialogOpen}
+        onClose={() => {
+          setArPaymentDialogOpen(false);
+          setSelectedARRecord(null);
+        }}
+        record={selectedARRecord}
+        onSuccess={refetchAR}
+      />
+
+      <APPaymentDialog
+        open={apPaymentDialogOpen}
+        onClose={() => {
+          setApPaymentDialogOpen(false);
+          setSelectedAPRecord(null);
+        }}
+        record={selectedAPRecord}
+        onSuccess={refetchAP}
+      />
     </div>
   );
 }

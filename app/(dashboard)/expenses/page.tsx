@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Edit } from 'lucide-react';
+import { ExpenseDialog } from '@/components/expenses/expense-dialog';
+import { ExpenseWithBranch, ExpenseCategories } from '@/types/expense.types';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-PH', {
@@ -31,12 +33,28 @@ export default function ExpensesPage() {
   const router = useRouter();
   const { selectedBranch } = useBranch();
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
-  const { expenses, loading } = useExpenses({ 
+  const { expenses, loading, refetch } = useExpenses({ 
     branchId: selectedBranch?.id,
     category: categoryFilter,
   });
 
-  const categories = ['Utilities', 'Rent', 'Salaries', 'Transportation', 'Marketing', 'Maintenance', 'Other'];
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<ExpenseWithBranch | null>(null);
+
+  const handleCreate = () => {
+    setSelectedExpense(null);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (expense: ExpenseWithBranch) => {
+    setSelectedExpense(expense);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setSelectedExpense(null);
+  };
 
   return (
     <div className="p-6">
@@ -56,13 +74,13 @@ export default function ExpensesPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((cat) => (
+            {ExpenseCategories.map((cat) => (
               <SelectItem key={cat} value={cat}>{cat}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Button onClick={() => router.push('/expenses/new')}>
+        <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
           Add Expense
         </Button>
@@ -106,7 +124,7 @@ export default function ExpensesPage() {
                       <Button 
                         size="sm" 
                         variant="ghost"
-                        onClick={() => router.push(`/expenses/${expense.id}`)}
+                        onClick={() => handleEdit(expense)}
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
@@ -119,6 +137,17 @@ export default function ExpensesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Expense Dialog */}
+      <ExpenseDialog
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        expense={selectedExpense}
+        onSuccess={() => {
+          refetch();
+          handleDialogClose();
+        }}
+      />
     </div>
   );
 }
