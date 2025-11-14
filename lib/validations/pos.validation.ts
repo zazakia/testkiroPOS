@@ -16,7 +16,7 @@ export const posSaleSchema = z.object({
   subtotal: z.number().positive('Subtotal must be greater than 0'),
   tax: z.number().nonnegative('Tax must be zero or greater'),
   totalAmount: z.number().positive('Total amount must be greater than 0'),
-  paymentMethod: z.enum(['Cash', 'Card', 'Check', 'GCash', 'Online Transfer'], {
+  paymentMethod: z.enum(['cash', 'card', 'check', 'gcash', 'online_transfer'], {
     required_error: 'Payment method is required',
     invalid_type_error: 'Invalid payment method',
   }),
@@ -28,8 +28,8 @@ export const posSaleSchema = z.object({
     .min(1, 'At least one item is required'),
 }).refine(
   (data) => {
-    // If payment method is Cash, amountReceived must be >= totalAmount
-    if (data.paymentMethod === 'Cash' && data.amountReceived) {
+    // If payment method is cash, amountReceived must be >= totalAmount
+    if (data.paymentMethod === 'cash' && data.amountReceived) {
       return data.amountReceived >= data.totalAmount;
     }
     return true;

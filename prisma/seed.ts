@@ -42,6 +42,7 @@ async function main() {
       status: 'active',
     },
   });
+  }
 
   console.log('Created branches');
 
@@ -102,6 +103,63 @@ async function main() {
   });
 
   console.log('Created suppliers');
+
+  // Create Customers
+  const customer1 = await prisma.customer.create({
+    data: {
+      customerCode: 'CUST-00001',
+      companyName: '7-Eleven Philippines',
+      contactPerson: 'Michael Santos',
+      phone: '+63 917 123 4567',
+      email: 'michael.santos@7eleven.com.ph',
+      address: '100 Pioneer Street',
+      city: 'Mandaluyong',
+      region: 'NCR',
+      postalCode: '1550',
+      paymentTerms: 'Net 30',
+      creditLimit: 500000,
+      taxId: '123-456-789',
+      customerType: 'wholesale',
+      status: 'active',
+    },
+  });
+
+  const customer2 = await prisma.customer.create({
+    data: {
+      customerCode: 'CUST-00002',
+      companyName: 'Mini Stop Corporation',
+      contactPerson: 'Sarah Reyes',
+      phone: '+63 918 234 5678',
+      email: 'sarah.reyes@ministop.com.ph',
+      address: '200 Ortigas Avenue',
+      city: 'Pasig',
+      region: 'NCR',
+      postalCode: '1600',
+      paymentTerms: 'Net 30',
+      creditLimit: 300000,
+      taxId: '234-567-890',
+      customerType: 'wholesale',
+      status: 'active',
+    },
+  });
+
+  const customer3 = await prisma.customer.create({
+    data: {
+      customerCode: 'CUST-00003',
+      contactPerson: 'Juan Dela Cruz',
+      phone: '+63 919 345 6789',
+      email: 'juan.delacruz@gmail.com',
+      address: '50 Tomas Morato Avenue',
+      city: 'Quezon City',
+      region: 'NCR',
+      postalCode: '1103',
+      paymentTerms: 'COD',
+      customerType: 'retail',
+      status: 'active',
+    },
+  });
+
+  console.log('Created customers');
 
   // Create Products with UOMs
   const products = [

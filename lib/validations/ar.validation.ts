@@ -23,7 +23,7 @@ export const accountsReceivableSchema = z.object({
 
 export const arPaymentSchema = z.object({
   amount: z.number().positive('Payment amount must be greater than 0'),
-  paymentMethod: z.enum(['Cash', 'Card', 'Check', 'Bank Transfer', 'Online Transfer'], {
+  paymentMethod: z.enum(['cash', 'card', 'check', 'bank_transfer', 'online_transfer'], {
     required_error: 'Payment method is required',
   }),
   referenceNumber: z.string().optional(),

@@ -16,7 +16,7 @@ export const expenseSchema = z.object({
   amount: z.number().positive('Amount must be greater than 0'),
   description: z.string().min(1, 'Description is required'),
   vendor: z.string().optional(),
-  paymentMethod: z.enum(['Cash', 'Card', 'Check', 'Online Transfer'], {
+  paymentMethod: z.enum(['cash', 'card', 'check', 'online_transfer'], {
     required_error: 'Payment method is required',
     invalid_type_error: 'Invalid payment method',
   }),
@@ -33,7 +33,7 @@ export const updateExpenseSchema = z.object({
   amount: z.number().positive('Amount must be greater than 0').optional(),
   description: z.string().min(1, 'Description is required').optional(),
   vendor: z.string().optional(),
-  paymentMethod: z.enum(['Cash', 'Card', 'Check', 'Online Transfer']).optional(),
+  paymentMethod: z.enum(['cash', 'card', 'check', 'online_transfer']).optional(),
   receiptUrl: z.string().url('Invalid receipt URL').optional(),
 });
 

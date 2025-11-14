@@ -165,7 +165,21 @@ export class PurchaseOrderService {
       throw new NotFoundError('Purchase Order');
     }
 
-    // Only allow updates for Draft and Pending status
+    // If only updating status (e.g., draft -> ordered), allow it
+    const isStatusOnlyUpdate = Object.keys(data).length === 1 && data.status !== undefined;
+    
+    if (isStatusOnlyUpdate) {
+      // Validate status transition
+      if (data.status === 'ordered' && (existingPO.status === 'draft' || existingPO.status === 'pending')) {
+        // Allow draft/pending -> ordered transition
+        return await purchaseOrderRepository.update(id, { status: data.status });
+      }
+      throw new ValidationError('Invalid status transition', {
+        status: 'Cannot change status from ' + existingPO.status + ' to ' + data.status,
+      });
+    }
+
+    // For other updates, only allow updates for Draft and Pending status
     if (existingPO.status !== 'draft' && existingPO.status !== 'pending') {
       throw new ValidationError('Cannot update purchase order', {
         status: 'Only Draft and Pending purchase orders can be updated',

@@ -34,11 +34,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ReceivingVoucherDialog } from '@/components/receiving-vouchers/receiving-voucher-dialog';
 
 interface PurchaseOrderTableProps {
   purchaseOrders: PurchaseOrderWithDetails[];
   onEdit: (po: PurchaseOrderWithDetails) => void;
-  onReceive: (id: string) => Promise<any>;
+  onReceive?: (id: string) => Promise<any>; // Made optional, no longer used
   onCancel: (id: string, reason: string) => Promise<any>;
   onView: (po: PurchaseOrderWithDetails) => void;
 }
@@ -46,11 +47,10 @@ interface PurchaseOrderTableProps {
 export function PurchaseOrderTable({
   purchaseOrders,
   onEdit,
-  onReceive,
   onCancel,
   onView,
 }: PurchaseOrderTableProps) {
-  const [receiveDialogOpen, setReceiveDialogOpen] = useState(false);
+  const [receivingVoucherDialogOpen, setReceivingVoucherDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedPO, setSelectedPO] = useState<PurchaseOrderWithDetails | null>(null);
   const [cancelReason, setCancelReason] = useState('');
@@ -81,21 +81,13 @@ export function PurchaseOrderTable({
 
   const handleReceiveClick = (po: PurchaseOrderWithDetails) => {
     setSelectedPO(po);
-    setReceiveDialogOpen(true);
+    setReceivingVoucherDialogOpen(true);
   };
 
   const handleCancelClick = (po: PurchaseOrderWithDetails) => {
     setSelectedPO(po);
     setCancelReason('');
     setCancelDialogOpen(true);
-  };
-
-  const handleReceiveConfirm = async () => {
-    if (selectedPO) {
-      await onReceive(selectedPO.id);
-      setReceiveDialogOpen(false);
-      setSelectedPO(null);
-    }
   };
 
   const handleCancelConfirm = async () => {
@@ -200,30 +192,27 @@ export function PurchaseOrderTable({
         </Table>
       </div>
 
-      {/* Receive Confirmation Dialog */}
-      <AlertDialog open={receiveDialogOpen} onOpenChange={setReceiveDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Receive Purchase Order</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to receive PO {selectedPO?.poNumber}? This will:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Create inventory batches for all items</li>
-                <li>Update stock levels in the warehouse</li>
-                <li>Create an Accounts Payable record</li>
-                <li>Mark the PO as received</li>
-              </ul>
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleReceiveConfirm}>
-              Receive Purchase Order
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Receiving Voucher Dialog */}
+      {selectedPO && (
+        <ReceivingVoucherDialog
+          open={receivingVoucherDialogOpen}
+          onOpenChange={setReceivingVoucherDialogOpen}
+          purchaseOrder={{
+            id: selectedPO.id,
+            poNumber: selectedPO.poNumber,
+            items: selectedPO.items.map((item) => ({
+              id: item.id,
+              productId: item.productId,
+              product: {
+                name: item.product.name,
+                baseUOM: item.product.baseUOM,
+              },
+              quantity: Number(item.quantity),
+              unitPrice: Number(item.unitPrice),
+            })),
+          }}
+        />
+      )}
 
       {/* Cancel Dialog */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>

@@ -34,6 +34,7 @@ const navigation = [
   { name: 'Inventory', href: '/inventory', icon: BoxIcon },
   { name: 'Warehouses', href: '/warehouses', icon: Warehouse },
   { name: 'Branches', href: '/branches', icon: Building2 },
+  { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Suppliers', href: '/suppliers', icon: Users },
   { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart },
   { name: 'Sales Orders', href: '/sales-orders', icon: FileText },

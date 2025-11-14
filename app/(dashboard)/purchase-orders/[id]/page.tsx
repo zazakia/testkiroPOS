@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, CheckCircle, Edit, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit, XCircle, Send } from 'lucide-react';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +31,7 @@ import { Label } from '@/components/ui/label';
 import { PurchaseOrderWithDetails } from '@/types/purchase-order.types';
 import { TableSkeleton } from '@/components/shared/loading-skeleton';
 import { toast } from '@/hooks/use-toast';
+import { ReceivingVoucherDialog } from '@/components/receiving-vouchers/receiving-voucher-dialog';
 
 export default function PurchaseOrderDetailPage({
   params,
@@ -41,8 +42,9 @@ export default function PurchaseOrderDetailPage({
   const router = useRouter();
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrderWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [receiveDialogOpen, setReceiveDialogOpen] = useState(false);
+  const [receivingVoucherDialogOpen, setReceivingVoucherDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
@@ -79,9 +81,16 @@ export default function PurchaseOrderDetailPage({
   };
 
   const handleReceive = async () => {
+    // Open receiving voucher dialog instead of direct receive
+    setReceivingVoucherDialogOpen(true);
+  };
+
+  const handleSubmitOrder = async () => {
     try {
-      const response = await fetch(`/api/purchase-orders/${id}/receive`, {
-        method: 'POST',
+      const response = await fetch(`/api/purchase-orders/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'ordered' }),
       });
 
       const result = await response.json();
@@ -89,22 +98,22 @@ export default function PurchaseOrderDetailPage({
       if (result.success) {
         toast({
           title: 'Success',
-          description: result.message || 'Purchase order received successfully',
+          description: 'Purchase order submitted successfully',
         });
-        setReceiveDialogOpen(false);
+        setSubmitDialogOpen(false);
         await fetchPurchaseOrder();
       } else {
         toast({
           title: 'Error',
-          description: result.error || 'Failed to receive purchase order',
+          description: result.error || 'Failed to submit purchase order',
           variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error('Error receiving purchase order:', error);
+      console.error('Error submitting purchase order:', error);
       toast({
         title: 'Error',
-        description: 'Failed to receive purchase order',
+        description: 'Failed to submit purchase order',
         variant: 'destructive',
       });
     }
@@ -208,16 +217,22 @@ export default function PurchaseOrderDetailPage({
               Back
             </Button>
             {(purchaseOrder.status === 'draft' || purchaseOrder.status === 'pending') && (
-              <Button
-                variant="outline"
-                onClick={() => router.push(`/purchase-orders/${id}/edit`)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push(`/purchase-orders/${id}/edit`)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button onClick={() => setSubmitDialogOpen(true)}>
+                  <Send className="h-4 w-4 mr-2" />
+                  Submit Order
+                </Button>
+              </>
             )}
             {purchaseOrder.status === 'ordered' && (
-              <Button onClick={() => setReceiveDialogOpen(true)}>
+              <Button onClick={handleReceive}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Receive
               </Button>
@@ -337,30 +352,57 @@ export default function PurchaseOrderDetailPage({
         </Card>
       </div>
 
-      {/* Receive Confirmation Dialog */}
-      <AlertDialog open={receiveDialogOpen} onOpenChange={setReceiveDialogOpen}>
+      {/* Submit Order Dialog */}
+      <AlertDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Receive Purchase Order</AlertDialogTitle>
+            <AlertDialogTitle>Submit Purchase Order</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to receive PO {purchaseOrder.poNumber}? This will:
+              Are you sure you want to submit PO {purchaseOrder.poNumber}? This will:
               <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Create inventory batches for all items</li>
-                <li>Update stock levels in {purchaseOrder.warehouse.name}</li>
-                <li>Create an Accounts Payable record</li>
-                <li>Mark the PO as received</li>
+                <li>Change status to "Ordered"</li>
+                <li>Lock the PO from further editing</li>
+                <li>Ready the PO for receiving</li>
               </ul>
-              This action cannot be undone.
+              You can still cancel the order if needed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleReceive}>
-              Receive Purchase Order
+            <AlertDialogAction onClick={handleSubmitOrder}>
+              Submit Order
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Receiving Voucher Dialog */}
+      {purchaseOrder && (
+        <ReceivingVoucherDialog
+          open={receivingVoucherDialogOpen}
+          onOpenChange={(open) => {
+            setReceivingVoucherDialogOpen(open);
+            if (!open) {
+              // Refresh PO data after closing dialog
+              fetchPurchaseOrder();
+            }
+          }}
+          purchaseOrder={{
+            id: purchaseOrder.id,
+            poNumber: purchaseOrder.poNumber,
+            items: purchaseOrder.items.map((item) => ({
+              id: item.id,
+              productId: item.productId,
+              product: {
+                name: item.product.name,
+                baseUOM: item.product.baseUOM,
+              },
+              quantity: Number(item.quantity),
+              unitPrice: Number(item.unitPrice),
+            })),
+          }}
+        />
+      )}
 
       {/* Cancel Dialog */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>

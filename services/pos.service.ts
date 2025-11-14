@@ -178,14 +178,15 @@ export class POSService {
           const costOfGoodsSold = avgCost * baseQuantity;
 
           // Deduct inventory (FIFO for expiry dates)
-          await inventoryService.deductStock(
-            item.productId,
-            data.warehouseId,
-            item.quantity,
-            item.uom,
-            data.receiptNumber!, // Will be set by now
-            'POS'
-          );
+          await inventoryService.deductStock({
+            productId: item.productId,
+            warehouseId: data.warehouseId,
+            quantity: item.quantity,
+            uom: item.uom,
+            reason: `POS Sale ${data.receiptNumber}`,
+            referenceId: data.receiptNumber!,
+            referenceType: 'POS',
+          });
 
           return {
             ...item,

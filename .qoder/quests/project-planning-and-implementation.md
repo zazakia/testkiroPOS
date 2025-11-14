@@ -1741,3 +1741,1274 @@ The new Receiving Voucher feature provides:
 **Revised Total Effort**: 344 hours (approximately 43 working days or 8-9 weeks with one developer)
 
 **Expected Outcome**: A fully functional, production-ready inventory management and POS system with comprehensive business intelligence capabilities and industry-standard receiving processes that ensure inventory accuracy and proper financial controls.
+
+---
+
+## IMPLEMENTATION GUIDE: Receiving Voucher Module
+
+### Step-by-Step Implementation Instructions
+
+This section provides complete, ready-to-implement code and instructions for building the Receiving Voucher feature.
+
+### Step 1: Database Schema Updates
+
+**File**: `prisma/schema.prisma`
+
+**Action**: Add the following changes to your Prisma schema:
+
+```prisma
+// 1. Update PurchaseOrder model - Add receivingStatus field and receivingVouchers relation
+model PurchaseOrder {
+  // ... existing fields
+  receivingStatus      String?   @default("pending") // pending, partially_received, fully_received
+  
+  // ... existing relations
+  receivingVouchers ReceivingVoucher[]
+  
+  // Add index
+  @@index([receivingStatus])
+}
+
+// 2. Update PurchaseOrderItem model - Add receivedQuantity field
+model PurchaseOrderItem {
+  // ... existing fields
+  receivedQuantity Decimal @default(0) @db.Decimal(10, 2)
+}
+
+// 3. Update Warehouse model - Add receivingVouchers relation
+model Warehouse {
+  // ... existing relations
+  receivingVouchers ReceivingVoucher[]
+}
+
+// 4. Update Branch model - Add receivingVouchers relation
+model Branch {
+  // ... existing relations
+  receivingVouchers ReceivingVoucher[]
+}
+
+// 5. Update Product model - Add receivingVoucherItems relation  
+model Product {
+  // ... existing relations
+  receivingVoucherItems ReceivingVoucherItem[]
+}
+
+// 6. Add NEW ReceivingVoucher model
+model ReceivingVoucher {
+  id                  String   @id @default(uuid())
+  rvNumber            String   @unique
+  purchaseOrderId     String
+  warehouseId         String
+  branchId            String
+  receiverName        String
+  deliveryNotes       String?
+  status              String   @default("complete")
+  totalOrderedAmount  Decimal  @db.Decimal(10, 2)
+  totalReceivedAmount Decimal  @db.Decimal(10, 2)
+  varianceAmount      Decimal  @db.Decimal(10, 2)
+  receivedDate        DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  purchaseOrder PurchaseOrder         @relation(fields: [purchaseOrderId], references: [id])
+  warehouse     Warehouse             @relation(fields: [warehouseId], references: [id])
+  branch        Branch                @relation(fields: [branchId], references: [id])
+  items         ReceivingVoucherItem[]
+
+  @@index([purchaseOrderId])
+  @@index([warehouseId])
+  @@index([branchId])
+  @@index([rvNumber])
+  @@index([status])
+  @@index([receivedDate])
+  @@index([createdAt])
+}
+
+// 7. Add NEW ReceivingVoucherItem model
+model ReceivingVoucherItem {
+  id                 String  @id @default(uuid())
+  rvId               String
+  productId          String
+  orderedQuantity    Decimal @db.Decimal(10, 2)
+  receivedQuantity   Decimal @db.Decimal(10, 2)
+  varianceQuantity   Decimal @db.Decimal(10, 2)
+  variancePercentage Decimal @db.Decimal(5, 2)
+  varianceReason     String?
+  unitPrice          Decimal @db.Decimal(10, 2)
+  lineTotal          Decimal @db.Decimal(10, 2)
+
+  receivingVoucher ReceivingVoucher @relation(fields: [rvId], references: [id], onDelete: Cascade)
+  product          Product          @relation(fields: [productId], references: [id])
+
+  @@index([rvId])
+  @@index([productId])
+}
+```
+
+**Commands to run**:
+```bash
+npx prisma format
+npx prisma migrate dev --name add_receiving_voucher
+npx prisma generate
+```
+
+### Step 2: Create Type Definitions
+
+**File**: `types/receiving-voucher.types.ts`
+
+```typescript
+import { Prisma } from '@prisma/client';
+
+export type ReceivingVoucher = Prisma.ReceivingVoucherGetPayload<{}>;
+
+export type ReceivingVoucherItem = Prisma.ReceivingVoucherItemGetPayload<{}>;
+
+export type ReceivingVoucherWithDetails = Prisma.ReceivingVoucherGetPayload<{
+  include: {
+    purchaseOrder: {
+      include: {
+        supplier: true;
+      };
+    };
+    warehouse: true;
+    branch: true;
+    items: {
+      include: {
+        product: true;
+      };
+    };
+  };
+}>;
+
+export interface CreateReceivingVoucherInput {
+  purchaseOrderId: string;
+  receiverName: string;
+  deliveryNotes?: string;
+  items: CreateReceivingVoucherItemInput[];
+}
+
+export interface CreateReceivingVoucherItemInput {
+  productId: string;
+  orderedQuantity: number;
+  receivedQuantity: number;
+  varianceReason?: string;
+  unitPrice: number;
+}
+
+export interface ReceivingVoucherFilters {
+  branchId?: string;
+  warehouseId?: string;
+  supplierId?: string;
+  status?: string;
+  startDate?: Date;
+  endDate?: Date;
+  rvNumber?: string;
+  poNumber?: string;
+}
+
+export interface VarianceReport {
+  supplierId: string;
+  supplierName: string;
+  totalPOs: number;
+  averageVariancePercentage: number;
+  overDeliveryCount: number;
+  underDeliveryCount: number;
+  exactMatchCount: number;
+  products: ProductVariance[];
+}
+
+export interface ProductVariance {
+  productId: string;
+  productName: string;
+  totalOrdered: number;
+  totalReceived: number;
+  totalVariance: number;
+  varianceFrequency: number;
+}
+
+export interface BulkProcessResult {
+  success: boolean;
+  rvNumber?: string;
+  error?: string;
+}
+```
+
+### Step 3: Create Validation Schemas
+
+**File**: `lib/validations/receiving-voucher.validation.ts`
+
+```typescript
+import { z } from 'zod';
+
+export const receivingVoucherItemSchema = z.object({
+  productId: z.string().uuid('Invalid product ID'),
+  orderedQuantity: z.number().positive('Ordered quantity must be positive'),
+  receivedQuantity: z.number().min(0, 'Received quantity cannot be negative'),
+  varianceReason: z.string().optional(),
+  unitPrice: z.number().positive('Unit price must be positive'),
+});
+
+export const createReceivingVoucherSchema = z.object({
+  purchaseOrderId: z.string().uuid('Invalid purchase order ID'),
+  receiverName: z.string().min(1, 'Receiver name is required').max(100, 'Receiver name too long'),
+  deliveryNotes: z.string().max(500, 'Delivery notes too long').optional(),
+  items: z
+    .array(receivingVoucherItemSchema)
+    .min(1, 'At least one item is required')
+    .refine(
+      (items) => items.some((item) => item.receivedQuantity > 0),
+      'At least one item must have received quantity greater than zero'
+    ),
+});
+
+export const receivingVoucherFiltersSchema = z.object({
+  branchId: z.string().uuid().optional(),
+  warehouseId: z.string().uuid().optional(),
+  supplierId: z.string().uuid().optional(),
+  status: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  rvNumber: z.string().optional(),
+  poNumber: z.string().optional(),
+});
+
+export type CreateReceivingVoucherInput = z.infer<typeof createReceivingVoucherSchema>;
+export type ReceivingVoucherFilters = z.infer<typeof receivingVoucherFiltersSchema>;
+```
+
+### Step 4: Create Repository Layer
+
+**File**: `repositories/receiving-voucher.repository.ts`
+
+```typescript
+import { prisma } from '@/lib/prisma';
+import {
+  ReceivingVoucher,
+  ReceivingVoucherWithDetails,
+  ReceivingVoucherFilters,
+} from '@/types/receiving-voucher.types';
+import { Prisma } from '@prisma/client';
+
+export class ReceivingVoucherRepository {
+  async create(data: Prisma.ReceivingVoucherCreateInput): Promise<ReceivingVoucher> {
+    return await prisma.receivingVoucher.create({
+      data,
+    });
+  }
+
+  async findById(id: string): Promise<ReceivingVoucherWithDetails | null> {
+    return await prisma.receivingVoucher.findUnique({
+      where: { id },
+      include: {
+        purchaseOrder: {
+          include: {
+            supplier: true,
+          },
+        },
+        warehouse: true,
+        branch: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+  }
+
+  async findByRVNumber(rvNumber: string): Promise<ReceivingVoucherWithDetails | null> {
+    return await prisma.receivingVoucher.findUnique({
+      where: { rvNumber },
+      include: {
+        purchaseOrder: {
+          include: {
+            supplier: true,
+          },
+        },
+        warehouse: true,
+        branch: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+  }
+
+  async findMany(filters: ReceivingVoucherFilters): Promise<ReceivingVoucherWithDetails[]> {
+    const where: Prisma.ReceivingVoucherWhereInput = {};
+
+    if (filters.branchId) {
+      where.branchId = filters.branchId;
+    }
+
+    if (filters.warehouseId) {
+      where.warehouseId = filters.warehouseId;
+    }
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    if (filters.rvNumber) {
+      where.rvNumber = {
+        contains: filters.rvNumber,
+        mode: 'insensitive',
+      };
+    }
+
+    if (filters.poNumber) {
+      where.purchaseOrder = {
+        poNumber: {
+          contains: filters.poNumber,
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    if (filters.startDate || filters.endDate) {
+      where.receivedDate = {};
+      if (filters.startDate) {
+        where.receivedDate.gte = filters.startDate;
+      }
+      if (filters.endDate) {
+        where.receivedDate.lte = filters.endDate;
+      }
+    }
+
+    return await prisma.receivingVoucher.findMany({
+      where,
+      include: {
+        purchaseOrder: {
+          include: {
+            supplier: true,
+          },
+        },
+        warehouse: true,
+        branch: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async findByPurchaseOrderId(poId: string): Promise<ReceivingVoucherWithDetails[]> {
+    return await prisma.receivingVoucher.findMany({
+      where: { purchaseOrderId: poId },
+      include: {
+        purchaseOrder: {
+          include: {
+            supplier: true,
+          },
+        },
+        warehouse: true,
+        branch: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async count(filters: ReceivingVoucherFilters): Promise<number> {
+    const where: Prisma.ReceivingVoucherWhereInput = {};
+
+    if (filters.branchId) {
+      where.branchId = filters.branchId;
+    }
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    return await prisma.receivingVoucher.count({ where });
+  }
+}
+
+export const receivingVoucherRepository = new ReceivingVoucherRepository();
+```
+
+### Step 5: Create Service Layer
+
+**File**: `services/receiving-voucher.service.ts`
+
+```typescript
+import { prisma } from '@/lib/prisma';
+import { receivingVoucherRepository } from '@/repositories/receiving-voucher.repository';
+import { inventoryService } from '@/services/inventory.service';
+import {
+  CreateReceivingVoucherInput,
+  ReceivingVoucherWithDetails,
+  ReceivingVoucherFilters,
+  VarianceReport,
+} from '@/types/receiving-voucher.types';
+import { NotFoundError, ValidationError } from '@/lib/errors';
+import { format } from 'date-fns';
+
+export class ReceivingVoucherService {
+  /**
+   * Generate unique RV number in format: RV-YYYYMMDD-XXXX
+   */
+  async generateRVNumber(): Promise<string> {
+    const today = new Date();
+    const dateStr = format(today, 'yyyyMMdd');
+    const prefix = `RV-${dateStr}-`;
+
+    // Find the last RV number for today
+    const lastRV = await prisma.receivingVoucher.findFirst({
+      where: {
+        rvNumber: {
+          startsWith: prefix,
+        },
+      },
+      orderBy: {
+        rvNumber: 'desc',
+      },
+    });
+
+    let sequence = 1;
+    if (lastRV) {
+      const lastSequence = parseInt(lastRV.rvNumber.split('-')[2]);
+      sequence = lastSequence + 1;
+    }
+
+    return `${prefix}${sequence.toString().padStart(4, '0')}`;
+  }
+
+  /**
+   * Create receiving voucher from purchase order
+   */
+  async createReceivingVoucher(
+    data: CreateReceivingVoucherInput
+  ): Promise<ReceivingVoucherWithDetails> {
+    return await prisma.$transaction(async (tx) => {
+      // 1. Get PO with items and related data
+      const po = await tx.purchaseOrder.findUnique({
+        where: { id: data.purchaseOrderId },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+          supplier: true,
+          warehouse: true,
+          branch: true,
+        },
+      });
+
+      if (!po) {
+        throw new NotFoundError('Purchase Order');
+      }
+
+      // 2. Validate PO status
+      if (po.status !== 'ordered') {
+        throw new ValidationError('Invalid purchase order status', {
+          status: 'Purchase order must be in ordered status',
+        });
+      }
+
+      // 3. Validate at least one item has received quantity > 0
+      const hasReceivedItems = data.items.some((item) => item.receivedQuantity > 0);
+      if (!hasReceivedItems) {
+        throw new ValidationError('No items received', {
+          items: 'At least one item must have received quantity greater than zero',
+        });
+      }
+
+      // 4. Generate RV number
+      const rvNumber = await this.generateRVNumber();
+
+      // 5. Calculate totals and variances
+      let totalOrderedAmount = 0;
+      let totalReceivedAmount = 0;
+
+      const processedItems = data.items.map((item) => {
+        const orderedQty = Number(item.orderedQuantity);
+        const receivedQty = Number(item.receivedQuantity);
+        const unitPrice = Number(item.unitPrice);
+
+        const varianceQty = receivedQty - orderedQty;
+        const variancePercentage =
+          orderedQty > 0 ? (varianceQty / orderedQty) * 100 : 0;
+        const lineTotal = receivedQty * unitPrice;
+
+        totalOrderedAmount += orderedQty * unitPrice;
+        totalReceivedAmount += lineTotal;
+
+        return {
+          productId: item.productId,
+          orderedQuantity: orderedQty,
+          receivedQuantity: receivedQty,
+          varianceQuantity: varianceQty,
+          variancePercentage: Number(variancePercentage.toFixed(2)),
+          varianceReason: item.varianceReason || null,
+          unitPrice: unitPrice,
+          lineTotal: Number(lineTotal.toFixed(2)),
+        };
+      });
+
+      const varianceAmount = totalReceivedAmount - totalOrderedAmount;
+
+      // 6. Create ReceivingVoucher
+      const rv = await tx.receivingVoucher.create({
+        data: {
+          rvNumber,
+          purchaseOrderId: po.id,
+          warehouseId: po.warehouseId,
+          branchId: po.branchId,
+          receiverName: data.receiverName,
+          deliveryNotes: data.deliveryNotes,
+          status: 'complete',
+          totalOrderedAmount: Number(totalOrderedAmount.toFixed(2)),
+          totalReceivedAmount: Number(totalReceivedAmount.toFixed(2)),
+          varianceAmount: Number(varianceAmount.toFixed(2)),
+          items: {
+            create: processedItems,
+          },
+        },
+        include: {
+          items: true,
+        },
+      });
+
+      // 7. Create inventory batches for received quantities
+      for (const item of processedItems) {
+        if (item.receivedQuantity > 0) {
+          const product = po.items.find((p) => p.productId === item.productId)?.product;
+          if (!product) continue;
+
+          // Add stock using inventory service
+          await inventoryService.addStock({
+            productId: item.productId,
+            warehouseId: po.warehouseId,
+            quantity: item.receivedQuantity,
+            uom: product.baseUOM,
+            unitCost: item.unitPrice,
+            referenceId: rv.id,
+            referenceType: 'RV',
+            reason: `Received from RV ${rvNumber} (PO ${po.poNumber})`,
+          });
+
+          // Update PO item received quantity
+          const poItem = po.items.find((p) => p.productId === item.productId);
+          if (poItem) {
+            await tx.purchaseOrderItem.update({
+              where: { id: poItem.id },
+              data: {
+                receivedQuantity: {
+                  increment: item.receivedQuantity,
+                },
+              },
+            });
+          }
+        }
+      }
+
+      // 8. Update PO receiving status
+      const updatedPOItems = await tx.purchaseOrderItem.findMany({
+        where: { poId: po.id },
+      });
+
+      const allItemsFullyReceived = updatedPOItems.every(
+        (item) => Number(item.receivedQuantity) >= Number(item.quantity)
+      );
+      const someItemsReceived = updatedPOItems.some(
+        (item) => Number(item.receivedQuantity) > 0
+      );
+
+      let receivingStatus = 'pending';
+      if (allItemsFullyReceived) {
+        receivingStatus = 'fully_received';
+      } else if (someItemsReceived) {
+        receivingStatus = 'partially_received';
+      }
+
+      await tx.purchaseOrder.update({
+        where: { id: po.id },
+        data: {
+          receivingStatus,
+          status: allItemsFullyReceived ? 'received' : po.status,
+          actualDeliveryDate: allItemsFullyReceived ? new Date() : po.actualDeliveryDate,
+        },
+      });
+
+      // 9. Create Accounts Payable for received amount
+      if (totalReceivedAmount > 0 && allItemsFullyReceived) {
+        const dueDate = this.calculateDueDate(po.supplier.paymentTerms, new Date());
+
+        await tx.accountsPayable.create({
+          data: {
+            branchId: po.branchId,
+            supplierId: po.supplierId,
+            purchaseOrderId: po.id,
+            totalAmount: Number(totalReceivedAmount.toFixed(2)),
+            paidAmount: 0,
+            balance: Number(totalReceivedAmount.toFixed(2)),
+            dueDate,
+            status: 'pending',
+          },
+        });
+      }
+
+      // 10. Return created RV with details
+      const createdRV = await tx.receivingVoucher.findUnique({
+        where: { id: rv.id },
+        include: {
+          purchaseOrder: {
+            include: {
+              supplier: true,
+            },
+          },
+          warehouse: true,
+          branch: true,
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+
+      return createdRV!;
+    });
+  }
+
+  /**
+   * Calculate due date based on payment terms
+   */
+  private calculateDueDate(paymentTerms: string, fromDate: Date): Date {
+    const dueDate = new Date(fromDate);
+
+    switch (paymentTerms) {
+      case 'Net 15':
+        dueDate.setDate(dueDate.getDate() + 15);
+        break;
+      case 'Net 30':
+        dueDate.setDate(dueDate.getDate() + 30);
+        break;
+      case 'Net 60':
+        dueDate.setDate(dueDate.getDate() + 60);
+        break;
+      case 'COD':
+        // Due immediately
+        break;
+      default:
+        dueDate.setDate(dueDate.getDate() + 30);
+    }
+
+    return dueDate;
+  }
+
+  /**
+   * Get receiving voucher by ID
+   */
+  async getReceivingVoucherById(id: string): Promise<ReceivingVoucherWithDetails> {
+    const rv = await receivingVoucherRepository.findById(id);
+
+    if (!rv) {
+      throw new NotFoundError('Receiving Voucher');
+    }
+
+    return rv;
+  }
+
+  /**
+   * Get receiving voucher by RV number
+   */
+  async getReceivingVoucherByNumber(rvNumber: string): Promise<ReceivingVoucherWithDetails> {
+    const rv = await receivingVoucherRepository.findByRVNumber(rvNumber);
+
+    if (!rv) {
+      throw new NotFoundError('Receiving Voucher');
+    }
+
+    return rv;
+  }
+
+  /**
+   * List receiving vouchers with filters
+   */
+  async listReceivingVouchers(
+    filters: ReceivingVoucherFilters
+  ): Promise<ReceivingVoucherWithDetails[]> {
+    return await receivingVoucherRepository.findMany(filters);
+  }
+
+  /**
+   * Get receiving vouchers for a purchase order
+   */
+  async getReceivingVouchersByPO(poId: string): Promise<ReceivingVoucherWithDetails[]> {
+    return await receivingVoucherRepository.findByPurchaseOrderId(poId);
+  }
+
+  /**
+   * Generate variance report
+   */
+  async generateVarianceReport(
+    filters: Pick<ReceivingVoucherFilters, 'branchId' | 'startDate' | 'endDate'>
+  ): Promise<VarianceReport[]> {
+    const rvs = await receivingVoucherRepository.findMany(filters);
+
+    // Group by supplier
+    const supplierMap = new Map<string, VarianceReport>();
+
+    for (const rv of rvs) {
+      const supplierId = rv.purchaseOrder.supplier.id;
+      const supplierName = rv.purchaseOrder.supplier.companyName;
+
+      if (!supplierMap.has(supplierId)) {
+        supplierMap.set(supplierId, {
+          supplierId,
+          supplierName,
+          totalPOs: 0,
+          averageVariancePercentage: 0,
+          overDeliveryCount: 0,
+          underDeliveryCount: 0,
+          exactMatchCount: 0,
+          products: [],
+        });
+      }
+
+      const report = supplierMap.get(supplierId)!;
+      report.totalPOs++;
+
+      // Analyze variance
+      for (const item of rv.items) {
+        const variance = Number(item.varianceQuantity);
+
+        if (variance > 0) {
+          report.overDeliveryCount++;
+        } else if (variance < 0) {
+          report.underDeliveryCount++;
+        } else {
+          report.exactMatchCount++;
+        }
+
+        // Track product variances
+        const existingProduct = report.products.find(
+          (p) => p.productId === item.productId
+        );
+
+        if (existingProduct) {
+          existingProduct.totalOrdered += Number(item.orderedQuantity);
+          existingProduct.totalReceived += Number(item.receivedQuantity);
+          existingProduct.totalVariance += variance;
+          existingProduct.varianceFrequency++;
+        } else {
+          report.products.push({
+            productId: item.productId,
+            productName: item.product.name,
+            totalOrdered: Number(item.orderedQuantity),
+            totalReceived: Number(item.receivedQuantity),
+            totalVariance: variance,
+            varianceFrequency: 1,
+          });
+        }
+      }
+    }
+
+    // Calculate average variance percentage per supplier
+    const reports = Array.from(supplierMap.values());
+    for (const report of reports) {
+      const totalItems =
+        report.overDeliveryCount + report.underDeliveryCount + report.exactMatchCount;
+      const totalVarianceItems = report.overDeliveryCount + report.underDeliveryCount;
+
+      report.averageVariancePercentage =
+        totalItems > 0 ? Number(((totalVarianceItems / totalItems) * 100).toFixed(2)) : 0;
+    }
+
+    return reports;
+  }
+}
+
+export const receivingVoucherService = new ReceivingVoucherService();
+```
+
+### Step 6: Create API Routes
+
+**File 1**: `app/api/receiving-vouchers/route.ts`
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { receivingVoucherService } from '@/services/receiving-voucher.service';
+import { createReceivingVoucherSchema, receivingVoucherFiltersSchema } from '@/lib/validations/receiving-voucher.validation';
+import { AppError } from '@/lib/errors';
+
+// POST /api/receiving-vouchers - Create receiving voucher
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Validate input
+    const validatedData = createReceivingVoucherSchema.parse(body);
+
+    // Create receiving voucher
+    const rv = await receivingVoucherService.createReceivingVoucher(validatedData);
+
+    return NextResponse.json({
+      success: true,
+      data: rv,
+      message: `Receiving voucher ${rv.rvNumber} created successfully. ${rv.items.filter(i => i.receivedQuantity > 0).length} inventory batches created.`,
+    });
+  } catch (error) {
+    console.error('Error creating receiving voucher:', error);
+
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { success: false, error: error.message, fields: (error as any).fields },
+        { status: error.statusCode }
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, error: 'Failed to create receiving voucher' },
+      { status: 500 }
+    );
+  }
+}
+
+// GET /api/receiving-vouchers - List receiving vouchers
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+
+    const filters = {
+      branchId: searchParams.get('branchId') || undefined,
+      warehouseId: searchParams.get('warehouseId') || undefined,
+      supplierId: searchParams.get('supplierId') || undefined,
+      status: searchParams.get('status') || undefined,
+      startDate: searchParams.get('startDate') || undefined,
+      endDate: searchParams.get('endDate') || undefined,
+      rvNumber: searchParams.get('rvNumber') || undefined,
+      poNumber: searchParams.get('poNumber') || undefined,
+    };
+
+    // Validate filters
+    const validatedFilters = receivingVoucherFiltersSchema.parse(filters);
+
+    // Convert date strings to Date objects if provided
+    const processedFilters = {
+      ...validatedFilters,
+      startDate: validatedFilters.startDate ? new Date(validatedFilters.startDate) : undefined,
+      endDate: validatedFilters.endDate ? new Date(validatedFilters.endDate) : undefined,
+    };
+
+    const rvs = await receivingVoucherService.listReceivingVouchers(processedFilters);
+
+    return NextResponse.json({
+      success: true,
+      data: rvs,
+    });
+  } catch (error) {
+    console.error('Error fetching receiving vouchers:', error);
+
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch receiving vouchers' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+**File 2**: `app/api/receiving-vouchers/[id]/route.ts`
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { receivingVoucherService } from '@/services/receiving-voucher.service';
+import { AppError } from '@/lib/errors';
+
+// GET /api/receiving-vouchers/[id] - Get single receiving voucher
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const rv = await receivingVoucherService.getReceivingVoucherById(id);
+
+    return NextResponse.json({
+      success: true,
+      data: rv,
+    });
+  } catch (error) {
+    console.error('Error fetching receiving voucher:', error);
+
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch receiving voucher' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+**File 3**: `app/api/purchase-orders/[id]/receiving-vouchers/route.ts`
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { receivingVoucherService } from '@/services/receiving-voucher.service';
+import { AppError } from '@/lib/errors';
+
+// GET /api/purchase-orders/[id]/receiving-vouchers - Get RVs for a PO
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const rvs = await receivingVoucherService.getReceivingVouchersByPO(id);
+
+    return NextResponse.json({
+      success: true,
+      data: rvs,
+    });
+  } catch (error) {
+    console.error('Error fetching receiving vouchers for PO:', error);
+
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch receiving vouchers' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+**File 4**: `app/api/reports/receiving-variance/route.ts`
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { receivingVoucherService } from '@/services/receiving-voucher.service';
+import { AppError } from '@/lib/errors';
+
+// GET /api/reports/receiving-variance - Generate variance report
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+
+    const filters = {
+      branchId: searchParams.get('branchId') || undefined,
+      startDate: searchParams.get('startDate')
+        ? new Date(searchParams.get('startDate')!)
+        : undefined,
+      endDate: searchParams.get('endDate')
+        ? new Date(searchParams.get('endDate')!)
+        : undefined,
+    };
+
+    const report = await receivingVoucherService.generateVarianceReport(filters);
+
+    return NextResponse.json({
+      success: true,
+      data: report,
+    });
+  } catch (error) {
+    console.error('Error generating variance report:', error);
+
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, error: 'Failed to generate variance report' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### Step 7: Create React Hooks
+
+**File**: `hooks/use-receiving-vouchers.ts`
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import {
+  ReceivingVoucherWithDetails,
+  CreateReceivingVoucherInput,
+  ReceivingVoucherFilters,
+  VarianceReport,
+} from '@/types/receiving-voucher.types';
+
+// Fetch all receiving vouchers with filters
+export function useReceivingVouchers(filters?: ReceivingVoucherFilters) {
+  return useQuery({
+    queryKey: ['receiving-vouchers', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.warehouseId) params.append('warehouseId', filters.warehouseId);
+      if (filters?.supplierId) params.append('supplierId', filters.supplierId);
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.startDate) params.append('startDate', filters.startDate.toISOString());
+      if (filters?.endDate) params.append('endDate', filters.endDate.toISOString());
+      if (filters?.rvNumber) params.append('rvNumber', filters.rvNumber);
+      if (filters?.poNumber) params.append('poNumber', filters.poNumber);
+
+      const response = await fetch(`/api/receiving-vouchers?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch receiving vouchers');
+      const data = await response.json();
+      return data.data as ReceivingVoucherWithDetails[];
+    },
+  });
+}
+
+// Fetch single receiving voucher by ID
+export function useReceivingVoucherDetail(id: string | undefined) {
+  return useQuery({
+    queryKey: ['receiving-voucher', id],
+    queryFn: async () => {
+      if (!id) throw new Error('ID is required');
+      const response = await fetch(`/api/receiving-vouchers/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch receiving voucher');
+      const data = await response.json();
+      return data.data as ReceivingVoucherWithDetails;
+    },
+    enabled: !!id,
+  });
+}
+
+// Fetch receiving vouchers for a purchase order
+export function usePOReceivingVouchers(poId: string | undefined) {
+  return useQuery({
+    queryKey: ['po-receiving-vouchers', poId],
+    queryFn: async () => {
+      if (!poId) throw new Error('PO ID is required');
+      const response = await fetch(`/api/purchase-orders/${poId}/receiving-vouchers`);
+      if (!response.ok) throw new Error('Failed to fetch receiving vouchers');
+      const data = await response.json();
+      return data.data as ReceivingVoucherWithDetails[];
+    },
+    enabled: !!poId,
+  });
+}
+
+// Fetch variance report
+export function useVarianceReport(filters?: Pick<ReceivingVoucherFilters, 'branchId' | 'startDate' | 'endDate'>) {
+  return useQuery({
+    queryKey: ['variance-report', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.startDate) params.append('startDate', filters.startDate.toISOString());
+      if (filters?.endDate) params.append('endDate', filters.endDate.toISOString());
+
+      const response = await fetch(`/api/reports/receiving-variance?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch variance report');
+      const data = await response.json();
+      return data.data as VarianceReport[];
+    },
+  });
+}
+
+// Create receiving voucher mutation
+export function useCreateReceivingVoucher() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: CreateReceivingVoucherInput) => {
+      const response = await fetch('/api/receiving-vouchers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create receiving voucher');
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Receiving voucher created successfully');
+      queryClient.invalidateQueries({ queryKey: ['receiving-vouchers'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create receiving voucher');
+    },
+  });
+}
+```
+
+### Step 8: Quick Implementation Checklist
+
+**Complete these steps in order to implement the Receiving Voucher feature**:
+
+#### Phase 1: Backend Foundation (Day 1)
+1. ✅ Update `prisma/schema.prisma` with new models and fields
+2. ✅ Run `npx prisma migrate dev --name add_receiving_voucher`
+3. ✅ Run `npx prisma generate`
+4. ✅ Create `types/receiving-voucher.types.ts`
+5. ✅ Create `lib/validations/receiving-voucher.validation.ts`
+6. ✅ Create `repositories/receiving-voucher.repository.ts`
+7. ✅ Create `services/receiving-voucher.service.ts`
+
+#### Phase 2: API Layer (Day 2)
+8. ✅ Create `app/api/receiving-vouchers/route.ts`
+9. ✅ Create `app/api/receiving-vouchers/[id]/route.ts`
+10. ✅ Create `app/api/purchase-orders/[id]/receiving-vouchers/route.ts`
+11. ✅ Create `app/api/reports/receiving-variance/route.ts`
+12. ✅ Test all API endpoints with Postman or Thunder Client
+
+#### Phase 3: Frontend Hooks & Components (Days 3-4)
+13. ✅ Create `hooks/use-receiving-vouchers.ts`
+14. ✅ Create `components/receiving-vouchers/receiving-voucher-dialog.tsx` (Main creation dialog)
+15. ✅ Create `components/receiving-vouchers/receiving-voucher-items-table.tsx` (Editable items table)
+16. ✅ Create `components/receiving-vouchers/variance-indicator.tsx` (Color-coded variance display)
+17. ✅ Create `components/receiving-vouchers/receiving-voucher-table.tsx` (List table)
+18. ✅ Update `app/(dashboard)/purchase-orders/[id]/page.tsx` to add RV creation button
+
+#### Phase 4: Pages & Integration (Day 5)
+19. ✅ Create `app/(dashboard)/receiving-vouchers/page.tsx` (List page)
+20. ✅ Create `app/(dashboard)/receiving-vouchers/[id]/page.tsx` (Detail page)
+21. ✅ Add navigation link in sidebar for Receiving Vouchers
+22. ✅ Update PO detail page to show RV history
+23. ✅ Test complete workflow end-to-end
+
+#### Phase 5: Variance Reporting (Day 6)
+24. ✅ Create variance report component in reports module
+25. ✅ Add CSV export functionality
+26. ✅ Test variance calculations
+27. ✅ Document user guide
+
+### Key Files Summary
+
+**New Files to Create** (Total: 20 files):
+
+```
+types/receiving-voucher.types.ts
+lib/validations/receiving-voucher.validation.ts
+repositories/receiving-voucher.repository.ts
+services/receiving-voucher.service.ts
+app/api/receiving-vouchers/route.ts
+app/api/receiving-vouchers/[id]/route.ts
+app/api/purchase-orders/[id]/receiving-vouchers/route.ts
+app/api/reports/receiving-variance/route.ts
+hooks/use-receiving-vouchers.ts
+components/receiving-vouchers/receiving-voucher-dialog.tsx
+components/receiving-vouchers/receiving-voucher-items-table.tsx
+components/receiving-vouchers/variance-indicator.tsx
+components/receiving-vouchers/receiving-voucher-table.tsx
+components/receiving-vouchers/receiving-voucher-detail.tsx
+app/(dashboard)/receiving-vouchers/page.tsx
+app/(dashboard)/receiving-vouchers/[id]/page.tsx
+```
+
+**Files to Modify** (Total: 3 files):
+
+```
+prisma/schema.prisma (Add ReceivingVoucher and ReceivingVoucherItem models)
+app/(dashboard)/purchase-orders/[id]/page.tsx (Add "Create RV" button)
+components/shared/sidebar.tsx (Add navigation link)
+```
+
+### Testing Checklist
+
+**Test Scenarios**:
+
+1. ✅ Create RV with exact quantities (all items match ordered)
+2. ✅ Create RV with under-delivery (some items received less)
+3. ✅ Create RV with over-delivery (some items received more)
+4. ✅ Create RV with partial delivery (some items zero quantity)
+5. ✅ Create RV with variance reasons documented
+6. ✅ Verify inventory batches created correctly
+7. ✅ Verify PO status updates (partially_received, fully_received)
+8. ✅ Verify AP created with correct amount (based on received, not ordered)
+9. ✅ Verify multiple RVs can be created for one PO
+10. ✅ Verify variance report calculations
+11. ✅ Test RV list filtering and search
+12. ✅ Test RV detail view and print functionality
+
+### Database Migration Preview
+
+After running the migration, your database will have:
+
+**New Tables**:
+- `ReceivingVoucher` (tracks receiving vouchers)
+- `ReceivingVoucherItem` (tracks line items with variances)
+
+**Updated Tables**:
+- `PurchaseOrder` (added `receivingStatus` field)
+- `PurchaseOrderItem` (added `receivedQuantity` field)
+
+**New Indexes**:
+- `receivingStatus` on PurchaseOrder
+- `rvNumber` on ReceivingVoucher
+- Multiple composite indexes for performance
+
+### Expected Business Impact
+
+**Inventory Accuracy**:
+- Track actual receipts vs. orders
+- Reduce inventory discrepancies by 60-80%
+- Better COGS accuracy
+
+**Financial Control**:
+- Pay only for what was received
+- Identify supplier billing errors
+- Reduce financial losses from discrepancies
+
+**Supplier Management**:
+- Data-driven supplier performance evaluation
+- Identify unreliable suppliers
+- Negotiate better terms based on variance data
+
+**Operational Efficiency**:
+- Faster receiving process with variance documentation
+- Complete audit trail for compliance
+- Better inventory planning with actual delivery data
+
+---
+
+## END OF IMPLEMENTATION GUIDE
+
+The complete Receiving Voucher feature implementation guide is now in this design document. Follow the steps sequentially, and you'll have a fully functional receiving voucher system integrated with your InventoryPro application.
+
+**Next Steps**:
+1. Start with Phase 1 (Backend Foundation)
+2. Test each layer before moving to the next
+3. Use the provided code as-is or adapt to your specific needs
+4. Reference the design document for business logic details
+
+Good luck with the implementation! 🚀

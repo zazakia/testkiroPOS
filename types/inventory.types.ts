@@ -4,7 +4,7 @@ export type InventoryBatchStatus = 'active' | 'expired' | 'depleted';
 
 export type StockMovementType = 'IN' | 'OUT' | 'TRANSFER' | 'ADJUSTMENT';
 
-export type ReferenceType = 'PO' | 'SO' | 'POS';
+export type ReferenceType = 'PO' | 'SO' | 'POS' | 'RV';
 
 export interface CreateInventoryBatchInput {
   productId: string;
