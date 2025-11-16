@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { BranchProvider } from "@/contexts/branch-context";
 import { AuthProvider } from "@/contexts/auth.context";
-import { Toaster } from "@/components/ui/toaster";
+import { ClientToaster } from "@/components/ui/client-toaster";
 import { Toaster as Sonner } from "sonner";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { QueryProvider } from "@/components/providers/query-provider";
@@ -35,7 +35,7 @@ export default function RootLayout({
             <AuthProvider>
               <BranchProvider>
                 {children}
-                <Toaster />
+                <ClientToaster />
                 <Sonner position="top-right" richColors />
               </BranchProvider>
             </AuthProvider>

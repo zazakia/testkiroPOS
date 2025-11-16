@@ -1,7 +1,6 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { CreateAuditLogInput, AuditLogFilters } from '@/types/audit.types';
-
-const prisma = new PrismaClient();
 
 export class AuditLogRepository {
   /**

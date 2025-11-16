@@ -124,6 +124,12 @@ npx prisma studio
 - `npx prisma studio` - Open Prisma Studio GUI
 - `npx prisma db seed` - Run seed script
 
+## Default Admin Credentials
+
+After seeding the database:
+- **Email**: cybergada@gmail.com
+- **Password**: Qweasd145698@
+
 ## License
 
 Private - All rights reserved

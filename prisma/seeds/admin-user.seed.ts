@@ -17,7 +17,7 @@ export async function seedAdminUser() {
 
   // Check if admin user already exists
   const existingAdmin = await prisma.user.findUnique({
-    where: { email: 'admin@inventorypro.com' },
+    where: { email: 'cybergada@gmail.com' },
   });
 
   if (existingAdmin) {
@@ -26,15 +26,15 @@ export async function seedAdminUser() {
   }
 
   // Hash the default password
-  const passwordHash = await bcrypt.hash('Admin@123456!', 12);
+  const passwordHash = await bcrypt.hash('Qweasd145698@', 12);
 
   // Create admin user
   await prisma.user.create({
     data: {
-      email: 'admin@inventorypro.com',
+      email: 'cybergada@gmail.com',
       passwordHash,
-      firstName: 'System',
-      lastName: 'Administrator',
+      firstName: 'Cyber',
+      lastName: 'Gada',
       roleId: superAdminRole.id,
       status: UserStatus.ACTIVE,
       emailVerified: true,
@@ -42,6 +42,6 @@ export async function seedAdminUser() {
   });
 
   console.log('Created default Super Admin user');
-  console.log('Email: admin@inventorypro.com');
-  console.log('Password: Admin@123456! (Please change on first login)');
+  console.log('Email: cybergada@gmail.com');
+  console.log('Password: Qweasd145698@ (Demo account)');
 }

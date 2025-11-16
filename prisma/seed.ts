@@ -318,9 +318,9 @@ async function main() {
 
   console.log('\n=== Seed completed successfully! ===');
   console.log('\nDefault Admin Credentials:');
-  console.log('Email: admin@inventorypro.com');
-  console.log('Password: Admin@123456!');
-  console.log('\n⚠️  Please change the admin password on first login!\n');
+  console.log('Email: cybergada@gmail.com');
+  console.log('Password: Qweasd145698@');
+  console.log('\n✅ Demo account ready for 1-click login!\n');
 }
 
 main()

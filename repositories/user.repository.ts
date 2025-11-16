@@ -1,7 +1,6 @@
-import { PrismaClient, User, UserStatus, Prisma } from '@prisma/client';
+import { UserStatus, Prisma } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { UserFilters } from '@/types/user.types';
-
-const prisma = new PrismaClient();
 
 export class UserRepository {
   /**

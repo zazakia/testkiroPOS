@@ -1,7 +1,6 @@
-import { PrismaClient, Role, Prisma } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { RoleFilters } from '@/types/role.types';
-
-const prisma = new PrismaClient();
 
 export class RoleRepository {
   /**

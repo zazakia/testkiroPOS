@@ -1,7 +1,6 @@
-import { PrismaClient, Session, Prisma } from '@prisma/client';
+import { Session, Prisma } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { CreateSessionInput, SessionFilters } from '@/types/session.types';
-
-const prisma = new PrismaClient();
 
 export class SessionRepository {
   /**

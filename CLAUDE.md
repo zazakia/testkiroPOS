@@ -463,8 +463,8 @@ NODE_ENV="development"
 
 After running `npx prisma db seed`:
 
-- **Email**: admin@inventorypro.com
-- **Password**: Admin@123456!
+- **Email**: cybergada@gmail.com
+- **Password**: Qweasd145698@
 - **Role**: Super Admin (all permissions)
 
 ## Common Gotchas
