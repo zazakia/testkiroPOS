@@ -111,6 +111,7 @@ export class UserService {
       ...(data.lastName && { lastName: data.lastName }),
       ...(data.phone !== undefined && { phone: data.phone }),
       ...(data.status && { status: data.status }),
+      ...(data.emailVerified !== undefined && { emailVerified: data.emailVerified }),
     };
 
     if (data.roleId) {

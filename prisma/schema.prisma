@@ -2,11 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -45,7 +46,7 @@ model Product {
   description   String?
   category      String
   imageUrl      String?
-  basePrice     Float
+  basePrice     Decimal  @db.Decimal(10, 2)
   baseUOM       String
   minStockLevel Int
   shelfLifeDays Int
@@ -72,8 +73,8 @@ model ProductUOM {
   id               String   @id @default(uuid())
   productId        String
   name             String
-  conversionFactor Float
-  sellingPrice     Float
+  conversionFactor Decimal  @db.Decimal(10, 4)
+  sellingPrice     Decimal  @db.Decimal(10, 2)
   createdAt        DateTime @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -109,8 +110,8 @@ model InventoryBatch {
   batchNumber  String   @unique
   productId    String
   warehouseId  String
-  quantity     Float
-  unitCost     Float
+  quantity     Decimal  @db.Decimal(10, 2)
+  unitCost     Decimal  @db.Decimal(10, 2)
   expiryDate   DateTime
   receivedDate DateTime
   status       String   @default("active")
@@ -135,7 +136,7 @@ model StockMovement {
   id            String   @id @default(uuid())
   batchId       String
   type          String // "IN", "OUT", "TRANSFER", "ADJUSTMENT"
-  quantity      Float
+  quantity      Decimal  @db.Decimal(10, 2)
   reason        String?
   referenceId   String?
   referenceType String? // "PO", "SO", "POS"
@@ -180,7 +181,7 @@ model Customer {
   region          String?
   postalCode      String?
   paymentTerms    String   @default("Net 30") // "Net 15", "Net 30", "Net 60", "COD"
-  creditLimit     Float?
+  creditLimit     Decimal? @db.Decimal(10, 2)
   taxId           String?
   customerType    String   @default("regular") // "regular", "wholesale", "retail"
   notes           String?
@@ -206,7 +207,7 @@ model PurchaseOrder {
   supplierId           String
   warehouseId          String
   branchId             String
-  totalAmount          Float
+  totalAmount          Decimal   @db.Decimal(10, 2)
   status               String    @default("draft")
   receivingStatus      String?   @default("pending")
   expectedDeliveryDate DateTime
@@ -235,10 +236,10 @@ model PurchaseOrderItem {
   id               String  @id @default(uuid())
   poId             String
   productId        String
-  quantity         Float
-  unitPrice        Float
-  subtotal         Float
-  receivedQuantity Float @default(0)
+  quantity         Decimal @db.Decimal(10, 2)
+  unitPrice        Decimal @db.Decimal(10, 2)
+  subtotal         Decimal @db.Decimal(10, 2)
+  receivedQuantity Decimal @default(0) @db.Decimal(10, 2)
 
   purchaseOrder PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
   product       Product       @relation(fields: [productId], references: [id])
@@ -258,7 +259,7 @@ model SalesOrder {
   deliveryAddress   String
   warehouseId       String
   branchId          String
-  totalAmount       Float
+  totalAmount       Decimal  @db.Decimal(10, 2)
   status            String   @default("draft")
   salesOrderStatus  String   @default("pending")
   deliveryDate      DateTime
@@ -285,10 +286,10 @@ model SalesOrderItem {
   id        String  @id @default(uuid())
   soId      String
   productId String
-  quantity  Float
+  quantity  Decimal @db.Decimal(10, 2)
   uom       String
-  unitPrice Float
-  subtotal  Float
+  unitPrice Decimal @db.Decimal(10, 2)
+  subtotal  Decimal @db.Decimal(10, 2)
 
   salesOrder SalesOrder @relation(fields: [soId], references: [id], onDelete: Cascade)
   product    Product    @relation(fields: [productId], references: [id])
@@ -302,12 +303,12 @@ model POSSale {
   id                   String   @id @default(uuid())
   receiptNumber        String   @unique
   branchId             String
-  subtotal             Float
-  tax                  Float
-  totalAmount          Float
+  subtotal             Decimal  @db.Decimal(10, 2)
+  tax                  Decimal  @db.Decimal(10, 2)
+  totalAmount          Decimal  @db.Decimal(10, 2)
   paymentMethod        String
-  amountReceived       Float?
-  change               Float?
+  amountReceived       Decimal? @db.Decimal(10, 2)
+  change               Decimal? @db.Decimal(10, 2)
   convertedFromOrderId String?
   createdAt            DateTime @default(now())
 
@@ -327,11 +328,11 @@ model POSSaleItem {
   id              String  @id @default(uuid())
   saleId          String
   productId       String
-  quantity        Float
+  quantity        Decimal @db.Decimal(10, 2)
   uom             String
-  unitPrice       Float
-  subtotal        Float
-  costOfGoodsSold Float
+  unitPrice       Decimal @db.Decimal(10, 2)
+  subtotal        Decimal @db.Decimal(10, 2)
+  costOfGoodsSold Decimal @db.Decimal(10, 2)
 
   sale    POSSale @relation(fields: [saleId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
@@ -347,9 +348,9 @@ model AccountsReceivable {
   customerId   String?
   customerName String
   salesOrderId String?
-  totalAmount  Float
-  paidAmount   Float  @default(0)
-  balance      Float
+  totalAmount  Decimal  @db.Decimal(10, 2)
+  paidAmount   Decimal  @default(0) @db.Decimal(10, 2)
+  balance      Decimal  @db.Decimal(10, 2)
   dueDate      DateTime
   status       String   @default("pending")
   createdAt    DateTime @default(now())
@@ -373,7 +374,7 @@ model AccountsReceivable {
 model ARPayment {
   id              String   @id @default(uuid())
   arId            String
-  amount          Float
+  amount          Decimal  @db.Decimal(10, 2)
   paymentMethod   String
   referenceNumber String?
   paymentDate     DateTime
@@ -391,9 +392,9 @@ model AccountsPayable {
   branchId        String
   supplierId      String
   purchaseOrderId String?
-  totalAmount     Float
-  paidAmount      Float  @default(0)
-  balance         Float
+  totalAmount     Decimal  @db.Decimal(10, 2)
+  paidAmount      Decimal  @default(0) @db.Decimal(10, 2)
+  balance         Decimal  @db.Decimal(10, 2)
   dueDate         DateTime
   status          String   @default("pending")
   createdAt       DateTime @default(now())
@@ -417,7 +418,7 @@ model AccountsPayable {
 model APPayment {
   id              String   @id @default(uuid())
   apId            String
-  amount          Float
+  amount          Decimal  @db.Decimal(10, 2)
   paymentMethod   String
   referenceNumber String?
   paymentDate     DateTime
@@ -435,7 +436,7 @@ model Expense {
   branchId      String
   expenseDate   DateTime
   category      String
-  amount        Float
+  amount        Decimal  @db.Decimal(10, 2)
   description   String
   paymentMethod String
   vendor        String?
@@ -568,7 +569,7 @@ model Session {
   userId    String
   token     String   @unique
   ipAddress String?
-  userAgent String?
+  userAgent String?  @db.VarChar(500)
   expiresAt DateTime
   createdAt DateTime @default(now())
 
@@ -584,12 +585,12 @@ model Session {
 model AuditLog {
   id         String   @id @default(uuid())
   userId     String?
-  action     String
-  resource   String
+  action     String   @db.VarChar(100)
+  resource   String   @db.VarChar(100)
   resourceId String?
   details    Json?
   ipAddress  String?
-  userAgent  String?
+  userAgent  String?  @db.VarChar(500)
   createdAt  DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -645,9 +646,9 @@ model ReceivingVoucher {
   receiverName        String
   deliveryNotes       String?
   status              String   @default("complete")
-  totalOrderedAmount  Float
-  totalReceivedAmount Float
-  varianceAmount      Float
+  totalOrderedAmount  Decimal  @db.Decimal(10, 2)
+  totalReceivedAmount Decimal  @db.Decimal(10, 2)
+  varianceAmount      Decimal  @db.Decimal(10, 2)
   receivedDate        DateTime @default(now())
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -671,13 +672,13 @@ model ReceivingVoucherItem {
   id                 String  @id @default(uuid())
   rvId               String
   productId          String
-  orderedQuantity    Float
-  receivedQuantity   Float
-  varianceQuantity   Float
-  variancePercentage Float
+  orderedQuantity    Decimal @db.Decimal(10, 2)
+  receivedQuantity   Decimal @db.Decimal(10, 2)
+  varianceQuantity   Decimal @db.Decimal(10, 2)
+  variancePercentage Decimal @db.Decimal(5, 2)
   varianceReason     String?
-  unitPrice          Float
-  lineTotal          Float
+  unitPrice          Decimal @db.Decimal(10, 2)
+  lineTotal          Decimal @db.Decimal(10, 2)
 
   receivingVoucher ReceivingVoucher @relation(fields: [rvId], references: [id], onDelete: Cascade)
   product          Product          @relation(fields: [productId], references: [id])

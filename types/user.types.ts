@@ -45,6 +45,7 @@ export interface UpdateUserInput {
   roleId?: string;
   branchId?: string;
   status?: UserStatus;
+  emailVerified?: boolean;
 }
 
 export interface ChangePasswordInput {

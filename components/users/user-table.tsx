@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { UserWithRelations } from '@/types/user.types';
 import { useDeleteUser } from '@/hooks/use-users';
+import { useVerifyUser } from '@/hooks/use-verify-user';
 import {
   Table,
   TableBody,
@@ -19,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/shared/confirmation-dialog';
 
@@ -31,6 +32,7 @@ interface UserTableProps {
 export function UserTable({ users, onEdit }: UserTableProps) {
   const [userToDelete, setUserToDelete] = useState<UserWithRelations | null>(null);
   const deleteUser = useDeleteUser();
+  const verifyUser = useVerifyUser();
 
   const handleDelete = async () => {
     if (!userToDelete) return;
@@ -44,6 +46,15 @@ export function UserTable({ users, onEdit }: UserTableProps) {
     }
   };
 
+  const handleVerify = async (user: UserWithRelations) => {
+    try {
+      await verifyUser.mutateAsync(user.id);
+      toast.success(`User ${user.email} verified successfully`);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to verify user');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive'> = {
       ACTIVE: 'default',
@@ -51,6 +62,14 @@ export function UserTable({ users, onEdit }: UserTableProps) {
       SUSPENDED: 'destructive',
     };
     return <Badge variant={variants[status] || 'default'}>{status}</Badge>;
+  };
+
+  const getEmailVerifiedBadge = (verified: boolean) => {
+    return verified ? (
+      <Badge variant="default">Verified</Badge>
+    ) : (
+      <Badge variant="secondary">Not Verified</Badge>
+    );
   };
 
   return (
@@ -64,6 +83,7 @@ export function UserTable({ users, onEdit }: UserTableProps) {
               <TableHead>Role</TableHead>
               <TableHead>Branch</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Email Verified</TableHead>
               <TableHead>Last Login</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
@@ -71,7 +91,7 @@ export function UserTable({ users, onEdit }: UserTableProps) {
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   No users found
                 </TableCell>
               </TableRow>
@@ -85,6 +105,7 @@ export function UserTable({ users, onEdit }: UserTableProps) {
                   <TableCell>{user.role.name}</TableCell>
                   <TableCell>{user.branch?.name || '-'}</TableCell>
                   <TableCell>{getStatusBadge(user.status)}</TableCell>
+                  <TableCell>{getEmailVerifiedBadge(user.emailVerified)}</TableCell>
                   <TableCell>
                     {user.lastLoginAt 
                       ? new Date(user.lastLoginAt).toLocaleDateString() 
@@ -98,6 +119,12 @@ export function UserTable({ users, onEdit }: UserTableProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        {!user.emailVerified && (
+                          <DropdownMenuItem onClick={() => handleVerify(user)}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Verify Email
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => onEdit(user)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
