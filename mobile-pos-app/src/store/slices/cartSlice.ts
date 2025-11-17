@@ -129,9 +129,9 @@ const cartSlice = createSlice({
 });
 
 export const {
-  addItem,
-  removeItem,
-  updateQuantity,
+  addItem as addToCart,
+  removeItem as removeFromCart,
+  updateQuantity as updateCartItemQuantity,
   clearCart,
   setPaymentMethod,
   setCustomer,

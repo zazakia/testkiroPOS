@@ -50,7 +50,9 @@ export interface Product {
   category: string;
   imageUrl?: string;
   basePrice: number;
+  price: number; // Add price property
   baseUOM: string;
+  uom: string; // Add uom property
   minStockLevel: number;
   shelfLifeDays: number;
   status: ProductStatus;
@@ -97,13 +99,16 @@ export interface InventoryBatch {
   productId: string;
   productName: string;
   warehouseId: string;
+  location?: string; // Add location property
   currentStock: number;
   minStockLevel: number;
   unitCost: number;
+  costPrice?: number; // Add costPrice property
   uom: string;
   expiryDate: Date;
   receivedDate: Date;
   status: 'active' | 'expired' | 'disposed';
+  supplierName?: string; // Add supplierName property
   createdAt: Date;
   updatedAt: Date;
 }

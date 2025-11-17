@@ -8,6 +8,9 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 
+// Import Error Boundary
+import ErrorBoundary, { setupGlobalErrorHandlers } from '../src/components/ErrorBoundary';
+
 // Import screens
 import LoginScreen from '../src/screens/auth/LoginScreen';
 import DashboardScreen from '../src/screens/dashboard/DashboardScreen';
@@ -133,6 +136,9 @@ export default function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Setup global error handlers
+        setupGlobalErrorHandlers();
+        
         // Initialize database
         await databaseService.init();
         
@@ -176,11 +182,13 @@ export default function App() {
   }
 
   return (
-    <PaperProvider>
-      <StatusBar style="auto" />
-      <NavigationContainer>
-        {isAuthenticated ? <AppStack /> : <LoginScreen />}
-      </NavigationContainer>
-    </PaperProvider>
+    <ErrorBoundary>
+      <PaperProvider>
+        <StatusBar style="auto" />
+        <NavigationContainer>
+          {isAuthenticated ? <AppStack /> : <LoginScreen />}
+        </NavigationContainer>
+      </PaperProvider>
+    </ErrorBoundary>
   );
 }

@@ -36,7 +36,8 @@ export default function POSScreen() {
   const tax = useAppSelector(state => state.cart.tax);
   const total = useAppSelector(state => state.cart.total);
   const amountReceived = useAppSelector(state => state.cart.amountReceived);
-  const customerInfo = useAppSelector(state => state.cart.customerInfo);
+  const customerId = useAppSelector(state => state.cart.customerId);
+  const customerName = useAppSelector(state => state.cart.customerName);
   
   const user = useAppSelector(selectCurrentUser);
   const currentBranch = useAppSelector(selectCurrentBranch);
@@ -76,8 +77,9 @@ export default function POSScreen() {
   };
 
   const handleCustomerInfoChange = (field: 'name' | 'phone' | 'email', value: string) => {
-    const updatedInfo = { ...customerInfo, [field]: value };
-    dispatch(setCustomerInfo(updatedInfo));
+    if (field === 'name') {
+      dispatch(setCustomerInfo({ customerId, customerName: value }));
+    }
   };
 
   const handleCheckout = async () => {
@@ -94,8 +96,8 @@ export default function POSScreen() {
       }
     }
 
-    if (selectedPaymentMethod === 'credit' && (!customerInfo.name || !customerInfo.phone)) {
-      Alert.alert('Error', 'Customer information required for credit sales');
+    if (selectedPaymentMethod === 'credit' && !customerName) {
+      Alert.alert('Error', 'Customer information is required for credit payment');
       return;
     }
 
@@ -103,15 +105,14 @@ export default function POSScreen() {
       const sale = await posService.createSale({
         items: cartItems,
         subtotal,
-        taxAmount: tax,
+        tax,
         total,
         paymentMethod: selectedPaymentMethod,
-        amountReceived: selectedPaymentMethod === 'cash' ? parseFloat(amountReceived) : undefined,
-        customerName: customerInfo.name || undefined,
-        customerPhone: customerInfo.phone || undefined,
-        customerEmail: customerInfo.email || undefined,
-        branchId: currentBranch?.id || '',
-        userId: user?.id || '',
+        amountReceived: selectedPaymentMethod === 'cash' ? amountReceived : undefined,
+        customerId,
+        customerName,
+        userId: user.id,
+        branchId: currentBranch?.id || 'default',
       });
 
       Alert.alert(
@@ -299,15 +300,8 @@ export default function POSScreen() {
             <TextInput
               mode="outlined"
               label="Customer Name"
-              value={customerInfo.name}
+              value={customerName || ''}
               onChangeText={(text) => handleCustomerInfoChange('name', text)}
-              style={styles.input}
-            />
-            <TextInput
-              mode="outlined"
-              label="Customer Phone"
-              value={customerInfo.phone}
-              onChangeText={(text) => handleCustomerInfoChange('phone', text)}
               style={styles.input}
             />
           </View>

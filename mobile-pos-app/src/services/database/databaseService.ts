@@ -467,13 +467,6 @@ class SQLiteDatabaseService implements DatabaseService {
       [branchId, 'pending']
     );
   }
-
-  async close(): Promise<void> {
-    if (this.db) {
-      await this.db.closeAsync();
-      this.db = null;
-    }
-  }
 }
 
 export const databaseService = new SQLiteDatabaseService();

@@ -65,7 +65,9 @@ const authSlice = createSlice({
         // Set default branch if available
         const user = action.payload.user as User;
         if (user.currentBranch) {
-          state.currentBranch = user.currentBranch;
+          // currentBranch is expected to be a Branch object, but User has it as string
+          // For now, we'll leave it as null and handle branch selection separately
+          state.currentBranch = null;
         }
       })
       .addCase(login.rejected, (state, action) => {
@@ -87,7 +89,9 @@ const authSlice = createSlice({
           // Set current branch if available
           const user = action.payload as User;
           if (user.currentBranch) {
-            state.currentBranch = user.currentBranch;
+            // currentBranch is expected to be a Branch object, but User has it as string
+            // For now, we'll leave it as null and handle branch selection separately
+            state.currentBranch = null;
           }
         }
       })

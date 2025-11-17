@@ -1,6 +1,9 @@
 import { databaseService } from '../database/databaseService';
 import { syncService } from '../sync/syncService';
 import { apiClient } from '../../api/client';
+import { optimizedAPI, useOptimizedAPI } from '../optimizedAPI';
+import { performanceMonitor } from '../../utils/performanceMonitor';
+import { cacheManager, CacheKeys, CacheTTL } from '../../utils/cache';
 import { Product, POSSale, POSSaleItem, CartItem, PaymentMethod, SaleStatus, Customer } from '../../types';
 
 export interface POSService {
@@ -74,6 +77,8 @@ class POSServiceImpl implements POSService {
     userId: string;
     branchId: string;
   }): Promise<POSSale> {
+    const endMonitoring = performanceMonitor.startMonitoring('createSale');
+    
     try {
       // Validate inventory availability
       for (const item of saleData.cartItems) {
@@ -130,6 +135,11 @@ class POSServiceImpl implements POSService {
         throw new Error(`Payment failed: ${paymentResult.error}`);
       }
 
+      // Invalidate related caches
+      const { invalidateRelatedCache } = useOptimizedAPI();
+      await invalidateRelatedCache('sales');
+      await invalidateRelatedCache('inventory');
+
       // Sync with server if online
       if (await syncService.isOnline()) {
         try {
@@ -149,8 +159,10 @@ class POSServiceImpl implements POSService {
         });
       }
 
+      endMonitoring();
       return sale;
     } catch (error) {
+      endMonitoring(error as Error);
       console.error('Error creating sale:', error);
       throw error;
     }
@@ -276,9 +288,27 @@ class POSServiceImpl implements POSService {
   }
 
   async getSalesByDateRange(startDate: Date, endDate: Date): Promise<POSSale[]> {
+    const endMonitoring = performanceMonitor.startMonitoring('getSalesByDateRange');
+    const cacheKey = CacheKeys.reportsByDateRange(startDate.toISOString(), endDate.toISOString());
+    
     try {
-      return await databaseService.getSalesByDateRange(startDate, endDate);
+      // Check cache first
+      const cachedSales = await cacheManager.get<POSSale[]>(cacheKey);
+      if (cachedSales) {
+        endMonitoring();
+        return cachedSales;
+      }
+
+      // Fetch from database
+      const sales = await databaseService.getSalesByDateRange(startDate, endDate);
+      
+      // Cache the result
+      await cacheManager.set(cacheKey, sales, CacheTTL.MEDIUM);
+      
+      endMonitoring();
+      return sales;
     } catch (error) {
+      endMonitoring(error as Error);
       console.error('Error getting sales by date range:', error);
       throw error;
     }
@@ -294,9 +324,28 @@ class POSServiceImpl implements POSService {
   }
 
   async getTodaySales(branchId: string): Promise<POSSale[]> {
+    const endMonitoring = performanceMonitor.startMonitoring('getTodaySales');
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const cacheKey = `sales:today:${branchId}:${today}`;
+    
     try {
-      return await databaseService.getTodaySales(branchId);
+      // Check cache first
+      const cachedSales = await cacheManager.get<POSSale[]>(cacheKey);
+      if (cachedSales) {
+        endMonitoring();
+        return cachedSales;
+      }
+
+      // Fetch from database
+      const sales = await databaseService.getTodaySales(branchId);
+      
+      // Cache the result with shorter TTL for today's sales
+      await cacheManager.set(cacheKey, sales, CacheTTL.SHORT);
+      
+      endMonitoring();
+      return sales;
     } catch (error) {
+      endMonitoring(error as Error);
       console.error('Error getting today sales:', error);
       throw error;
     }

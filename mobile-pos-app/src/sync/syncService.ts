@@ -1,23 +1,18 @@
 import { apiClient } from '../api/client';
 import { databaseService } from '../database/database';
 import { store } from '../store';
+import { setSyncStatus, setIsOnline, setLastSyncAt } from '../store/slices/appSlice';
 
 let syncIntervalId: ReturnType<typeof setInterval> | null = null;
 
 // Run a single sync cycle: update online status, push local changes, pull server changes
 export const runSyncOnce = async () => {
-  const {
-    setSyncStatus,
-    setIsOnline,
-    setLastSyncAt,
-  } = useAppStore.getState();
-
   try {
-    setSyncStatus({ syncInProgress: true });
+    store.dispatch(setSyncStatus({ syncInProgress: true }));
 
     // 1) Check connectivity
     const online = await apiClient.isOnline();
-    setIsOnline(online);
+    store.dispatch(setIsOnline(online));
     if (!online) {
       setSyncStatus({ syncInProgress: false });
       return;

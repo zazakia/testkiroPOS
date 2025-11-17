@@ -104,7 +104,7 @@ class AuthService {
   setCurrentBranch(branch: Branch): void {
     this.currentBranch = branch;
     if (this.currentUser) {
-      this.currentUser.currentBranch = branch;
+      this.currentUser.currentBranch = branch.id; // Store branch ID as string
     }
   }
 
@@ -188,7 +188,7 @@ class AuthService {
       if (this.currentUser) {
         // This would typically come from the API response
         this.currentBranch = { id: branchId } as Branch;
-        this.currentUser.currentBranch = this.currentBranch;
+        this.currentUser.currentBranch = this.currentBranch.id; // Store branch ID as string
       }
     } catch (error) {
       console.error('Branch switch error:', error);

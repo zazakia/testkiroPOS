@@ -95,7 +95,7 @@ export default function InventoryScreen() {
             addStock({
               batchId: selectedBatch.id,
               quantity: qty,
-              notes,
+              reason: notes,
             })
           ).unwrap();
           break;
@@ -104,7 +104,7 @@ export default function InventoryScreen() {
             deductStock({
               batchId: selectedBatch.id,
               quantity: qty,
-              notes,
+              reason: notes,
             })
           ).unwrap();
           break;
@@ -113,7 +113,7 @@ export default function InventoryScreen() {
             adjustStock({
               batchId: selectedBatch.id,
               newQuantity: qty,
-              notes,
+              reason: notes,
             })
           ).unwrap();
           break;

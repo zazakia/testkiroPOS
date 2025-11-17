@@ -194,5 +194,10 @@ export const selectProducts = (state: { products: ProductsState }) => state.prod
 export const selectProductsLoading = (state: { products: ProductsState }) => state.products.loading;
 export const selectProductsError = (state: { products: ProductsState }) => state.products.error;
 export const selectProductCategories = (state: { products: ProductsState }) => state.products.categories;
-export const selectProductsFilters = (state: { products: ProductsState }) => state.products.filters;
+export const selectProductsFilters = (state: { products: ProductsState }) => ({
+  searchQuery: state.products.searchQuery,
+  selectedCategory: state.products.selectedCategory,
+  sortBy: state.products.sortBy,
+  sortOrder: state.products.sortOrder,
+});
 export const selectProductsPagination = (state: { products: ProductsState }) => state.products.pagination;
