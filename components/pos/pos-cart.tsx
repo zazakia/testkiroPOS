@@ -3,6 +3,7 @@
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -108,7 +109,17 @@ export function POSCart({
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="w-12 text-center font-medium">{item.quantity}</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      if (Number.isNaN(value)) return;
+                      onUpdateQuantity(index, Math.max(1, value));
+                    }}
+                    className="w-12 h-8 text-center px-1"
+                  />
                   <Button
                     variant="outline"
                     size="sm"

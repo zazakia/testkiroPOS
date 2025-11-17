@@ -71,19 +71,37 @@ export class POSRepository {
   }
 
   async create(data: CreatePOSSaleInput): Promise<POSSaleWithItems> {
-    const { items, warehouseId, receiptNumber, ...saleData } = data;
+    // Extract fields that are NOT part of the Prisma POSSale model so they don't get
+    // passed through to prisma.pOSSale.create (which would throw on unknown args).
+    const {
+      items,
+      warehouseId, // used for inventory, not stored on POSSale
+      receiptNumber,
+      customerId,
+      customerName,
+      partialPayment,
+      ...saleData
+    } = data;
 
     // Ensure receiptNumber is present
     if (!receiptNumber) {
       throw new Error('Receipt number is required');
     }
 
+    // Only pass fields that exist on the Prisma POSSale model.
     return await prisma.pOSSale.create({
       data: {
-        ...saleData,
+        branchId: saleData.branchId,
+        subtotal: saleData.subtotal,
+        tax: saleData.tax,
+        totalAmount: saleData.totalAmount,
+        paymentMethod: saleData.paymentMethod,
+        amountReceived: saleData.amountReceived,
+        change: saleData.change,
+        convertedFromOrderId: saleData.convertedFromOrderId,
         receiptNumber,
         items: {
-          create: items.map(item => ({
+          create: items.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
             uom: item.uom,

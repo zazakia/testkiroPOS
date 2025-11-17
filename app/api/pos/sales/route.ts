@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { posService } from '@/services/pos.service';
 import { AppError } from '@/lib/errors';
 import { POSSaleFilters } from '@/types/pos.types';
+import { posSaleSchema } from '@/lib/validations/pos.validation';
+import { ZodError } from 'zod';
 
 // GET /api/pos/sales - Fetch all POS sales with optional filters
 export async function GET(request: NextRequest) {
@@ -48,7 +50,8 @@ export async function GET(request: NextRequest) {
 // POST /api/pos/sales - Process a new POS sale
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
+    const body = posSaleSchema.parse(rawBody);
 
     const sale = await posService.processSale(body);
 
@@ -59,6 +62,19 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error processing POS sale:', error);
 
+    // Validation errors from Zod schema
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid POS sale data',
+          fields: error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Domain/business errors
     if (error instanceof AppError) {
       return NextResponse.json(
         { success: false, error: error.message, fields: (error as any).fields },
@@ -66,6 +82,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fallback: unexpected errors
     return NextResponse.json(
       { success: false, error: 'Failed to process sale' },
       { status: 500 }
