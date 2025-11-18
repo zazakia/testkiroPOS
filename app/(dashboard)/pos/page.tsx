@@ -59,12 +59,14 @@ export default function POSPage() {
     if (!selectedBranch) return;
 
     async function fetchWarehouses() {
+      if (!selectedBranch) return;
+
       try {
         const response = await fetch(`/api/warehouses?branchId=${selectedBranch.id}`);
         const data = await response.json();
-        
+
         console.log('Warehouses response:', data);
-        
+
         if (data.success && data.data.length > 0) {
           setWarehouses(data.data);
           // Auto-select first warehouse
@@ -187,12 +189,14 @@ export default function POSPage() {
         return;
       }
 
-      const productsMap = new Map(productsData.data.map((p: any) => [p.id, p]));
+      const productsMap = new Map<string, ProductWithStock>(
+        productsData.data.map((p: ProductWithStock) => [p.id, p])
+      );
 
       // Pre-populate cart with order items
       const cartItems: CartItem[] = order.items.map((item) => {
         const product = productsMap.get(item.productId);
-        
+
         return {
           productId: item.productId,
           productName: item.product?.name || 'Unknown Product',
@@ -200,12 +204,12 @@ export default function POSPage() {
           uom: item.uom,
           unitPrice: Number(item.unitPrice),
           subtotal: Number(item.subtotal),
-          availableStock: product?.currentStock || 0,
+          availableStock: product?.currentStock ?? 0,
           availableUOMs: product ? [
-            { name: product.baseUOM, sellingPrice: product.basePrice },
-            ...product.alternateUOMs.map((u: any) => ({
+            { name: product.baseUOM, sellingPrice: Number(product.basePrice) },
+            ...product.alternateUOMs.map((u) => ({
               name: u.name,
-              sellingPrice: u.sellingPrice,
+              sellingPrice: Number(u.sellingPrice),
             })),
           ] : [],
         };

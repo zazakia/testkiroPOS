@@ -99,7 +99,7 @@ export function SalesOrderDialog({
 
   const { products } = useProducts({ status: 'active' });
   const { warehouses } = useWarehouses();
-  const { activeBranch, branches } = useBranch();
+  const { selectedBranch: activeBranch, branches } = useBranch();
 
   const form = useForm<SalesOrderFormData>({
     resolver: zodResolver(salesOrderFormSchema),

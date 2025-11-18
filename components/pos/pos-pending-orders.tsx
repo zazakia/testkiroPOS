@@ -100,14 +100,14 @@ export function POSPendingOrders({ branchId, onConvertOrder }: POSPendingOrdersP
 
     // Get all selected orders
     const ordersToConvert = orders.filter(o => selectedOrders.has(o.id));
-    
+
     // Merge all items from selected orders
     const mergedOrder: SalesOrderWithItems = {
       ...ordersToConvert[0],
       id: `BULK-${ordersToConvert.map(o => o.id).join(',')}`, // Store order IDs in the id field
       orderNumber: `BULK-${ordersToConvert.map(o => o.orderNumber).join(',')}`,
       items: ordersToConvert.flatMap(o => o.items),
-      totalAmount: ordersToConvert.reduce((sum, o) => sum + Number(o.totalAmount), 0),
+      totalAmount: ordersToConvert.reduce((sum, o) => sum + Number(o.totalAmount), 0) as any,
     };
 
     onConvertOrder(mergedOrder);

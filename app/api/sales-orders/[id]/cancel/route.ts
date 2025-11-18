@@ -5,10 +5,11 @@ import { AppError } from '@/lib/errors';
 // POST /api/sales-orders/[id]/cancel - Cancel a sales order
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const salesOrder = await salesOrderService.cancelSalesOrder(params.id);
+    const { id } = await params;
+    const salesOrder = await salesOrderService.cancelSalesOrder(id);
     
     return NextResponse.json({ 
       success: true, 

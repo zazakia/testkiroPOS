@@ -5,10 +5,11 @@ import { AppError } from '@/lib/errors';
 // GET /api/sales-orders/[id] - Fetch a single sales order
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const salesOrder = await salesOrderService.getSalesOrderById(params.id);
+    const { id } = await params;
+    const salesOrder = await salesOrderService.getSalesOrderById(id);
     return NextResponse.json({ success: true, data: salesOrder });
   } catch (error) {
     console.error('Error fetching sales order:', error);
@@ -30,17 +31,18 @@ export async function GET(
 // PUT /api/sales-orders/[id] - Update a sales order
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
-    
+
     // Convert deliveryDate string to Date object if provided
     if (body.deliveryDate) {
       body.deliveryDate = new Date(body.deliveryDate);
     }
-    
-    const salesOrder = await salesOrderService.updateSalesOrder(params.id, body);
+
+    const salesOrder = await salesOrderService.updateSalesOrder(id, body);
     
     return NextResponse.json({ success: true, data: salesOrder });
   } catch (error) {
@@ -63,10 +65,11 @@ export async function PUT(
 // DELETE /api/sales-orders/[id] - Delete a sales order (not used, use cancel instead)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await salesOrderService.cancelSalesOrder(params.id);
+    const { id } = await params;
+    await salesOrderService.cancelSalesOrder(id);
     
     return NextResponse.json({ 
       success: true, 

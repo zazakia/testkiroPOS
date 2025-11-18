@@ -29,6 +29,7 @@ export interface AddStockInput {
   quantity: number;
   uom: string;
   unitCost: number;
+  receivedDate?: Date;
   reason?: string;
   referenceId?: string;
   referenceType?: ReferenceType;
@@ -125,3 +126,11 @@ export interface StockLevel {
     status: string;
   }>;
 }
+
+// Type aliases for backwards compatibility
+export type MovementWithRelations = StockMovementWithRelations;
+export type MovementType = StockMovementType;
+export type BatchStatus = InventoryBatchStatus;
+export type BatchWithRelations = InventoryBatchWithRelations;
+export type MovementFilters = StockMovementFilters;
+export type BatchFilters = InventoryBatchFilters;

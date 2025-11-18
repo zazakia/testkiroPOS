@@ -31,7 +31,7 @@ export default function SalesOrdersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<SalesOrderWithItems | null>(null);
 
-  const { activeBranch } = useBranch();
+  const { selectedBranch: activeBranch } = useBranch();
 
   const filters = {
     search: searchQuery || undefined,

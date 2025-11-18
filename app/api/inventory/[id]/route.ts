@@ -5,10 +5,11 @@ import { AppError } from '@/lib/errors';
 // GET /api/inventory/[id] - Fetch single inventory batch
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const batch = await inventoryService.getBatchById(params.id);
+    const { id } = await params;
+    const batch = await inventoryService.getBatchById(id);
     return NextResponse.json({ success: true, data: batch });
   } catch (error) {
     console.error('Error fetching inventory batch:', error);

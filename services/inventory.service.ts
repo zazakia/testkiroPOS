@@ -498,6 +498,43 @@ export class InventoryService {
   async getExpiredBatches(): Promise<InventoryBatchWithRelations[]> {
     return await inventoryRepository.getExpiredBatches();
   }
+
+  /**
+   * Get stock levels for all products in a warehouse or all warehouses
+   */
+  async getStockLevels(warehouseId?: string): Promise<StockLevel[]> {
+    // Get all active products
+    const products = await prisma.product.findMany({
+      where: { status: 'active' },
+      select: { id: true, name: true, baseUOM: true },
+    });
+
+    const stockLevels: StockLevel[] = [];
+
+    for (const product of products) {
+      if (warehouseId) {
+        // Get stock level for specific warehouse
+        const stockLevel = await this.getStockLevel(product.id, warehouseId);
+        if (stockLevel) {
+          stockLevels.push(stockLevel);
+        }
+      } else {
+        // Get stock levels for all warehouses
+        const warehouses = await prisma.warehouse.findMany({
+          select: { id: true },
+        });
+
+        for (const warehouse of warehouses) {
+          const stockLevel = await this.getStockLevel(product.id, warehouse.id);
+          if (stockLevel) {
+            stockLevels.push(stockLevel);
+          }
+        }
+      }
+    }
+
+    return stockLevels;
+  }
 }
 
 export const inventoryService = new InventoryService();

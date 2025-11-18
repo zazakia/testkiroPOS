@@ -114,15 +114,23 @@ export class SalesOrderRepository {
   async create(data: CreateSalesOrderInput): Promise<SalesOrderWithItems> {
     const { items, ...orderData } = data;
 
+    // Ensure orderNumber is always provided
+    const orderNumber = orderData.orderNumber || `SO-${Date.now()}`;
+
     return await prisma.salesOrder.create({
       data: {
         ...orderData,
+        orderNumber,
         items: {
           create: items,
         },
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
         warehouse: true,
         branch: true,
       },

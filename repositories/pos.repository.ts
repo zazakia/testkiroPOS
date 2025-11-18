@@ -73,9 +73,13 @@ export class POSRepository {
   async create(data: CreatePOSSaleInput): Promise<POSSaleWithItems> {
     const { items, warehouseId, ...saleData } = data;
 
+    // Ensure receiptNumber is always provided
+    const receiptNumber = saleData.receiptNumber || `RCP-${Date.now()}`;
+
     return await prisma.pOSSale.create({
       data: {
         ...saleData,
+        receiptNumber,
         items: {
           create: items.map(item => ({
             productId: item.productId,

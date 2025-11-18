@@ -47,9 +47,19 @@ export type SalesOrderWithItems = SalesOrder & {
       id: string;
       name: string;
       baseUOM: string;
-      basePrice: number;
+      basePrice: number | any; // Can be Decimal from Prisma
+      status?: string;
+      category?: string;
+      description?: string | null;
+      imageUrl?: string | null;
+      minStockLevel?: number;
+      shelfLifeDays?: number;
+      createdAt?: Date;
+      updatedAt?: Date;
     };
   })[];
+  warehouse?: any;
+  branch?: any;
 };
 
 export interface SalesOrderFilters {

@@ -5,10 +5,11 @@ import { AppError } from '@/lib/errors';
 // GET /api/pos/sales/[id] - Fetch single POS sale with items
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sale = await posService.getSaleById(params.id);
+    const { id } = await params;
+    const sale = await posService.getSaleById(id);
     return NextResponse.json({ success: true, data: sale });
   } catch (error) {
     console.error('Error fetching POS sale:', error);
