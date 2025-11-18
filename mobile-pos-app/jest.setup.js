@@ -1,22 +1,31 @@
-import '@testing-library/jest-native/extend-expect';
-import { NativeModules } from 'react-native';
+// Mock React Native globally
+jest.mock('react-native', () => ({
+  NativeModules: {
+    RNGestureHandlerModule: {
+      State: {},
+      Directions: {},
+      default: {},
+    },
+    RNCNetInfo: {
+      getCurrentState: jest.fn(() => Promise.resolve({
+        type: 'wifi',
+        isConnected: true,
+        details: { isConnectionExpensive: false }
+      })),
+      addListener: jest.fn(),
+      removeListeners: jest.fn(),
+    },
+  },
+  Platform: {
+    OS: 'ios',
+    select: jest.fn(),
+  },
+}));
 
-// Mock React Native modules
-NativeModules.RNGestureHandlerModule = {
-  State: {},
-  Directions: {},
-  default: {},
-};
+// Mock @testing-library/jest-native
+jest.mock('@testing-library/jest-native/extend-expect', () => ({}));
 
-NativeModules.RNCNetInfo = {
-  getCurrentState: jest.fn(() => Promise.resolve({
-    type: 'wifi',
-    isConnected: true,
-    details: { isConnectionExpensive: false }
-  })),
-  addListener: jest.fn(),
-  removeListeners: jest.fn(),
-};
+// React Native modules are now mocked above
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -92,34 +101,34 @@ jest.mock('expo-constants', () => ({
 }));
 
 // Mock react-native-paper
-jest.mock('react-native-paper', () => {
-  const React = require('react');
-  const { View, Text, TouchableOpacity } = require('react-native');
-  
-  return {
-    Provider: ({ children }) => children,
-    Button: ({ children, onPress, ...props }) => (
-      <TouchableOpacity onPress={onPress} {...props}>
-        <Text>{children}</Text>
-      </TouchableOpacity>
-    ),
-    Text: ({ children, ...props }) => <Text {...props}>{children}</Text>,
-    Card: ({ children, ...props }) => <View {...props}>{children}</View>,
-    IconButton: ({ onPress, ...props }) => (
-      <TouchableOpacity onPress={onPress} {...props}>
-        <Text>Icon</Text>
-      </TouchableOpacity>
-    ),
-    Snackbar: ({ children, visible }) => visible ? <View>{children}</View> : null,
-    ActivityIndicator: () => <Text>Loading...</Text>,
-    DefaultTheme: {
-      colors: {
-        primary: '#6200ee',
-        accent: '#03dac4',
-      },
+jest.mock('react-native-paper', () => ({
+  Provider: ({ children }) => children,
+  Button: ({ children, onPress, ...props }) => ({
+    type: 'TouchableOpacity',
+    props: { onPress, ...props, children },
+  }),
+  Text: ({ children, ...props }) => ({
+    type: 'Text',
+    props: { ...props, children },
+  }),
+  Card: ({ children, ...props }) => ({
+    type: 'View',
+    props: { ...props, children },
+  }),
+  IconButton: ({ onPress, ...props }) => ({
+    type: 'TouchableOpacity',
+    props: { onPress, ...props, children: 'Icon' },
+  }),
+  Snackbar: ({ children, visible }) =>
+    visible ? { type: 'View', props: { children } } : null,
+  ActivityIndicator: () => ({ type: 'Text', props: { children: 'Loading...' } }),
+  DefaultTheme: {
+    colors: {
+      primary: '#6200ee',
+      accent: '#03dac4',
     },
-  };
-});
+  },
+}));
 
 // Mock react-navigation
 jest.mock('@react-navigation/native', () => ({
@@ -133,6 +142,7 @@ jest.mock('@react-navigation/native', () => ({
     params: {},
     name: 'TestScreen',
   }),
+  useFocusEffect: jest.fn(),
 }));
 
 jest.mock('@react-navigation/bottom-tabs', () => ({
@@ -151,9 +161,13 @@ jest.mock('@react-navigation/stack', () => ({
 
 // Mock @expo/vector-icons
 jest.mock('@expo/vector-icons', () => ({
-  MaterialCommunityIcons: ({ name, size, color }) => (
-    <Text style={{ fontSize: size, color }}>{name}</Text>
-  ),
+  MaterialCommunityIcons: ({ name, size, color }) => ({
+    type: 'Text',
+    props: {
+      style: { fontSize: size, color },
+      children: name,
+    },
+  }),
 }));
 
 // Mock axios

@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 import { Search, Download, ArrowUpDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { PageHeader } from '@/components/shared/page-header';

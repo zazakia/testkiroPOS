@@ -50,9 +50,7 @@ export interface Product {
   category: string;
   imageUrl?: string;
   basePrice: number;
-  price: number; // Add price property
   baseUOM: string;
-  uom: string; // Add uom property
   minStockLevel: number;
   shelfLifeDays: number;
   status: ProductStatus;
@@ -99,16 +97,16 @@ export interface InventoryBatch {
   productId: string;
   productName: string;
   warehouseId: string;
-  location?: string; // Add location property
+  location?: string;
   currentStock: number;
   minStockLevel: number;
   unitCost: number;
-  costPrice?: number; // Add costPrice property
+  costPrice?: number;
   uom: string;
   expiryDate: Date;
   receivedDate: Date;
   status: 'active' | 'expired' | 'disposed';
-  supplierName?: string; // Add supplierName property
+  supplierName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -204,4 +202,120 @@ export interface BackupStatus {
   backupInProgress: boolean;
   lastError?: string;
   availableBackups: Date[];
+}
+
+// Product input types for create and update operations
+export interface ProductCreateInput {
+  name: string;
+  description?: string;
+  category: string;
+  imageUrl?: string;
+  basePrice: number;
+  baseUOM: string;
+  minStockLevel?: number;
+  shelfLifeDays?: number;
+  status?: ProductStatus;
+}
+
+export interface ProductUpdateInput {
+  name?: string;
+  description?: string;
+  category?: string;
+  imageUrl?: string;
+  basePrice?: number;
+  minStockLevel?: number;
+  shelfLifeDays?: number;
+  status?: ProductStatus;
+}
+
+// Extended Product interface with sync and additional fields
+export interface ProductWithSync {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  imageUrl?: string;
+  basePrice: number;
+  baseUOM: string;
+  minStockLevel: number;
+  shelfLifeDays: number;
+  status: ProductStatus;
+  alternateUOMs: ProductUOM[];
+  createdAt: Date;
+  updatedAt: Date;
+  syncStatus: 'synced' | 'pending_create' | 'pending_update' | 'pending_delete';
+  lastModified: string;
+  price?: number; // Selling price
+  location?: string; // Storage location
+  supplierName?: string; // Supplier information
+  costPrice?: number; // Cost price
+}
+
+// Extended Customer interface with sync fields
+export interface CustomerWithSync extends Customer {
+  id: string;
+  customerCode: string;
+  companyName?: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  address?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  paymentTerms: string;
+  creditLimit?: number;
+  taxId?: string;
+  customerType: 'regular' | 'wholesale' | 'retail';
+  notes?: string;
+  status: 'active' | 'inactive';
+  createdAt: Date;
+  updatedAt: Date;
+  syncStatus: 'synced' | 'pending_create' | 'pending_update' | 'pending_delete';
+  lastModified: string;
+}
+
+// Extended POSSale interface with sync fields
+export interface POSSaleWithSync extends POSSale {
+  id: string;
+  receiptNumber: string;
+  branchId: string;
+  userId: string;
+  subtotal: number;
+  tax: number;
+  totalAmount: number;
+  paymentMethod: 'cash' | 'card' | 'credit' | 'digital';
+  amountReceived?: number;
+  change?: number;
+  customerId?: string;
+  customerName?: string;
+  items: POSSaleItem[];
+  status: 'completed' | 'voided' | 'refunded';
+  createdAt: Date;
+  updatedAt: Date;
+  syncStatus: 'synced' | 'pending_create' | 'pending_update' | 'pending_delete';
+  lastModified: string;
+}
+
+// Extended InventoryBatch interface with sync fields
+export interface InventoryBatchWithSync extends InventoryBatch {
+  id: string;
+  batchNumber: string;
+  productId: string;
+  productName: string;
+  warehouseId: string;
+  location?: string;
+  currentStock: number;
+  minStockLevel: number;
+  unitCost: number;
+  costPrice?: number;
+  uom: string;
+  expiryDate: Date;
+  receivedDate: Date;
+  status: 'active' | 'expired' | 'disposed';
+  supplierName?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  syncStatus: 'synced' | 'pending_create' | 'pending_update' | 'pending_delete';
+  lastModified: string;
 }
