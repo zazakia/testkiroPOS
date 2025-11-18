@@ -14,7 +14,7 @@ export const runSyncOnce = async () => {
     const online = await apiClient.isOnline();
     store.dispatch(setIsOnline(online));
     if (!online) {
-      setSyncStatus({ syncInProgress: false });
+      store.dispatch(setSyncStatus({ syncInProgress: false }));
       return;
     }
 
@@ -184,19 +184,18 @@ export const runSyncOnce = async () => {
 
     // 5) Update sync status in store
     const remaining = await databaseService.getPendingSync();
-    setSyncStatus({
-      pendingChanges: remaining.length,
+    store.dispatch(setSyncStatus({
       syncInProgress: false,
+      pendingChanges: remaining.length,
       lastError: undefined,
-    });
-    setLastSyncAt(new Date());
+    }));
+    store.dispatch(setLastSyncAt(new Date()));
   } catch (error: any) {
     console.error('Sync error:', error);
-    const { setSyncStatus } = useAppStore.getState();
-    setSyncStatus({
+    store.dispatch(setSyncStatus({
       syncInProgress: false,
       lastError: error?.message || 'Unknown sync error',
-    });
+    }));
   }
 };
 

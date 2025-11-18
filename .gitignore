@@ -46,4 +46,6 @@ next-env.d.ts
 
 # Mobile app dependencies
 mobile-pos-app/node_modules
-.netlify
+
+# Windows reserved files
+nul

@@ -27,10 +27,12 @@ import { prisma } from '@/lib/prisma';
 
 describe('ReceivingVoucherService', () => {
   let service: ReceivingVoucherService;
+  let lastTxMock: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
     service = new ReceivingVoucherService();
+    lastTxMock = undefined;
   });
 
   describe('getReceivingVoucherById', () => {
@@ -122,17 +124,17 @@ describe('ReceivingVoucherService', () => {
             findUnique: vi.fn().mockResolvedValue(mockCreatedRV),
           },
         };
+        lastTxMock = mockTx;
         return callback(mockTx);
       });
 
-      vi.mocked(receivingVoucherRepository.create).mockResolvedValue(mockCreatedRV as any);
       vi.mocked(prisma.purchaseOrder.findFirst).mockResolvedValue(null);
       vi.mocked(prisma.receivingVoucher.findFirst).mockResolvedValue(null);
 
       const result = await service.createReceivingVoucher(validRVData as any);
 
       expect(result).toBeDefined();
-      expect(receivingVoucherRepository.create).toHaveBeenCalled();
+      expect(lastTxMock.receivingVoucher.create).toHaveBeenCalled();
     });
 
     it('should throw NotFoundError when PO not found', async () => {
@@ -161,6 +163,7 @@ describe('ReceivingVoucherService', () => {
             findUnique: vi.fn().mockResolvedValue(draftPO),
           },
         };
+        lastTxMock = mockTx;
         return callback(mockTx);
       });
 
@@ -189,6 +192,7 @@ describe('ReceivingVoucherService', () => {
             findUnique: vi.fn().mockResolvedValue(mockPO),
           },
         };
+        lastTxMock = mockTx;
         return callback(mockTx);
       });
 
@@ -231,23 +235,25 @@ describe('ReceivingVoucherService', () => {
             findUnique: vi.fn().mockResolvedValue({}),
           },
         };
+        lastTxMock = mockTx;
         return callback(mockTx);
       });
       
-      const createSpy = vi.mocked(receivingVoucherRepository.create).mockResolvedValue({} as any);
       vi.mocked(prisma.purchaseOrder.findFirst).mockResolvedValue(null);
       vi.mocked(prisma.receivingVoucher.findFirst).mockResolvedValue(null);
 
       await service.createReceivingVoucher(validRVData as any);
 
-      const createCallArg: any = createSpy.mock.calls[0][0];
+      const createCall = lastTxMock.receivingVoucher.create.mock.calls[0][0];
+      const createData: any = createCall.data;
+      const items = createData.items.create;
       
       // Check variance calculations
       const item1Variance = 95 - 100; // -5
       const item2Variance = 50 - 50;  // 0
       
-      expect(createCallArg.items[0].varianceQuantity).toBe(item1Variance);
-      expect(createCallArg.items[1].varianceQuantity).toBe(item2Variance);
+      expect(items[0].varianceQuantity).toBe(item1Variance);
+      expect(items[1].varianceQuantity).toBe(item2Variance);
     });
 
     it('should calculate total amounts correctly', async () => {
@@ -285,24 +291,25 @@ describe('ReceivingVoucherService', () => {
             findUnique: vi.fn().mockResolvedValue({}),
           },
         };
+        lastTxMock = mockTx;
         return callback(mockTx);
       });
       
-      const createSpy = vi.mocked(receivingVoucherRepository.create).mockResolvedValue({} as any);
       vi.mocked(prisma.purchaseOrder.findFirst).mockResolvedValue(null);
       vi.mocked(prisma.receivingVoucher.findFirst).mockResolvedValue(null);
 
       await service.createReceivingVoucher(validRVData as any);
 
-      const createCallArg: any = createSpy.mock.calls[0][0];
+      const createCall = lastTxMock.receivingVoucher.create.mock.calls[0][0];
+      const createData: any = createCall.data;
       
       // totalOrderedAmount = 100*10 + 50*20 = 2000
       // totalReceivedAmount = 95*10 + 50*20 = 1950
       // varianceAmount = 1950 - 2000 = -50
       
-      expect(createCallArg.totalOrderedAmount).toBe(2000);
-      expect(createCallArg.totalReceivedAmount).toBe(1950);
-      expect(createCallArg.varianceAmount).toBe(-50);
+      expect(createData.totalOrderedAmount).toBe(2000);
+      expect(createData.totalReceivedAmount).toBe(1950);
+      expect(createData.varianceAmount).toBe(-50);
     });
   });
 
@@ -376,18 +383,21 @@ describe('ReceivingVoucherService', () => {
             findUnique: vi.fn().mockResolvedValue({}),
           },
         };
+        lastTxMock = mockTx;
         return callback(mockTx);
       });
       
-      const createSpy = vi.mocked(receivingVoucherRepository.create).mockResolvedValue({} as any);
       vi.mocked(prisma.purchaseOrder.findFirst).mockResolvedValue(null);
       vi.mocked(prisma.receivingVoucher.findFirst).mockResolvedValue(null);
 
       await service.createReceivingVoucher(underDeliveryData as any);
 
-      const createCallArg: any = createSpy.mock.calls[0][0];
-      expect(createCallArg.items[0].varianceQuantity).toBe(-10);
-      expect(createCallArg.items[0].variancePercentage).toBeCloseTo(-10);
+      const createCall = lastTxMock.receivingVoucher.create.mock.calls[0][0];
+      const createData: any = createCall.data;
+      const items = createData.items.create;
+
+      expect(items[0].varianceQuantity).toBe(-10);
+      expect(items[0].variancePercentage).toBeCloseTo(-10);
     });
 
     it('should identify over-delivery correctly', async () => {
@@ -434,18 +444,21 @@ describe('ReceivingVoucherService', () => {
             findUnique: vi.fn().mockResolvedValue({}),
           },
         };
+        lastTxMock = mockTx;
         return callback(mockTx);
       });
       
-      const createSpy = vi.mocked(receivingVoucherRepository.create).mockResolvedValue({} as any);
       vi.mocked(prisma.purchaseOrder.findFirst).mockResolvedValue(null);
       vi.mocked(prisma.receivingVoucher.findFirst).mockResolvedValue(null);
 
       await service.createReceivingVoucher(overDeliveryData as any);
 
-      const createCallArg: any = createSpy.mock.calls[0][0];
-      expect(createCallArg.items[0].varianceQuantity).toBe(10);
-      expect(createCallArg.items[0].variancePercentage).toBeCloseTo(10);
+      const createCall = lastTxMock.receivingVoucher.create.mock.calls[0][0];
+      const createData: any = createCall.data;
+      const items = createData.items.create;
+
+      expect(items[0].varianceQuantity).toBe(10);
+      expect(items[0].variancePercentage).toBeCloseTo(10);
     });
   });
 });
