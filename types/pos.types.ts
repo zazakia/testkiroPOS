@@ -44,6 +44,7 @@ export type POSSaleWithItems = POSSale & {
       createdAt: Date;
       updatedAt: Date;
     };
+    discountAmount?: number; // Optional discount per item
   })[];
   branch?: {
     id: string;
@@ -55,6 +56,22 @@ export type POSSaleWithItems = POSSale & {
     status: string;
     createdAt: Date;
     updatedAt: Date;
+  } | null;
+  customer?: {
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+  } | null;
+  user?: {
+    id: string;
+    name: string;
+  } | null;
+  loyaltyPointsUsed?: number;
+  loyaltyPointsEarned?: number;
+  cashier?: {
+    id: string;
+    name: string;
   } | null;
 };
 

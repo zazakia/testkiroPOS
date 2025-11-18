@@ -8,6 +8,11 @@ import {
   CashFlowStatement,
   BalanceSheet,
   ReportFilters,
+  POSReceipt,
+  DailySalesSummary,
+  EmployeePerformance,
+  CustomerPurchaseHistory,
+  PromotionUsage,
 } from '@/types/report.types';
 
 export function useStockLevelReport(filters?: ReportFilters) {
@@ -174,6 +179,193 @@ export function useProfitLoss(filters?: ReportFilters) {
       if (filters?.toDate) params.append('toDate', filters.toDate.toISOString());
 
       const response = await fetch(`/api/reports/profit-loss?${params.toString()}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setData(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch report');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, [filters?.branchId, filters?.fromDate, filters?.toDate]);
+
+  return { data, loading, error, refetch: fetchReport };
+}
+
+// New Reporting Hooks for Comprehensive System
+
+export function usePOSReceipt(receiptId?: string) {
+  const [data, setData] = useState<POSReceipt | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReceipt = async () => {
+    if (!receiptId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/reports/pos-receipt/${receiptId}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setData(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch receipt');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReceipt();
+  }, [receiptId]);
+
+  return { data, loading, error, refetch: fetchReceipt };
+}
+
+export function useDailySalesSummary(filters?: ReportFilters) {
+  const [data, setData] = useState<DailySalesSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.fromDate) params.append('fromDate', filters.fromDate.toISOString());
+      if (filters?.toDate) params.append('toDate', filters.toDate.toISOString());
+
+      const response = await fetch(`/api/reports/daily-sales-summary?${params.toString()}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setData(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch report');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, [filters?.branchId, filters?.fromDate, filters?.toDate]);
+
+  return { data, loading, error, refetch: fetchReport };
+}
+
+export function useEmployeePerformance(filters?: ReportFilters) {
+  const [data, setData] = useState<EmployeePerformance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.fromDate) params.append('fromDate', filters.fromDate.toISOString());
+      if (filters?.toDate) params.append('toDate', filters.toDate.toISOString());
+
+      const response = await fetch(`/api/reports/employee-performance?${params.toString()}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setData(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch report');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, [filters?.branchId, filters?.fromDate, filters?.toDate]);
+
+  return { data, loading, error, refetch: fetchReport };
+}
+
+export function useCustomerPurchaseHistory(customerId?: string, filters?: ReportFilters) {
+  const [data, setData] = useState<CustomerPurchaseHistory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      
+      if (customerId) params.append('customerId', customerId);
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.fromDate) params.append('fromDate', filters.fromDate.toISOString());
+      if (filters?.toDate) params.append('toDate', filters.toDate.toISOString());
+
+      const response = await fetch(`/api/reports/customer-purchase-history?${params.toString()}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setData(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch report');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, [customerId, filters?.branchId, filters?.fromDate, filters?.toDate]);
+
+  return { data, loading, error, refetch: fetchReport };
+}
+
+export function usePromotionUsage(filters?: ReportFilters) {
+  const [data, setData] = useState<PromotionUsage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.fromDate) params.append('fromDate', filters.fromDate.toISOString());
+      if (filters?.toDate) params.append('toDate', filters.toDate.toISOString());
+
+      const response = await fetch(`/api/reports/promotion-usage?${params.toString()}`);
       const result = await response.json();
 
       if (result.success) {

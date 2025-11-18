@@ -11,13 +11,20 @@ import {
   useInventoryValueReport, 
   useSalesReport, 
   useBestSellers,
-  useProfitLoss 
+  useProfitLoss,
+  usePOSReceipt,
+  useDailySalesSummary,
+  useEmployeePerformance,
+  useCustomerPurchaseHistory,
+  usePromotionUsage
 } from '@/hooks/use-reports';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { POSReceiptTemplate } from '@/components/reports/pos-receipt-template';
+import { DailySalesSummaryReport } from '@/components/reports/daily-sales-summary-report';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-PH', {
