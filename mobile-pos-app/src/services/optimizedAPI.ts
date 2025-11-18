@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { cacheManager, CacheKeys, CacheTTL } from '../utils/cache';
+import { cacheManager, CacheTTL } from '../utils/cache';
+import * as SecureStore from 'expo-secure-store';
 const API_BASE_URL = '';
 const API_TIMEOUT = 10000;
-import { useAuthStore } from '../store/hooks';
 
 interface CachedRequestConfig extends AxiosRequestConfig {
   cacheKey?: string;
@@ -53,6 +53,8 @@ class OptimizedAPIClient {
             statusText: 'OK',
             headers: {},
             config,
+            fromCache: true,
+            cacheHit: true,
           });
         }
 
@@ -65,6 +67,8 @@ class OptimizedAPIClient {
             statusText: 'OK (from cache)',
             headers: {},
             config,
+            fromCache: true,
+            cacheHit: true,
           });
         }
 
@@ -79,7 +83,7 @@ class OptimizedAPIClient {
         const config = (response.config || {}) as CachedRequestConfig;
         const { cacheKey, cacheTTL = CacheTTL.MEDIUM } = config;
 
-        if (cacheKey && config.method === 'get' && response.status === 200) {
+        if (cacheKey && (config.method === 'get' || config.method === 'GET') && response.status === 200 && !response.fromCache) {
           // Cache the response
           await cacheManager.set(cacheKey, response.data, cacheTTL);
           
@@ -106,10 +110,10 @@ class OptimizedAPIClient {
 
     // Auth interceptor
     this.getClient().interceptors.request.use(
-      (config) => {
-        const { token } = (useAuthStore() as any);
+      async (config) => {
+        const token = await SecureStore.getItemAsync('authToken');
         if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+          (config.headers = config.headers || {}).Authorization = `Bearer ${token}`;
         }
         return config;
       },
@@ -120,20 +124,15 @@ class OptimizedAPIClient {
     this.getClient().interceptors.response.use(
       (response) => response,
       async (error) => {
-        if (error.response?.status === 401) {
-          // Handle token refresh
-          const { refreshToken } = (useAuthStore() as any);
-          if (refreshToken) {
-            try {
-              await this.refreshToken();
-              // Retry the original request
-              return this.client(error.config);
-            } catch (refreshError) {
-              // Refresh failed, redirect to login
-              const { logoutUser } = (useAuthStore() as any);
-              logoutUser();
-              throw refreshError;
-            }
+        if (error.response?.status === 401 && error.config && !(error.config as any)._retry) {
+          (error.config as any)._retry = true;
+          try {
+            await this.refreshToken();
+            return this.getClient().request(error.config);
+          } catch (refreshError) {
+            await SecureStore.deleteItemAsync('authToken');
+            await SecureStore.deleteItemAsync('refreshToken');
+            throw refreshError;
           }
         }
         return Promise.reject(error);
@@ -142,20 +141,22 @@ class OptimizedAPIClient {
   }
 
   private async refreshToken() {
-    const { refreshToken, setTokens } = (useAuthStore() as any);
-    
-    try {
-      const response = await this.getClient().post('/auth/refresh', {
-        refreshToken,
-      });
-      
-      const { accessToken, refreshToken: newRefreshToken } = response.data;
-      setTokens(accessToken, newRefreshToken);
-      
-      return response.data;
-    } catch (error) {
-      throw error;
+    const storedRefreshToken = await SecureStore.getItemAsync('refreshToken');
+    if (!storedRefreshToken) {
+      throw new Error('No refresh token available');
     }
+    const response = await this.getClient().post('/auth/refresh', {
+      refreshToken: storedRefreshToken,
+    });
+    const { token, refreshToken: newRefreshToken } = response.data?.data || response.data;
+    if (!token) {
+      throw new Error('Failed to refresh token');
+    }
+    await SecureStore.setItemAsync('authToken', token);
+    if (newRefreshToken) {
+      await SecureStore.setItemAsync('refreshToken', newRefreshToken);
+    }
+    return response.data;
   }
 
   async get<T>(url: string, config: CachedRequestConfig = {}): Promise<CachedResponse<T>> {

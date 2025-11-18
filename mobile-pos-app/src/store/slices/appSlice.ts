@@ -126,12 +126,12 @@ export const {
 } = appSlice.actions;
 
 // Selectors
-export const selectAppSettings = (state: { app: AppState }) => state.app.settings;
-export const selectIsOnline = (state: { app: AppState }) => state.app.isOnline;
-export const selectSyncStatus = (state: { app: AppState }) => state.app.syncStatus;
-export const selectAppLoading = (state: { app: AppState }) => state.app.isLoading;
-export const selectAppError = (state: { app: AppState }) => state.app.error;
-export const selectAppSuccessMessage = (state: { app: AppState }) => state.app.successMessage;
-export const selectLastSyncAt = (state: { app: AppState }) => state.app.lastSyncAt;
+export const selectAppSettings = (state: any) => state.app.settings;
+export const selectIsOnline = (state: any) => state.app.isOnline;
+export const selectSyncStatus = (state: any) => state.app.syncStatus;
+export const selectAppLoading = (state: any) => state.app.isLoading;
+export const selectAppError = (state: any) => state.app.error;
+export const selectAppSuccessMessage = (state: any) => state.app.successMessage;
+export const selectLastSyncAt = (state: any) => state.app.lastSyncAt;
 
 export default appSlice.reducer;

@@ -1,15 +1,37 @@
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from './index';
+import type { AppDispatch } from './index';
 import { useCallback } from 'react';
 import { login, logout, getCurrentUser, setCurrentBranch, clearError, setLoading } from './slices/authSlice';
 import { selectCurrentUser, selectCurrentBranch, selectIsAuthenticated, selectAuthLoading, selectAuthError } from './slices/authSlice';
-import { setIsOnline, setLastSyncAt, setSyncStatus, setLoading as setAppLoading, setError as setAppError, setSuccessMessage } from './slices/appSlice';
-import { selectAppSettings, selectIsOnline, selectSyncStatus, selectAppLoading, selectAppError, selectAppSuccessMessage } from './slices/appSlice';
-import cartSlice from './slices/cartSlice';
+import { 
+  setIsOnline, 
+  setLastSyncAt, 
+  setSyncStatus, 
+  setLoading as setAppLoading, 
+  setError as setAppError, 
+  setSuccessMessage,
+  selectAppSettings,
+  selectIsOnline,
+  selectSyncStatus,
+  selectAppLoading,
+  selectAppError,
+  selectAppSuccessMessage,
+  selectLastSyncAt,
+} from './slices/appSlice';
+import { 
+  addToCart,
+  removeFromCart,
+  updateCartItemQuantity,
+  clearCart as clearCartAction,
+  setPaymentMethod as setPaymentMethodAction,
+  setCustomerInfo as setCustomerInfoAction,
+  setAmountReceived as setAmountReceivedAction,
+  calculateTotals as calculateTotalsAction,
+} from './slices/cartSlice';
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+export const useAppSelector: TypedUseSelectorHook<any> = useSelector;
 
 // Auth store hook - combines auth selectors and actions
 export const useAuthStore = () => {
@@ -79,35 +101,35 @@ export const useCartStore = () => {
   
   // Actions
   const addItem = useCallback((item: any) => {
-    dispatch(cartSlice.actions.addItem(item));
+    dispatch(addToCart(item));
   }, [dispatch]);
   
-  const removeItem = useCallback((productId: string) => {
-    dispatch(cartSlice.actions.removeItem(productId));
+  const removeItem = useCallback((itemId: string) => {
+    dispatch(removeFromCart(itemId));
   }, [dispatch]);
   
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
-    dispatch(cartSlice.actions.updateQuantity({ productId, quantity }));
+  const updateQuantity = useCallback((itemId: string, quantity: number) => {
+    dispatch(updateCartItemQuantity({ itemId, quantity }));
   }, [dispatch]);
   
   const clearCart = useCallback(() => {
-    dispatch(cartSlice.actions.clearCart());
+    dispatch(clearCartAction());
   }, [dispatch]);
   
   const setPaymentMethodType = useCallback((method: 'cash' | 'card' | 'credit' | 'digital') => {
-    dispatch(cartSlice.actions.setPaymentMethod(method));
+    dispatch(setPaymentMethodAction(method));
   }, [dispatch]);
   
   const setCustomerInfo = useCallback((customer: { customerId?: string; customerName?: string }) => {
-    dispatch(cartSlice.actions.setCustomerInfo(customer));
+    dispatch(setCustomerInfoAction(customer));
   }, [dispatch]);
   
   const setAmountReceived = useCallback((amount: string) => {
-    dispatch(cartSlice.actions.setAmountReceived(amount));
+    dispatch(setAmountReceivedAction(amount));
   }, [dispatch]);
   
   const calculateTotals = useCallback(() => {
-    dispatch(cartSlice.actions.calculateTotals());
+    dispatch(calculateTotalsAction());
   }, [dispatch]);
   
   return {

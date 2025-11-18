@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Button, Card, IconButton, Snackbar } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Platform } from 'react-native';
+import { Text, Button, Card, Snackbar } from 'react-native-paper';
 import { performanceMonitor } from '../utils/performanceMonitor';
 import { cacheManager } from '../utils/cache';
 
@@ -141,7 +141,7 @@ Component Stack: ${errorInfo.componentStack}
                 </View>
                 
                 <Text style={styles.message}>
-                  We're sorry, but something unexpected happened. 
+                  We&apos;re sorry, but something unexpected happened. 
                   The app will continue to work, but this feature may be temporarily unavailable.
                 </Text>
 
@@ -339,10 +339,10 @@ export const setupGlobalErrorHandlers = () => {
   };
 
   // Handle uncaught promise rejections
-  if (typeof global !== 'undefined' && global.ErrorUtils) {
-    const originalHandler = global.ErrorUtils.getGlobalHandler();
+  if (typeof global !== 'undefined' && (global as any).ErrorUtils) {
+    const originalHandler = (global as any).ErrorUtils.getGlobalHandler();
     
-    global.ErrorUtils.setGlobalHandler((error, isFatal) => {
+    (global as any).ErrorUtils.setGlobalHandler((error: any, isFatal: any) => {
       console.error('Uncaught exception:', error);
       performanceMonitor.startMonitoring('uncaught_exception')();
       

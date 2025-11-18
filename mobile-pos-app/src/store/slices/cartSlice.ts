@@ -128,16 +128,14 @@ const cartSlice = createSlice({
   },
 });
 
-export const {
-  addItem as addToCart,
-  removeItem as removeFromCart,
-  updateQuantity as updateCartItemQuantity,
-  clearCart,
-  setPaymentMethod,
-  setCustomer,
-  setCustomerInfo,
-  setAmountReceived,
-  calculateTotals,
-} = cartSlice.actions;
+export const addToCart = cartSlice.actions.addItem;
+export const removeFromCart = cartSlice.actions.removeItem;
+export const updateCartItemQuantity = cartSlice.actions.updateQuantity;
+export const clearCart = cartSlice.actions.clearCart;
+export const setPaymentMethod = cartSlice.actions.setPaymentMethod;
+export const setCustomer = cartSlice.actions.setCustomer;
+export const setCustomerInfo = cartSlice.actions.setCustomerInfo;
+export const setAmountReceived = cartSlice.actions.setAmountReceived;
+export const calculateTotals = cartSlice.actions.calculateTotals;
 
 export default cartSlice.reducer;

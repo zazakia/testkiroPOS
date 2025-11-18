@@ -1,7 +1,7 @@
 import { databaseService } from '../database/databaseService';
 import { syncService } from '../sync/syncService';
 import { apiClient } from '../../api/client';
-import { optimizedAPI, useOptimizedAPI } from '../optimizedAPI';
+import { optimizedAPI } from '../optimizedAPI';
 import { performanceMonitor } from '../../utils/performanceMonitor';
 import { cacheManager, CacheKeys, CacheTTL } from '../../utils/cache';
 import { Product, POSSale, POSSaleItem, CartItem, PaymentMethod, SaleStatus, Customer } from '../../types';
@@ -96,6 +96,7 @@ class POSServiceImpl implements POSService {
         id: `sale-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         receiptNumber,
         branchId: saleData.branchId,
+        userId: saleData.userId,
         subtotal: saleData.subtotal,
         tax: saleData.tax,
         totalAmount: saleData.total,
@@ -108,6 +109,7 @@ class POSServiceImpl implements POSService {
           id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           saleId: '', // Will be updated after sale creation
           productId: item.productId,
+          productName: item.productName,
           quantity: item.quantity,
           uom: item.uom,
           unitPrice: item.unitPrice,
@@ -136,9 +138,8 @@ class POSServiceImpl implements POSService {
       }
 
       // Invalidate related caches
-      const { invalidateRelatedCache } = useOptimizedAPI();
-      await invalidateRelatedCache('sales');
-      await invalidateRelatedCache('inventory');
+      await cacheManager.invalidatePattern('sales');
+      await cacheManager.invalidatePattern('inventory');
 
       // Sync with server if online
       if (await syncService.isOnline()) {
@@ -363,7 +364,10 @@ class POSServiceImpl implements POSService {
   async checkProductAvailability(productId: string, quantity: number): Promise<boolean> {
     try {
       const inventory = await databaseService.getInventoryByProduct(productId);
-      const totalAvailable = inventory.reduce((sum, batch) => sum + batch.quantity, 0);
+      const totalAvailable = inventory.reduce((sum, batch) => {
+        const available = (batch as any).quantity ?? batch.currentStock;
+        return sum + available;
+      }, 0);
       return totalAvailable >= quantity;
     } catch (error) {
       console.error('Error checking product availability:', error);
@@ -381,12 +385,13 @@ class POSServiceImpl implements POSService {
         for (const batch of inventory) {
           if (remainingQuantity <= 0) break;
 
-          const quantityToDeduct = Math.min(remainingQuantity, batch.quantity);
-          batch.quantity -= quantityToDeduct;
+          const available = (batch as any).quantity ?? batch.currentStock;
+          const quantityToDeduct = Math.min(remainingQuantity, available);
+          const newQuantity = available - quantityToDeduct;
           remainingQuantity -= quantityToDeduct;
 
           // Update batch in database
-          await databaseService.update('inventory_batches', batch.id, { quantity: batch.quantity });
+          await databaseService.update('inventory_batches', batch.id, { quantity: newQuantity });
 
           // Record stock movement
           await databaseService.recordStockMovement({
@@ -413,9 +418,10 @@ class POSServiceImpl implements POSService {
       const inventory = await databaseService.getInventoryByProduct(productId);
       if (inventory.length > 0) {
         const batch = inventory[0]; // Use the first available batch
-        batch.quantity += quantity;
+        const available = (batch as any).quantity ?? batch.currentStock;
+        const newQuantity = available + quantity;
 
-        await databaseService.update('inventory_batches', batch.id, { quantity: batch.quantity });
+        await databaseService.update('inventory_batches', batch.id, { quantity: newQuantity });
 
         // Record stock movement
         await databaseService.recordStockMovement({

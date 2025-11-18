@@ -1,6 +1,7 @@
 import { databaseService } from '../database/database';
-import { POSSale, POSSaleItem, CartItem, User, Branch } from '../types';
-import { useAppStore } from '../store';
+import { POSSale, CartItem, User, Branch } from '../types';
+import { store } from '../store';
+import { setSyncStatus } from '../store/slices/appSlice';
 
 interface CreateSaleParams {
   cartItems: CartItem[];
@@ -65,6 +66,7 @@ export const createSale = async (params: CreateSaleParams): Promise<POSSale> => 
     id: saleId,
     receiptNumber,
     branchId: currentBranch.id,
+    userId: currentUser.id,
     subtotal,
     tax,
     totalAmount: total,
@@ -77,6 +79,7 @@ export const createSale = async (params: CreateSaleParams): Promise<POSSale> => 
       id: generateId(),
       saleId,
       productId: item.productId,
+      productName: item.productName,
       quantity: item.quantity,
       uom: item.uom,
       unitPrice: item.unitPrice,
@@ -130,8 +133,7 @@ export const createSale = async (params: CreateSaleParams): Promise<POSSale> => 
   // Update pending sync count in app store
   try {
     const pending = await databaseService.getPendingSync();
-    const { setSyncStatus } = useAppStore.getState();
-    setSyncStatus({ pendingChanges: pending.length });
+    store.dispatch(setSyncStatus({ pendingChanges: pending.length }));
   } catch (error) {
     console.error('Error updating pending sync count after sale:', error);
   }

@@ -129,11 +129,11 @@ const ReportsScreen: React.FC = () => {
   };
 
   const getSalesMetrics = () => {
-    const totalRevenue = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
+    const totalRevenue = sales.reduce((sum: number, sale: POSSale) => sum + sale.totalAmount, 0);
     const totalTransactions = sales.length;
     const averageTransactionValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
-    const totalItems = sales.reduce((sum, sale) => 
-      sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0
+    const totalItems = sales.reduce((sum: number, sale: POSSale) => 
+      sum + sale.items.reduce((itemSum: number, item: { quantity: number }) => itemSum + item.quantity, 0), 0
     );
 
     return {
@@ -145,12 +145,13 @@ const ReportsScreen: React.FC = () => {
   };
 
   const getPaymentMethodBreakdown = () => {
-    const breakdown = sales.reduce((acc, sale) => {
+    const breakdown = sales.reduce((acc: Record<string, number>, sale: POSSale) => {
       acc[sale.paymentMethod] = (acc[sale.paymentMethod] || 0) + sale.totalAmount;
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(breakdown).map(([method, amount]) => ({
+    const entries = Object.entries(breakdown) as [string, number][];
+    return entries.map(([method, amount]) => ({
       method,
       amount,
       percentage: (amount / getSalesMetrics().totalRevenue) * 100,
@@ -158,8 +159,8 @@ const ReportsScreen: React.FC = () => {
   };
 
   const getTopProducts = () => {
-    const productSales = sales.reduce((acc, sale) => {
-      sale.items.forEach(item => {
+    const productSales = sales.reduce((acc: Record<string, { productId: string; productName: string; quantity: number; revenue: number }>, sale: POSSale) => {
+      sale.items.forEach((item: { productId: string; productName: string; quantity: number; subtotal: number }) => {
         const key = item.productId;
         if (!acc[key]) {
           acc[key] = {
@@ -175,7 +176,8 @@ const ReportsScreen: React.FC = () => {
       return acc;
     }, {} as Record<string, { productId: string; productName: string; quantity: number; revenue: number }>);
 
-    return Object.values(productSales)
+    const productsArray = Object.values(productSales) as { productId: string; productName: string; quantity: number; revenue: number }[];
+    return productsArray
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10);
   };
@@ -187,7 +189,7 @@ const ReportsScreen: React.FC = () => {
       transactions: 0,
     }));
 
-    sales.forEach(sale => {
+    sales.forEach((sale: POSSale) => {
       const hour = new Date(sale.createdAt).getHours();
       hourlyData[hour].revenue += sale.totalAmount;
       hourlyData[hour].transactions += 1;
@@ -197,7 +199,7 @@ const ReportsScreen: React.FC = () => {
   };
 
   const metrics = getSalesMetrics();
-  const paymentBreakdown = getPaymentMethodBreakdown();
+  const paymentBreakdown: { method: string; amount: number; percentage: number }[] = getPaymentMethodBreakdown();
   const topProducts = getTopProducts();
   const hourlySales = getHourlySales();
 
@@ -337,7 +339,7 @@ const ReportsScreen: React.FC = () => {
                   </View>
                 </DataTable.Cell>
                 <DataTable.Cell numeric>{product.quantity}</DataTable.Cell>
-                <DataTable.Cell numeric style={styles.revenueColor}>
+                <DataTable.Cell numeric style={styles.revenueColor as any}>
                   {formatCurrency(product.revenue)}
                 </DataTable.Cell>
               </DataTable.Row>
@@ -389,7 +391,7 @@ const ReportsScreen: React.FC = () => {
             </Button>
           </View>
           
-          {sales.slice(0, 5).map((sale) => (
+          {sales.slice(0, 5).map((sale: POSSale) => (
             <View key={sale.id} style={styles.transactionRow}>
               <View style={styles.transactionInfo}>
                 <Text style={styles.transactionId}>{sale.receiptNumber}</Text>

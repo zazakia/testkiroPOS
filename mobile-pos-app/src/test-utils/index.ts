@@ -20,8 +20,8 @@ export {
   createMockAsyncThunk,
 } from './test-helpers';
 
-// Setup file (imported in jest.config.js)
-export * from './setup';
+// Setup file (side-effect import for test environment)
+import './setup';
 
 // Re-export commonly used testing libraries
 export { jest } from '@jest/globals';

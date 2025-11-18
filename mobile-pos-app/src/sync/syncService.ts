@@ -205,7 +205,7 @@ export const startSyncService = () => {
 
   // Get settings from Redux store
   const state = store.getState();
-  const settings = state.app.settings;
+  const settings = (state as any).app.settings;
   const intervalMinutes = settings.syncInterval || 30;
   const intervalMs = intervalMinutes * 60 * 1000;
 

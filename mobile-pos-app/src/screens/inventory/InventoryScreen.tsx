@@ -208,7 +208,7 @@ export default function InventoryScreen() {
             </View>
             <View style={styles.detailRow}>
               <MaterialCommunityIcons name="cash" size={16} color="#666" />
-              <Text style={styles.detailText}>Cost: ₱{item.costPrice.toFixed(2)}</Text>
+              <Text style={styles.detailText}>Cost: ₱{(item.costPrice ?? 0).toFixed(2)}</Text>
             </View>
             {item.supplierName && (
               <View style={styles.detailRow}>
@@ -254,7 +254,7 @@ export default function InventoryScreen() {
 
   const renderSummaryCard = () => {
     const totalProducts = new Set(batches.map(b => b.productId)).size;
-    const totalValue = batches.reduce((sum, batch) => sum + (batch.currentStock * batch.costPrice), 0);
+    const totalValue = batches.reduce((sum, batch) => sum + (batch.currentStock * (batch.costPrice ?? 0)), 0);
     const lowStockItems = batches.filter(b => b.currentStock <= b.minStockLevel).length;
     const expiringItems = batches.filter(b => {
       const daysUntilExpiry = Math.ceil(

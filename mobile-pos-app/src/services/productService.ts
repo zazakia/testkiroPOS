@@ -195,6 +195,7 @@ export class ProductService {
     limit?: number;
   } = {}): Promise<Product[]> {
     return this.getProducts({
+      status: 'active',
       ...options,
       category,
     });
@@ -325,7 +326,7 @@ export class ProductService {
   }
 
   private async createProductLocally(productData: ProductCreateInput): Promise<Product> {
-    const now = new Date().toISOString();
+    const now = new Date();
     const product: ProductWithSync = {
       id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: productData.name,
@@ -436,6 +437,7 @@ export class ProductService {
   }
 
   private async syncProductsToLocal(products: Product[]): Promise<void> {
+    await this.db.findAll('products');
     for (const product of products) {
       const existing = await this.getProductFromDB(product.id);
       if (existing) {

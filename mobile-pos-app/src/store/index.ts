@@ -26,16 +26,16 @@ const appPersistConfig = {
 };
 
 export const store = configureStore({
-  reducer: {
-    auth: persistReducer(authPersistConfig, authSlice),
-    app: persistReducer(appPersistConfig, appSlice),
+  reducer: ({
+    auth: persistReducer(authPersistConfig, authSlice as any),
+    app: persistReducer(appPersistConfig, appSlice as any),
     cart: cartSlice,
     products: productsSlice,
     inventory: inventorySlice,
     sales: salesSlice,
     customers: customersSlice,
     sync: syncSlice,
-  },
+  } as any),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

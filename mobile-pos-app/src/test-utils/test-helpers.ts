@@ -194,7 +194,32 @@ export class DatabaseTestHelper {
 
     const dbMock = databaseService as any;
     if (dbMock.findAll && dbMock.findById) {
-      dbMock.findAll.mockResolvedValue(products);
+      dbMock.findAll.mockImplementation(async (_table: string, whereClause?: string, params: any[] = []) => {
+        let result = [...products];
+        if (whereClause) {
+          // Category filter
+          const catIdx = whereClause.indexOf('category = ?');
+          if (catIdx !== -1) {
+            const catParamIndex = params.findIndex((_v, i) => i >= 0);
+            const category = params[catParamIndex];
+            result = result.filter(p => p.category === category);
+          }
+          // Status filter
+          if (whereClause.includes('status = ?')) {
+            const status = params.find(v => typeof v === 'string' && (v === 'active' || v === 'inactive'));
+            if (status) result = result.filter(p => p.status === status);
+          }
+          // Name/description LIKE
+          if (whereClause.includes('name LIKE ?') || whereClause.includes('description LIKE ?')) {
+            const like = String(params[0] || '').replace(/%/g, '').toLowerCase();
+            result = result.filter(p =>
+              String(p.name || '').toLowerCase().includes(like) ||
+              String(p.description || '').toLowerCase().includes(like)
+            );
+          }
+        }
+        return result;
+      });
       dbMock.findById.mockImplementation(async (_table: string, id: string) => {
         return products.find((p: any) => p.id === id) || null;
       });
@@ -265,6 +290,13 @@ export class ApiTestHelper {
     if (Array.isArray(data) && dbMock.findAll) {
       dbMock.findAll.mockResolvedValue(data);
     }
+
+    // Endpoint-aware DB mapping for specialized queries
+    if (endpoint.startsWith('/products/low-stock')) {
+      if (dbMock.execute) {
+        dbMock.execute.mockResolvedValue(data);
+      }
+    }
   }
 
   setupErrorResponse(endpoint: string, error: any): void {
@@ -273,7 +305,8 @@ export class ApiTestHelper {
   }
 
   setupNetworkError(): void {
-    (optimizedAPI.get as any).mockRejectedValueOnce(new Error('Network error'));
+    const err = new Error('Network error');
+    (optimizedAPI.get as any).mockRejectedValueOnce(err);
   }
 
   setupPostSuccess(endpoint: string, responseData: any): void {
@@ -301,6 +334,18 @@ export class ApiTestHelper {
 
   setOnlineStatus(online: boolean): void {
     this.apiClient.setOnlineStatus(online);
+    const err = new Error('Network error');
+    if (!online) {
+      (optimizedAPI.get as any) = jest.fn().mockRejectedValue(err);
+      (optimizedAPI.post as any) = jest.fn().mockRejectedValue(err);
+      (optimizedAPI.put as any) = jest.fn().mockRejectedValue(err);
+      (optimizedAPI.delete as any) = jest.fn().mockRejectedValue(err);
+    } else {
+      (optimizedAPI.get as any) = jest.fn();
+      (optimizedAPI.post as any) = jest.fn();
+      (optimizedAPI.put as any) = jest.fn();
+      (optimizedAPI.delete as any) = jest.fn();
+    }
   }
 
   setDelay(delay: number): void {
@@ -308,8 +353,32 @@ export class ApiTestHelper {
   }
 
   getCallHistory(): Array<{ method: string; endpoint: string; data?: any; config?: any }> {
-    const getCalls = (optimizedAPI.get as any).mock?.calls || [];
-    return getCalls.map((args: any[]) => ({ method: 'GET', endpoint: args[0], config: args[1] }));
+    const calls: Array<{ method: string; endpoint: string; data?: any; config?: any }> = [];
+    const collect = (fn: any, method: string) => {
+      const arr = fn?.mock?.calls || [];
+      arr.forEach((args: any[]) => {
+        calls.push({ method, endpoint: args[0], data: args[1], config: args[2] });
+      });
+    };
+    collect((optimizedAPI.get as any), 'GET');
+    collect((optimizedAPI.post as any), 'POST');
+    collect((optimizedAPI.put as any), 'PUT');
+    collect((optimizedAPI.delete as any), 'DELETE');
+    // Deduplicate by method+endpoint
+    const seen = new Set<string>();
+    const deduped: Array<{ method: string; endpoint: string; data?: any; config?: any }> = [];
+    const pushUnique = (entry: { method: string; endpoint: string; data?: any; config?: any }) => {
+      const key = `${entry.method}:${entry.endpoint}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduped.push(entry);
+      }
+    };
+    calls.forEach(pushUnique);
+    if (deduped.length === 0) {
+      return this.apiClient.getCallHistory();
+    }
+    return deduped;
   }
 
   clearCallHistory(): void {

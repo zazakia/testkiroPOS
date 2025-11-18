@@ -84,7 +84,7 @@ export class CacheManager {
     // Invalidate AsyncStorage
     try {
       const allKeys = await AsyncStorage.getAllKeys();
-      const cacheKeys = allKeys.filter(key => 
+      const cacheKeys = allKeys.filter((key: string) =>
         key.startsWith('cache:') && key.includes(pattern)
       );
       if (cacheKeys.length > 0) {
@@ -99,7 +99,7 @@ export class CacheManager {
     this.memoryCache.clear();
     try {
       const allKeys = await AsyncStorage.getAllKeys();
-      const cacheKeys = allKeys.filter(key => key.startsWith('cache:'));
+      const cacheKeys = allKeys.filter((key: string) => key.startsWith('cache:'));
       if (cacheKeys.length > 0) {
         await AsyncStorage.multiRemove(cacheKeys);
       }

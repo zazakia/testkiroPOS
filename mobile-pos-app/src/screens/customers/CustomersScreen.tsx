@@ -88,7 +88,7 @@ const CustomersScreen: React.FC = () => {
     setRefreshing(false);
   };
 
-  const filteredCustomers = customers.filter(customer => {
+  const filteredCustomers = customers.filter((customer: Customer) => {
     const matchesSearch = 
       customer.customerCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -316,14 +316,14 @@ const CustomersScreen: React.FC = () => {
             onPress={() => setFilterType('active')}
             style={styles.filterChip}
           >
-            Active ({customers.filter(c => c.status === 'active').length})
+            Active ({customers.filter((c: Customer) => c.status === 'active').length})
           </Chip>
           <Chip
             selected={filterType === 'inactive'}
             onPress={() => setFilterType('inactive')}
             style={styles.filterChip}
           >
-            Inactive ({customers.filter(c => c.status === 'inactive').length})
+            Inactive ({customers.filter((c: Customer) => c.status === 'inactive').length})
           </Chip>
         </View>
       </View>

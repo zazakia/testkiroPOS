@@ -9,10 +9,10 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { Button, Card, Snackbar, ActivityIndicator } from 'react-native-paper';
+import { Button, Card, Snackbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { login, clearError } from '../../store/slices/authSlice';
+import { login, clearError, selectAuthLoading, selectAuthError } from '../../store/slices/authSlice';
 import { setError, setSuccessMessage } from '../../store/slices/appSlice';
 
 export default function LoginScreen() {
@@ -22,7 +22,8 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   
   const dispatch = useAppDispatch();
-  const { isLoading, error } = useAppSelector((state) => state.auth);
+  const isLoading = useAppSelector(selectAuthLoading);
+  const error = useAppSelector(selectAuthError);
 
   useEffect(() => {
     // Clear any previous errors when component mounts

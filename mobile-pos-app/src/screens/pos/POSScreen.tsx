@@ -48,7 +48,7 @@ export default function POSScreen() {
     dispatch(fetchProducts());
   }, [dispatch]);
 
-  const filteredProducts = products.filter(product =>
+  const filteredProducts = products.filter((product: Product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -72,7 +72,6 @@ export default function POSScreen() {
   };
 
   const handleAmountReceivedChange = (amount: string) => {
-    setAmountReceived(amount);
     dispatch(setAmountReceived(amount));
   };
 
@@ -89,7 +88,7 @@ export default function POSScreen() {
     }
 
     if (selectedPaymentMethod === 'cash') {
-      const received = parseFloat(amountReceived);
+      const received = parseFloat(amountReceived || '0');
       if (received < total) {
         Alert.alert('Error', 'Insufficient amount received');
         return;
@@ -102,13 +101,17 @@ export default function POSScreen() {
     }
 
     try {
+      if (!user) {
+        Alert.alert('Error', 'User not authenticated');
+        return;
+      }
       const sale = await posService.createSale({
-        items: cartItems,
+        cartItems: cartItems,
         subtotal,
         tax,
         total,
         paymentMethod: selectedPaymentMethod,
-        amountReceived: selectedPaymentMethod === 'cash' ? amountReceived : undefined,
+        amountReceived: selectedPaymentMethod === 'cash' ? parseFloat(amountReceived || '0') : undefined,
         customerId,
         customerName,
         userId: user.id,
@@ -153,7 +156,7 @@ export default function POSScreen() {
             style={styles.quantityButton}
             onPress={() => {
               if (item.quantity > 1) {
-                dispatch(updateCartItemQuantity({ id: item.id, quantity: item.quantity - 1 }));
+                dispatch(updateCartItemQuantity({ itemId: item.id, quantity: item.quantity - 1 }));
               } else {
                 dispatch(removeFromCart(item.id));
               }
@@ -166,7 +169,7 @@ export default function POSScreen() {
           
           <TouchableOpacity
             style={styles.quantityButton}
-            onPress={() => dispatch(updateCartItemQuantity({ id: item.id, quantity: item.quantity + 1 }))}
+            onPress={() => dispatch(updateCartItemQuantity({ itemId: item.id, quantity: item.quantity + 1 }))}
           >
             <MaterialCommunityIcons name="plus" size={20} color="#fff" />
           </TouchableOpacity>
@@ -201,7 +204,7 @@ export default function POSScreen() {
                 <Card.Content>
                   <Text style={styles.productName}>{item.name}</Text>
                   <Text style={styles.productCategory}>{item.category}</Text>
-                  <Text style={styles.productPrice}>₱{item.price.toFixed(2)} / {item.uom}</Text>
+                  <Text style={styles.productPrice}>₱{item.basePrice.toFixed(2)} / {item.baseUOM}</Text>
                 </Card.Content>
               </Card>
             </TouchableOpacity>

@@ -14,6 +14,8 @@ import { useFonts } from 'expo-font';
 // Import Redux store
 import { store, persistor } from '../store';
 import { useAppSelector } from '../store/hooks';
+import { selectIsAuthenticated } from '../store/slices/authSlice';
+import { selectAppSettings } from '../store/slices/appSlice';
 
 // Import screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -185,8 +187,8 @@ function DrawerNavigator() {
 }
 
 function AppContent() {
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const { settings } = useAppSelector((state) => state.app);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const settings = useAppSelector(selectAppSettings);
   const [isReady, setIsReady] = useState(false);
   
   const [fontsLoaded] = useFonts({

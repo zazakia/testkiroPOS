@@ -18,13 +18,7 @@ export function withLazyLoad<P extends LazyComponentProps>(
   importFn: () => Promise<{ default: ComponentType<P> }>,
   options: LazyLoadOptions = {}
 ) {
-  const {
-    fallback,
-    errorComponent: ErrorComponent,
-    retryCount = 3,
-    retryDelay = 1000,
-    timeout = 10000,
-  } = options;
+  const { timeout = 10000 } = options;
 
   return React.lazy(() => {
     return Promise.race([

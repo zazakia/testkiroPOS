@@ -46,8 +46,9 @@ describe('PerformanceMonitor', () => {
       setTimeout(() => {
         const stats = performanceMonitor.getPerformanceStats('testOperation');
         expect(stats?.averageDuration).toBeGreaterThan(0);
-        expect(stats?.minDuration).toBeLessThanOrEqual(stats?.averageDuration);
-        expect(stats?.maxDuration).toBeGreaterThanOrEqual(stats?.averageDuration);
+        const avg = stats?.averageDuration ?? 0;
+        expect((stats?.minDuration ?? 0)).toBeLessThanOrEqual(avg);
+        expect((stats?.maxDuration ?? 0)).toBeGreaterThanOrEqual(avg);
       }, 250);
     });
   });
