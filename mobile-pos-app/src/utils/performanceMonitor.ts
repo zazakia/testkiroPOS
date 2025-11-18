@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import * as React from 'react';
 
 interface PerformanceMetrics {
   timestamp: number;
@@ -31,7 +32,7 @@ class PerformanceMonitor {
     return PerformanceMonitor.instance;
   }
 
-  startMonitoring(operationName: string): () => void {
+  startMonitoring(operationName: string): (error?: Error) => void {
     const startTime = Date.now();
     const startMemory = this.getCurrentMemoryUsage();
 

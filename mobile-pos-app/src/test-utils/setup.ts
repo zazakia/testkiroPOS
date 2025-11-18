@@ -254,6 +254,13 @@ beforeEach(() => {
   if (jest.isMockFunction(console.error)) {
     (console.error as jest.Mock).mockClear();
   }
+
+  try {
+    const { optimizedAPI } = require('../services/optimizedAPI');
+    if (optimizedAPI && typeof optimizedAPI.__resetClientForTests === 'function') {
+      optimizedAPI.__resetClientForTests();
+    }
+  } catch {}
 });
 
 afterEach(() => {

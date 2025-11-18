@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { cacheManager, CacheKeys, CacheTTL } from './cache';
-import { API_BASE_URL, API_TIMEOUT } from '../config/constants';
+import { cacheManager, CacheKeys, CacheTTL } from '../utils/cache';
+const API_BASE_URL = '';
+const API_TIMEOUT = 10000;
 import { useAuthStore } from '../store/hooks';
 
 interface CachedRequestConfig extends AxiosRequestConfig {
@@ -15,22 +16,26 @@ interface CachedResponse<T = any> extends AxiosResponse<T> {
 }
 
 class OptimizedAPIClient {
-  private client: AxiosInstance;
+  private client: AxiosInstance | null = null;
   private pendingRequests: Map<string, Promise<any>> = new Map();
 
-  constructor() {
-    this.client = axios.create({
-      baseURL: API_BASE_URL,
-      timeout: API_TIMEOUT,
-    });
+  constructor() {}
 
-    this.setupInterceptors();
+  private getClient(): AxiosInstance {
+    if (!this.client) {
+      this.client = axios.create({
+        baseURL: API_BASE_URL,
+        timeout: API_TIMEOUT,
+      });
+      this.setupInterceptors();
+    }
+    return this.client;
   }
 
   private setupInterceptors() {
     // Request interceptor for caching
-    this.client.interceptors.request.use(
-      async (config: CachedRequestConfig) => {
+    this.getClient().interceptors.request.use(
+      async (config: any) => {
         const { cacheKey, cacheTTL = CacheTTL.MEDIUM, skipCache } = config;
 
         if (skipCache || !cacheKey || config.method !== 'get') {
@@ -42,7 +47,7 @@ class OptimizedAPIClient {
         if (pendingRequest) {
           // Wait for the pending request instead of making a duplicate
           const cachedData = await pendingRequest;
-          config.adapter = () => Promise.resolve({
+          (config as any).adapter = () => Promise.resolve({
             data: cachedData,
             status: 200,
             statusText: 'OK',
@@ -54,7 +59,7 @@ class OptimizedAPIClient {
         // Check cache
         const cachedData = await cacheManager.get(cacheKey);
         if (cachedData) {
-          config.adapter = () => Promise.resolve({
+          (config as any).adapter = () => Promise.resolve({
             data: cachedData,
             status: 200,
             statusText: 'OK (from cache)',
@@ -69,9 +74,9 @@ class OptimizedAPIClient {
     );
 
     // Response interceptor for caching
-    this.client.interceptors.response.use(
+    this.getClient().interceptors.response.use(
       async (response: CachedResponse) => {
-        const config = response.config as CachedRequestConfig;
+        const config = (response.config || {}) as CachedRequestConfig;
         const { cacheKey, cacheTTL = CacheTTL.MEDIUM } = config;
 
         if (cacheKey && config.method === 'get' && response.status === 200) {
@@ -87,7 +92,7 @@ class OptimizedAPIClient {
         return response;
       },
       async (error) => {
-        const config = error.config as CachedRequestConfig;
+        const config = (error?.config || {}) as CachedRequestConfig;
         const { cacheKey } = config;
 
         if (cacheKey) {
@@ -100,9 +105,9 @@ class OptimizedAPIClient {
     );
 
     // Auth interceptor
-    this.client.interceptors.request.use(
+    this.getClient().interceptors.request.use(
       (config) => {
-        const { token } = useAuthStore();
+        const { token } = (useAuthStore() as any);
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -112,12 +117,12 @@ class OptimizedAPIClient {
     );
 
     // Error handling interceptor
-    this.client.interceptors.response.use(
+    this.getClient().interceptors.response.use(
       (response) => response,
       async (error) => {
         if (error.response?.status === 401) {
           // Handle token refresh
-          const { refreshToken } = useAuthStore();
+          const { refreshToken } = (useAuthStore() as any);
           if (refreshToken) {
             try {
               await this.refreshToken();
@@ -125,7 +130,7 @@ class OptimizedAPIClient {
               return this.client(error.config);
             } catch (refreshError) {
               // Refresh failed, redirect to login
-              const { logoutUser } = useAuthStore();
+              const { logoutUser } = (useAuthStore() as any);
               logoutUser();
               throw refreshError;
             }
@@ -137,10 +142,10 @@ class OptimizedAPIClient {
   }
 
   private async refreshToken() {
-    const { refreshToken, setTokens } = useAuthStore();
+    const { refreshToken, setTokens } = (useAuthStore() as any);
     
     try {
-      const response = await this.client.post('/auth/refresh', {
+      const response = await this.getClient().post('/auth/refresh', {
         refreshToken,
       });
       
@@ -154,23 +159,23 @@ class OptimizedAPIClient {
   }
 
   async get<T>(url: string, config: CachedRequestConfig = {}): Promise<CachedResponse<T>> {
-    return this.client.get(url, config);
+    return this.getClient().get(url, config);
   }
 
   async post<T>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<CachedResponse<T>> {
-    return this.client.post(url, data, config);
+    return this.getClient().post(url, data, config);
   }
 
   async put<T>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<CachedResponse<T>> {
-    return this.client.put(url, data, config);
+    return this.getClient().put(url, data, config);
   }
 
   async patch<T>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<CachedResponse<T>> {
-    return this.client.patch(url, data, config);
+    return this.getClient().patch(url, data, config);
   }
 
   async delete<T>(url: string, config: AxiosRequestConfig = {}): Promise<CachedResponse<T>> {
-    return this.client.delete(url, config);
+    return this.getClient().delete(url, config);
   }
 
   // Optimized batch requests
@@ -181,11 +186,20 @@ class OptimizedAPIClient {
 
   // Cache invalidation helpers
   async invalidateCache(pattern: string) {
-    await cacheManager.invalidatePattern(pattern);
+    if (pattern.includes('*') || pattern.includes(':')) {
+      await cacheManager.invalidatePattern(pattern);
+    } else {
+      await cacheManager.invalidate(pattern);
+    }
   }
 
   async clearCache() {
     await cacheManager.clear();
+  }
+
+  // Test-only helper
+  __resetClientForTests() {
+    this.client = null;
   }
 }
 

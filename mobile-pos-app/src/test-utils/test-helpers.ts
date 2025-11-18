@@ -1,6 +1,8 @@
 import { MockSQLiteDatabase, mockDatabaseService } from './__mocks__/database';
 import { MockApiClient, mockApiClient } from './__mocks__/apiClient';
 import { MockReduxStore, mockStore } from './__mocks__/reduxStore';
+import { optimizedAPI } from '../services/optimizedAPI';
+import { databaseService } from '../services/database/databaseService';
 
 // Test data factories
 export class TestDataFactory {
@@ -189,6 +191,14 @@ export class DatabaseTestHelper {
         ]
       );
     }
+
+    const dbMock = databaseService as any;
+    if (dbMock.findAll && dbMock.findById) {
+      dbMock.findAll.mockResolvedValue(products);
+      dbMock.findById.mockImplementation(async (_table: string, id: string) => {
+        return products.find((p: any) => p.id === id) || null;
+      });
+    }
   }
 
   async seedCustomers(customers: any[] = []): Promise<void> {
@@ -232,30 +242,61 @@ export class DatabaseTestHelper {
   getDatabase(): MockSQLiteDatabase {
     return this.db;
   }
+
+  getCallHistory(method: string): any[] {
+    const fn = (databaseService as any)[method];
+    return fn?.mock?.calls || [];
+  }
 }
 
 // API test helpers
 export class ApiTestHelper {
   private apiClient: MockApiClient;
+  private cacheInvalidations: string[] = [];
 
   constructor() {
     this.apiClient = new MockApiClient();
   }
 
   setupSuccessResponse(endpoint: string, data: any): void {
+    (optimizedAPI.get as any).mockResolvedValueOnce({ data, status: 200 });
     this.apiClient.setResponse('GET', endpoint, { data, success: true });
+    const dbMock = databaseService as any;
+    if (Array.isArray(data) && dbMock.findAll) {
+      dbMock.findAll.mockResolvedValue(data);
+    }
   }
 
   setupErrorResponse(endpoint: string, error: any): void {
+    (optimizedAPI.get as any).mockRejectedValueOnce(error);
     this.apiClient.setError('GET', endpoint, error);
   }
 
+  setupNetworkError(): void {
+    (optimizedAPI.get as any).mockRejectedValueOnce(new Error('Network error'));
+  }
+
   setupPostSuccess(endpoint: string, responseData: any): void {
+    (optimizedAPI.post as any).mockResolvedValueOnce({ data: responseData, status: 200 });
     this.apiClient.setResponse('POST', endpoint, { data: responseData, success: true });
+    const dbMock = databaseService as any;
+    if (dbMock.insert) {
+      dbMock.insert.mockResolvedValue('mock-id');
+    }
   }
 
   setupPostError(endpoint: string, error: any): void {
+    (optimizedAPI.post as any).mockRejectedValueOnce(error);
     this.apiClient.setError('POST', endpoint, error);
+  }
+
+  setupPutSuccess(endpoint: string, responseData: any): void {
+    (optimizedAPI.put as any).mockResolvedValueOnce({ data: responseData, status: 200 });
+    this.apiClient.setResponse('PUT', endpoint, { data: responseData, success: true });
+    const dbMock = databaseService as any;
+    if (dbMock.update) {
+      dbMock.update.mockResolvedValue(undefined);
+    }
   }
 
   setOnlineStatus(online: boolean): void {
@@ -267,15 +308,26 @@ export class ApiTestHelper {
   }
 
   getCallHistory(): Array<{ method: string; endpoint: string; data?: any; config?: any }> {
-    return this.apiClient.getCallHistory();
+    const getCalls = (optimizedAPI.get as any).mock?.calls || [];
+    return getCalls.map((args: any[]) => ({ method: 'GET', endpoint: args[0], config: args[1] }));
   }
 
   clearCallHistory(): void {
+    if ((optimizedAPI.get as any).mock) (optimizedAPI.get as any).mockClear();
+    if ((optimizedAPI.post as any).mock) (optimizedAPI.post as any).mockClear();
+    if ((optimizedAPI.put as any).mock) (optimizedAPI.put as any).mockClear();
+    if ((optimizedAPI.delete as any).mock) (optimizedAPI.delete as any).mockClear();
+    if ((optimizedAPI.invalidateCache as any).mock) (optimizedAPI.invalidateCache as any).mockClear();
     this.apiClient.clearCallHistory();
   }
 
   getApiClient(): MockApiClient {
     return this.apiClient;
+  }
+
+  getCacheInvalidationCalls(): string[] {
+    const calls = (optimizedAPI.invalidateCache as any).mock?.calls || [];
+    return calls.map((args: any[]) => args[0]);
   }
 }
 

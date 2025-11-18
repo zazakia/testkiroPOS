@@ -1,4 +1,6 @@
-import { Image } from 'react-native';
+import * as React from 'react';
+import { Image, View } from 'react-native';
+import { ActivityIndicator } from 'react-native-paper';
 import { cacheManager, CacheKeys, CacheTTL } from './cache';
 
 interface ImageOptimizationOptions {
@@ -250,12 +252,12 @@ export const OptimizedImage = ({
   }, [source, optimizationOptions]);
 
   if (loading && typeof source === 'object' && source.uri) {
-    return (
-      <View style={[style, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="small" />
-      </View>
+    return React.createElement(
+      View,
+      { style: [style, { justifyContent: 'center', alignItems: 'center' }] },
+      React.createElement(ActivityIndicator, { size: 'small' })
     );
   }
 
-  return <Image source={optimizedSource} style={style} {...props} />;
+  return React.createElement(Image as any, { source: optimizedSource, style, ...(props || {}) });
 };

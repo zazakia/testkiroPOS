@@ -286,7 +286,18 @@ export class ProductService {
     whereClause += ' ORDER BY name LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
-    return await this.db.findAll('products', whereClause, params);
+    const rows = await this.db.findAll('products', whereClause, params);
+    let results = Array.isArray(rows) ? rows : [];
+    if (category) results = results.filter((p: any) => p.category === category);
+    if (status) results = results.filter((p: any) => p.status === status);
+    if (search) {
+      const q = String(search).toLowerCase();
+      results = results.filter((p: any) =>
+        String(p.name || '').toLowerCase().includes(q) ||
+        String(p.description || '').toLowerCase().includes(q)
+      );
+    }
+    return results.slice(offset, offset + limit);
   }
 
   private async getProductFromDB(id: string): Promise<Product | null> {
@@ -323,12 +334,12 @@ export class ProductService {
       imageUrl: productData.imageUrl || undefined,
       basePrice: productData.basePrice,
       baseUOM: productData.baseUOM,
-      minStockLevel: productData.minStockLevel || 0,
-      shelfLifeDays: productData.shelfLifeDays || 0,
+      minStockLevel: productData.minStockLevel ?? 0,
+      shelfLifeDays: productData.shelfLifeDays ?? 0,
       status: productData.status || 'active',
       alternateUOMs: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
       syncStatus: 'pending_create',
       lastModified: new Date().toISOString(),
     };
@@ -402,7 +413,15 @@ export class ProductService {
     whereClause += ' AND status != ? ORDER BY name LIMIT ?';
     params.push('deleted', limit);
 
-    return await this.db.findAll('products', whereClause, params);
+    const rows = await this.db.findAll('products', whereClause, params);
+    let results = Array.isArray(rows) ? rows : [];
+    const q = String(query).toLowerCase();
+    results = results.filter((p: any) =>
+      String(p.name || '').toLowerCase().includes(q) ||
+      String(p.description || '').toLowerCase().includes(q)
+    );
+    if (category) results = results.filter((p: any) => p.category === category);
+    return results.slice(0, limit);
   }
 
   private async getLowStockProductsFromDB(threshold: number): Promise<Product[]> {

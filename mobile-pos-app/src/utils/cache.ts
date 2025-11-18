@@ -131,6 +131,13 @@ export const CacheKeys = {
   CATEGORIES: 'categories',
   USER_PROFILE: 'user_profile',
   BRANCH_INFO: 'branch_info',
+  Products: 'products',
+  Inventory: 'inventory',
+  Customers: 'customers',
+  SalesReports: 'sales_reports',
+  Categories: 'categories',
+  UserProfile: 'user_profile',
+  BranchInfo: 'branch_info',
   
   // Dynamic keys
   productById: (id: string) => `product:${id}`,

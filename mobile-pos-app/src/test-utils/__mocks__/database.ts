@@ -88,17 +88,12 @@ export class MockSQLiteDatabase {
         const recordIndex = table.findIndex(record => record.id === id || record.ID === id);
         if (recordIndex !== -1) {
           // Parse SET clause
-          const setMatch = sql.match(/SET ([^W]+) WHERE/i);
+          const setMatch = sql.match(/SET\s+(.+?)\s+WHERE/i);
           if (setMatch) {
             const setClause = setMatch[1];
-            const assignments = setClause.split(',').map(assign => {
-              const [key, value] = assign.trim().split(' = ?');
-              return { key: key.trim(), paramIndex: params.findIndex((_, index) => index < params.length - 1) };
-            });
-            
-            assignments.forEach(assign => {
-              const paramValue = params[assign.paramIndex];
-              table[recordIndex][assign.key] = paramValue;
+            const assignments = setClause.split(',').map(assign => assign.trim().split(' = ')[0].trim());
+            assignments.forEach((key, idx) => {
+              table[recordIndex][key] = params[idx];
             });
           }
           
@@ -152,6 +147,16 @@ export class MockSQLiteDatabase {
           table = table.filter(record => record.category === params[0]);
         } else if (sql.includes('status = ?') && params.length > 0) {
           table = table.filter(record => record.status === params[0]);
+        } else if ((sql.includes('name LIKE ?') || sql.includes('description LIKE ?')) && params.length >= 2) {
+          const likeVal = String(params[0]).replace(/%/g, '');
+          table = table.filter(record =>
+            (record.name && String(record.name).includes(likeVal)) ||
+            (record.description && String(record.description).includes(likeVal))
+          );
+          if (sql.includes('status != ?') && params.length >= 3) {
+            const notStatus = params[2];
+            table = table.filter(record => record.status !== notStatus);
+          }
         } else if (sql.includes('customer_code = ?') && params.length > 0) {
           table = table.filter(record => record.customerCode === params[0] || record.customer_code === params[0]);
         }
@@ -164,6 +169,8 @@ export class MockSQLiteDatabase {
           const dateB = new Date(b.createdAt || b.created_at || 0).getTime();
           return dateB - dateA;
         });
+      } else if (sql.includes('ORDER BY name')) {
+        table = [...table].sort((a, b) => String(a.name).localeCompare(String(b.name)));
       }
       
       return [...table]; // Return a copy
