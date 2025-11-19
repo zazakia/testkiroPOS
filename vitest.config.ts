@@ -15,6 +15,7 @@ export default defineConfig({
       '**/.{idea,git,cache,output,temp}/**',
       '**/e2e/**', // Exclude Playwright E2E tests
       '**/*.spec.ts', // Exclude Playwright spec files
+      'mobile-pos-app/**', // Exclude React Native/Jest subproject tests
     ],
     coverage: {
       provider: 'v8',

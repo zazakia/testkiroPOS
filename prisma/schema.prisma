@@ -419,7 +419,7 @@ model Permission {
 }
 
 model Product {
-  id                   String                 @id
+  id                   String                 @id @default(cuid())
   name                 String                 @unique
   description          String?
   category             String
@@ -433,7 +433,7 @@ model Product {
   updatedAt            DateTime
   InventoryBatch       InventoryBatch[]
   POSSaleItem          POSSaleItem[]
-  ProductUOM           ProductUOM[]
+  alternateUOMs        ProductUOM[]
   PurchaseOrderItem    PurchaseOrderItem[]
   ReceivingVoucherItem ReceivingVoucherItem[]
   SalesOrderItem       SalesOrderItem[]
@@ -483,7 +483,7 @@ model PromotionUsage {
 }
 
 model PurchaseOrder {
-  id                   String              @id
+  id                   String              @id @default(cuid())
   poNumber             String              @unique
   supplierId           String
   warehouseId          String
@@ -496,10 +496,10 @@ model PurchaseOrder {
   notes                String?
   createdAt            DateTime            @default(now())
   updatedAt            DateTime
-  Branch               Branch              @relation(fields: [branchId], references: [id])
-  Warehouse            Warehouse           @relation(fields: [warehouseId], references: [id])
-  Supplier             Supplier            @relation(fields: [supplierId], references: [id])
-  PurchaseOrderItem    PurchaseOrderItem[]
+  branch               Branch              @relation(fields: [branchId], references: [id])
+  warehouse            Warehouse           @relation(fields: [warehouseId], references: [id])
+  supplier             Supplier            @relation(fields: [supplierId], references: [id])
+  items                PurchaseOrderItem[]
   ReceivingVoucher     ReceivingVoucher[]
 
   @@index([createdAt])
@@ -519,8 +519,8 @@ model PurchaseOrderItem {
   unitPrice        Float
   subtotal         Float
   receivedQuantity Float         @default(0)
-  Product          Product       @relation(fields: [productId], references: [id])
-  PurchaseOrder    PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  product          Product       @relation(fields: [productId], references: [id])
+  purchaseOrder    PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([poId])

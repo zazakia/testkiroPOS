@@ -5,10 +5,10 @@ import { AppError } from '@/lib/errors';
 // GET /api/purchase-orders/[id] - Fetch single purchase order with items
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const purchaseOrder = await purchaseOrderService.getPurchaseOrderById(id);
     return NextResponse.json({ success: true, data: purchaseOrder });
   } catch (error) {
@@ -31,10 +31,10 @@ export async function GET(
 // PUT /api/purchase-orders/[id] - Update purchase order
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const body = await request.json();
     
     // Convert date string to Date object if provided

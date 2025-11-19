@@ -5,10 +5,10 @@ import { AppError } from '@/lib/errors';
 // POST /api/purchase-orders/[id]/receive - Receive purchase order
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const purchaseOrder = await purchaseOrderService.receivePurchaseOrder(id);
     
     return NextResponse.json({

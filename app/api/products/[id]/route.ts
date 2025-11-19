@@ -5,10 +5,10 @@ import { AppError } from '@/lib/errors';
 // GET /api/products/[id] - Fetch single product with UOMs
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const product = await productService.getProductById(id);
     return NextResponse.json({ success: true, data: product });
   } catch (error) {
@@ -31,10 +31,10 @@ export async function GET(
 // PUT /api/products/[id] - Update product and UOMs
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const body = await request.json();
     const product = await productService.updateProduct(id, body);
     
@@ -59,10 +59,10 @@ export async function PUT(
 // DELETE /api/products/[id] - Delete product (inactive only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     await productService.deleteProduct(id);
     return NextResponse.json({ success: true, message: 'Product deleted successfully' });
   } catch (error) {
