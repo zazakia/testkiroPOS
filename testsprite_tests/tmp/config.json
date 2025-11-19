@@ -1,7 +1,15 @@
 {
-  "status": "init",
-  "scope": "codebase",
+  "status": "commited",
   "type": "frontend",
-  "localEndpoint": "http://localhost:3000/",
-  "serverPort": 59914
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "executionArgs": {
+    "projectName": "test",
+    "projectPath": "c:\\Users\\HI\\Documents\\GitHub\\_deve local\\_React Apps\\test",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "your-api-key"
+    }
+  }
 }
