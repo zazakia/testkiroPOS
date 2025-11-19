@@ -42,8 +42,8 @@ export class AuthService {
       firstName: data.firstName,
       lastName: data.lastName,
       phone: data.phone,
-      role: { connect: { id: data.roleId } },
-      branch: data.branchId ? { connect: { id: data.branchId } } : undefined,
+      Role: { connect: { id: data.roleId } },
+      Branch: data.branchId ? { connect: { id: data.branchId } } : undefined,
       status: UserStatus.ACTIVE,
       emailVerified: false,
     });
@@ -158,8 +158,8 @@ export class AuthService {
     });
 
     // Get user permissions
-    const permissions = user.role.permissions.map(rp => 
-      `${rp.permission.resource}:${rp.permission.action}`
+    const permissions = (user.Role?.RolePermission || []).map(rp => 
+      `${rp.Permission.resource}:${rp.Permission.action}`
     );
 
     return {
@@ -175,14 +175,14 @@ export class AuthService {
         status: user.status,
         emailVerified: user.emailVerified,
         role: {
-          id: user.role.id,
-          name: user.role.name,
-          description: user.role.description,
+          id: user.Role.id,
+          name: user.Role.name,
+          description: user.Role.description,
         },
-        branch: user.branch ? {
-          id: user.branch.id,
-          name: user.branch.name,
-          code: user.branch.code,
+        branch: user.Branch ? {
+          id: user.Branch.id,
+          name: user.Branch.name,
+          code: user.Branch.code,
         } : undefined,
       },
       permissions,
@@ -226,7 +226,7 @@ export class AuthService {
     }
 
     // Check if user is still active
-    if (session.user.status !== UserStatus.ACTIVE) {
+    if (session.User.status !== UserStatus.ACTIVE) {
       return null;
     }
 

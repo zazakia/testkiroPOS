@@ -83,11 +83,11 @@ export class PermissionRepository {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        role: {
+        Role: {
           include: {
-            permissions: {
+            RolePermission: {
               include: {
-                permission: true,
+                Permission: true,
               },
             },
           },
@@ -97,7 +97,7 @@ export class PermissionRepository {
 
     if (!user) return [];
 
-    return user.role.permissions.map(rp => rp.permission);
+    return user.Role.RolePermission.map(rp => rp.Permission);
   }
 }
 

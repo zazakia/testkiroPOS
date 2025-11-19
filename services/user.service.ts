@@ -54,8 +54,8 @@ export class UserService {
       firstName: data.firstName,
       lastName: data.lastName,
       phone: data.phone,
-      role: { connect: { id: data.roleId } },
-      branch: data.branchId ? { connect: { id: data.branchId } } : undefined,
+      Role: { connect: { id: data.roleId } },
+      Branch: data.branchId ? { connect: { id: data.branchId } } : undefined,
       status: UserStatus.ACTIVE,
       emailVerified: false,
     };
@@ -115,11 +115,11 @@ export class UserService {
     };
 
     if (data.roleId) {
-      updateData.role = { connect: { id: data.roleId } };
+      updateData.Role = { connect: { id: data.roleId } };
     }
 
     if (data.branchId !== undefined) {
-      updateData.branch = data.branchId ? { connect: { id: data.branchId } } : { disconnect: true };
+      updateData.Branch = data.branchId ? { connect: { id: data.branchId } } : { disconnect: true };
     }
 
     // Update user

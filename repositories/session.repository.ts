@@ -19,18 +19,18 @@ export class SessionRepository {
     return prisma.session.findUnique({
       where: { token },
       include: {
-        user: {
+        User: {
           include: {
-            role: {
+            Role: {
               include: {
-                permissions: {
+                RolePermission: {
                   include: {
-                    permission: true,
+                    Permission: true,
                   },
                 },
               },
             },
-            branch: true,
+            Branch: true,
           },
         },
       },

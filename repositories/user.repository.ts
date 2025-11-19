@@ -37,8 +37,8 @@ export class UserRepository {
       prisma.user.findMany({
         where,
         include: {
-          role: true,
-          branch: true,
+          Role: true,
+          Branch: true,
         },
         skip: (page - 1) * limit,
         take: limit,
@@ -63,19 +63,19 @@ export class UserRepository {
     return prisma.user.findUnique({
       where: { id: userId },
       include: {
-        role: {
+        Role: {
           include: {
-            permissions: {
+            RolePermission: {
               include: {
-                permission: true,
+                Permission: true,
               },
             },
           },
         },
-        branch: true,
-        branchAccess: {
+        Branch: true,
+        UserBranchAccess: {
           include: {
-            branch: true,
+            Branch: true,
           },
         },
       },
@@ -89,16 +89,16 @@ export class UserRepository {
     return prisma.user.findUnique({
       where: { email },
       include: {
-        role: {
+        Role: {
           include: {
-            permissions: {
+            RolePermission: {
               include: {
-                permission: true,
+                Permission: true,
               },
             },
           },
         },
-        branch: true,
+        Branch: true,
       },
     });
   }
@@ -110,8 +110,8 @@ export class UserRepository {
     return prisma.user.create({
       data,
       include: {
-        role: true,
-        branch: true,
+        Role: true,
+        Branch: true,
       },
     });
   }
@@ -124,8 +124,8 @@ export class UserRepository {
       where: { id: userId },
       data,
       include: {
-        role: true,
-        branch: true,
+        Role: true,
+        Branch: true,
       },
     });
   }

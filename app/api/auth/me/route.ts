@@ -40,9 +40,30 @@ export async function GET(request: NextRequest) {
     const permissions = await permissionService.getUserPermissions(payload.userId);
     const permissionStrings = permissions.map(p => `${p.resource}:${p.action}`);
 
+    const shapedUser = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      roleId: user.roleId,
+      branchId: user.branchId,
+      status: user.status,
+      emailVerified: user.emailVerified,
+      role: {
+        id: user.Role.id,
+        name: user.Role.name,
+        description: user.Role.description,
+      },
+      branch: user.Branch ? {
+        id: user.Branch.id,
+        name: user.Branch.name,
+        code: user.Branch.code,
+      } : undefined,
+    };
+
     return NextResponse.json({ 
       success: true, 
-      user,
+      user: shapedUser,
       permissions: permissionStrings
     }, { status: 200 });
   } catch (error) {
