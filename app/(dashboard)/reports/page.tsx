@@ -25,6 +25,7 @@ import { FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { POSReceiptTemplate } from '@/components/reports/pos-receipt-template';
 import { DailySalesSummaryReport } from '@/components/reports/daily-sales-summary-report';
+import { BatchPrintManager } from '@/components/reports/batch-print-manager';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-PH', {
@@ -96,6 +97,9 @@ export default function ReportsPage() {
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="financial">Financial</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
+          <TabsTrigger value="batch-print">Batch Print</TabsTrigger>
         </TabsList>
 
         {/* Inventory Reports */}
@@ -155,10 +159,10 @@ export default function ReportsPage() {
                 <FileText className="h-5 w-5" />
                 Inventory Valuation Report
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={() => handleExport('Inventory Valuation')}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
+              <ExportDropdown 
+                onExport={(format) => handleExport('Inventory Valuation', format, inventoryValue, 'inventory-value')}
+                size="sm"
+              />
             </CardHeader>
             <CardContent>
               {invValueLoading ? (
@@ -209,10 +213,10 @@ export default function ReportsPage() {
                 <FileText className="h-5 w-5" />
                 Top 10 Best Selling Products
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={() => handleExport('Best Sellers')}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
+              <ExportDropdown 
+                onExport={(format) => handleExport('Best Sellers', format, bestSellers, 'best-sellers')}
+                size="sm"
+              />
             </CardHeader>
             <CardContent>
               {bestLoading ? (
@@ -256,10 +260,10 @@ export default function ReportsPage() {
                 <FileText className="h-5 w-5" />
                 Sales Summary Report
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={() => handleExport('Sales Summary')}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
+              <ExportDropdown 
+                onExport={(format) => handleExport('Sales Summary', format, salesData, 'sales')}
+                size="sm"
+              />
             </CardHeader>
             <CardContent>
               {salesLoading ? (
@@ -305,10 +309,10 @@ export default function ReportsPage() {
                 <FileText className="h-5 w-5" />
                 Profit & Loss Statement
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={() => handleExport('Profit & Loss')}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
+              <ExportDropdown 
+                onExport={(format) => handleExport('Profit & Loss', format)}
+                size="sm"
+              />
             </CardHeader>
             <CardContent>
               {plLoading ? (
@@ -356,6 +360,45 @@ export default function ReportsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Analytics Reports */}
+        <TabsContent value="analytics" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Discount & Promotion Analytics
+              </CardTitle>
+              <ExportDropdown 
+                onExport={(format) => handleExport('Discount & Promotion Analytics', format)}
+                size="sm"
+              />
+            </CardHeader>
+            <CardContent>
+              {promotionLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <div className="text-muted-foreground">
+                  Promotion analytics component will be integrated here
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Templates */}
+        <TabsContent value="templates" className="space-y-4">
+          <ReportTemplateManager />
+        </TabsContent>
+
+        {/* Batch Print */}
+        <TabsContent value="batch-print" className="space-y-4">
+          <BatchPrintManager />
         </TabsContent>
       </Tabs>
     </div>

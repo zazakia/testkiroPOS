@@ -2,9 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authMiddleware } from '@/middleware/auth.middleware';
 import { permissionMiddleware } from '@/middleware/permission.middleware';
+import { 
+  SecurityValidator, 
+  ErrorHandler, 
+  AuthValidator, 
+  RateLimiters,
+  DataValidator,
+  ValidationError,
+  AuthorizationError,
+  DataNotFoundError,
+  withSecurity
+} from '@/lib/report-security';
 
 export async function GET(request: NextRequest) {
   try {
+    // Apply rate limiting
+    const clientIp = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    RateLimiters.reportGeneration(clientIp);
+
     // Apply authentication and permission middleware
     const authResponse = await authMiddleware(request);
     if (authResponse.status !== 200) {
@@ -22,15 +37,32 @@ export async function GET(request: NextRequest) {
     const branchId = searchParams.get('branchId');
     const userId = searchParams.get('userId');
 
+    // Validate and sanitize parameters
+    const dateRange = {
+      fromDate: startDate ? new Date(startDate) : undefined,
+      toDate: endDate ? new Date(endDate) : undefined,
+    };
+
+    // Validate date range and other parameters
+    SecurityValidator.validateReportParams({
+      dateRange,
+      branchId: branchId || undefined,
+      userId: userId || undefined,
+    });
+
+    // Sanitize parameters
+    const sanitizedBranchId = branchId ? SecurityValidator.sanitizeInput(branchId) : undefined;
+    const sanitizedUserId = userId ? SecurityValidator.sanitizeInput(userId) : undefined;
+
     // Build where clause for date filtering
     const whereClause: any = {};
     if (startDate || endDate) {
       whereClause.createdAt = {};
-      if (startDate) whereClause.createdAt.gte = new Date(startDate);
-      if (endDate) whereClause.createdAt.lte = new Date(endDate);
+      if (startDate) whereClause.createdAt.gte = dateRange.fromDate;
+      if (endDate) whereClause.createdAt.lte = dateRange.toDate;
     }
-    if (branchId) whereClause.branchId = branchId;
-    if (userId) whereClause.userId = userId;
+    if (sanitizedBranchId) whereClause.branchId = sanitizedBranchId;
+    if (sanitizedUserId) whereClause.userId = sanitizedUserId;
 
     // Get employee performance data
     const employeePerformance = await prisma.employeePerformance.findMany({
@@ -134,30 +166,49 @@ export async function GET(request: NextRequest) {
       })
     );
 
+    // Check if data exists
+    if (!employeePerformance || employeePerformance.length === 0) {
+      throw new DataNotFoundError('Employee performance data');
+    }
+
     return NextResponse.json({
-      employeePerformance,
-      summaryStats,
-      topPerformers,
-      branchPerformance: branchDetails,
-      filters: {
-        startDate,
-        endDate,
-        branchId,
-        userId,
+      success: true,
+      data: {
+        employeePerformance,
+        summaryStats,
+        topPerformers,
+        branchPerformance: branchDetails,
+        filters: {
+          startDate,
+          endDate,
+          branchId: sanitizedBranchId,
+          userId: sanitizedUserId,
+        },
       },
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Employee performance report error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate employee performance report' },
-      { status: 500 }
-    );
+    const errorResponse = ErrorHandler.formatErrorResponse(error);
+    ErrorHandler.logError(error, {
+      endpoint: '/api/reports/employee-performance',
+      method: 'GET',
+      params: { startDate, endDate, branchId, userId }
+    });
+    
+    return NextResponse.json(errorResponse, { 
+      status: error.statusCode || 500 
+    });
   }
 }
 
 // POST endpoint to create or update employee performance records
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limiting
+    const clientIp = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    RateLimiters.reportGeneration(clientIp);
+
     const authResponse = await authMiddleware(request);
     if (authResponse.status !== 200) {
       return authResponse;
@@ -184,12 +235,48 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!userId || !branchId || totalSales === undefined) {
-      return NextResponse.json(
-        { error: 'Missing required fields: userId, branchId, totalSales' },
-        { status: 400 }
-      );
+    if (!userId || !branchId) {
+      throw new ValidationError('User ID and Branch ID are required');
     }
+
+    // Validate and sanitize parameters
+    SecurityValidator.validateReportParams({
+      branchId: SecurityValidator.sanitizeInput(branchId),
+      userId: SecurityValidator.sanitizeInput(userId),
+    });
+
+    // Validate numeric values
+    DataValidator.validateRange(totalSales, 0, 10000000, 'Total sales');
+    DataValidator.validateRange(totalTransactions, 0, 1000000, 'Total transactions');
+    DataValidator.validateRange(totalItems, 0, 10000000, 'Total items');
+    DataValidator.validateRange(averageTransactionValue, 0, 1000000, 'Average transaction value');
+    DataValidator.validateRange(averageItemsPerTransaction, 0, 1000, 'Average items per transaction');
+    DataValidator.validateRange(discountAmount || 0, 0, 1000000, 'Discount amount');
+    DataValidator.validateRange(refundAmount || 0, 0, 1000000, 'Refund amount');
+    DataValidator.validateRange(performanceScore || 0, 0, 100, 'Performance score');
+
+    // Check if user and branch exist
+    const userExists = await prisma.user.findUnique({
+      where: { id: sanitizedUserId },
+      select: { id: true, branchId: true }
+    });
+
+    const branchExists = await prisma.branch.findUnique({
+      where: { id: sanitizedBranchId },
+      select: { id: true }
+    });
+
+    if (!userExists) {
+      throw new DataNotFoundError('User');
+    }
+
+    if (!branchExists) {
+      throw new DataNotFoundError('Branch');
+    }
+
+    // Check authorization for branch access
+    const user = JSON.parse(authResponse.headers.get('x-user') || '{}');
+    AuthValidator.validateReportAccess(user, 'employee', sanitizedBranchId);
 
     // Check if performance record exists for today
     const today = new Date();
@@ -244,12 +331,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(performanceRecord);
+    return NextResponse.json({
+      success: true,
+      data: performanceRecord,
+      message: existingRecord ? 'Performance record updated successfully' : 'Performance record created successfully',
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Employee performance record creation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create employee performance record' },
-      { status: 500 }
-    );
+    const errorResponse = ErrorHandler.formatErrorResponse(error);
+    ErrorHandler.logError(error, {
+      endpoint: '/api/reports/employee-performance',
+      method: 'POST',
+      body: { userId, branchId, totalSales, totalTransactions }
+    });
+    
+    return NextResponse.json(errorResponse, { 
+      status: error.statusCode || 500 
+    });
   }
 }

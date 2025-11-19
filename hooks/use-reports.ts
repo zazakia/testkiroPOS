@@ -365,7 +365,7 @@ export function usePromotionUsage(filters?: ReportFilters) {
       if (filters?.fromDate) params.append('fromDate', filters.fromDate.toISOString());
       if (filters?.toDate) params.append('toDate', filters.toDate.toISOString());
 
-      const response = await fetch(`/api/reports/promotion-usage?${params.toString()}`);
+      const response = await fetch(`/api/reports/discount-promotion-analytics?${params.toString()}`);
       const result = await response.json();
 
       if (result.success) {
