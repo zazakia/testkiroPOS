@@ -33,7 +33,23 @@ export function useStockLevelReport(filters?: ReportFilters) {
       const result = await response.json();
 
       if (result.success) {
-        setData(result.data);
+        const mapped = (result.data || []).map((u: any) => ({
+          id: u.id,
+          promotionName: u.promotion?.name ?? u.promotionName ?? '',
+          promotionCode: u.promotion?.code ?? u.promotionCode ?? '',
+          saleId: u.saleId,
+          receiptNumber: u.receiptNumber,
+          customerId: u.customer?.id ?? u.customerId,
+          customerName: u.customer?.name ?? u.customerName ?? '',
+          discountAmount: u.discountAmount,
+          discountType: u.discountType ?? u.promotion?.type ?? '',
+          discountValue: u.discountValue ?? u.promotion?.value ?? 0,
+          usageDate: new Date(u.createdAt ?? u.usageDate),
+          branchId: u.branch?.id ?? u.branchId,
+          branchName: u.branch?.name ?? u.branchName ?? '',
+          createdAt: new Date(u.createdAt)
+        }));
+        setData(mapped);
         setError(null);
       } else {
         setError(result.error || 'Failed to fetch report');
@@ -99,8 +115,8 @@ export function useSalesReport(filters?: ReportFilters, groupBy: 'day' | 'week' 
       const params = new URLSearchParams();
       
       if (filters?.branchId) params.append('branchId', filters.branchId);
-      if (filters?.fromDate) params.append('fromDate', filters.fromDate.toISOString());
-      if (filters?.toDate) params.append('toDate', filters.toDate.toISOString());
+      if (filters?.fromDate) params.append('startDate', filters.fromDate.toISOString());
+      if (filters?.toDate) params.append('endDate', filters.toDate.toISOString());
       params.append('groupBy', groupBy);
 
       const response = await fetch(`/api/reports/sales?${params.toString()}`);

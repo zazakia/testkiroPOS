@@ -23,9 +23,10 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { POSReceiptTemplate } from '@/components/reports/pos-receipt-template';
-import { DailySalesSummaryReport } from '@/components/reports/daily-sales-summary-report';
 import { BatchPrintManager } from '@/components/reports/batch-print-manager';
+import { ExportDropdown } from '@/components/ui/export-dropdown';
+import { ReportTemplateManager } from '@/components/reports/report-template-manager';
+import { exportData, prepareSalesDataForExport, prepareInventoryDataForExport, ExportFormat } from '@/lib/export-utils';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-PH', {
@@ -63,6 +64,12 @@ export default function ReportsPage() {
     toDate: dateRange.toDate
   });
 
+  const { data: promotionData, loading: promotionLoading } = usePromotionUsage({
+    branchId: selectedBranch?.id,
+    fromDate: dateRange.fromDate,
+    toDate: dateRange.toDate
+  });
+
   const getStockStatusBadge = (status: string) => {
     switch (status) {
       case 'adequate':
@@ -76,9 +83,78 @@ export default function ReportsPage() {
     }
   };
 
-  const handleExport = (reportName: string) => {
-    // TODO: Implement actual export functionality
-    toast.success(`Exporting ${reportName} report...`);
+  const handleExport = (
+    reportName: string,
+    format: ExportFormat,
+    rawData: any[],
+    typeKey: string
+  ) => {
+    if (!rawData || rawData.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+
+    let tableData;
+    switch (typeKey) {
+      case 'sales':
+        tableData = prepareSalesDataForExport(rawData);
+        break;
+      case 'stock-levels':
+        tableData = prepareInventoryDataForExport(rawData);
+        break;
+      case 'best-sellers':
+        tableData = {
+          headers: ['Rank', 'Product', 'Category', 'Qty Sold', 'Revenue', 'Profit'],
+          data: rawData.map((item, index) => [
+            `#${index + 1}`,
+            item.productName,
+            item.category,
+            item.quantitySold,
+            new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(item.revenue)),
+            new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(item.profit))
+          ])
+        };
+        break;
+      case 'inventory-value':
+        tableData = {
+          headers: ['Product', 'Quantity', 'Avg Cost', 'Total Value'],
+          data: rawData.map((item) => [
+            item.productName,
+            item.totalQuantity,
+            new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(item.averageCost)),
+            new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(item.totalValue))
+          ])
+        };
+        break;
+      case 'promotion-usage':
+        tableData = {
+          headers: ['Date', 'Promotion', 'Code', 'Customer', 'Discount', 'Branch', 'Receipt'],
+          data: rawData.map((item) => [
+            new Date(item.usageDate).toLocaleDateString(),
+            item.promotionName,
+            item.promotionCode || '',
+            item.customerName || '',
+            new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(Number(item.discountAmount)),
+            item.branchName,
+            item.receiptNumber
+          ])
+        };
+        break;
+      default:
+        tableData = {
+          headers: Object.keys(rawData[0] || {}),
+          data: rawData.map((row) => Object.values(row))
+        };
+    }
+
+    exportData(tableData, {
+      format,
+      filename: reportName.toLowerCase().replace(/[\s&]+/g, '-'),
+      title: reportName,
+      dateRange: { start: dateRange.fromDate, end: dateRange.toDate },
+      filters: { branchId: selectedBranch?.id, branchName: (selectedBranch as any)?.name }
+    });
+    toast.success(`Exported ${reportName}`);
   };
 
   return (
@@ -111,10 +187,10 @@ export default function ReportsPage() {
                 <FileText className="h-5 w-5" />
                 Stock Level Report
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={() => handleExport('Stock Level')}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
+              <ExportDropdown 
+                onExport={(format) => handleExport('Stock Level', format, stockLevels, 'stock-levels')}
+                size="sm"
+              />
             </CardHeader>
             <CardContent>
               {stockLoading ? (
@@ -310,7 +386,7 @@ export default function ReportsPage() {
                 Profit & Loss Statement
               </CardTitle>
               <ExportDropdown 
-                onExport={(format) => handleExport('Profit & Loss', format)}
+                onExport={(format) => handleExport('Profit & Loss', format, profitLoss ? [profitLoss] : [], 'profit-loss')}
                 size="sm"
               />
             </CardHeader>
@@ -371,7 +447,7 @@ export default function ReportsPage() {
                 Discount & Promotion Analytics
               </CardTitle>
               <ExportDropdown 
-                onExport={(format) => handleExport('Discount & Promotion Analytics', format)}
+                onExport={(format) => handleExport('Discount & Promotion Analytics', format, promotionData || [], 'promotion-usage')}
                 size="sm"
               />
             </CardHeader>
@@ -382,10 +458,35 @@ export default function ReportsPage() {
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
                 </div>
+              ) : promotionData && promotionData.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Promotion</TableHead>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead className="text-right">Discount</TableHead>
+                      <TableHead>Branch</TableHead>
+                      <TableHead>Receipt</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {promotionData.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{new Date(item.usageDate).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium">{item.promotionName}</TableCell>
+                        <TableCell>{item.promotionCode || ''}</TableCell>
+                        <TableCell>{item.customerName || ''}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(Number(item.discountAmount))}</TableCell>
+                        <TableCell>{item.branchName}</TableCell>
+                        <TableCell><Badge variant="outline">{item.receiptNumber}</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               ) : (
-                <div className="text-muted-foreground">
-                  Promotion analytics component will be integrated here
-                </div>
+                <p className="text-muted-foreground">No promotion usage data</p>
               )}
             </CardContent>
           </Card>
