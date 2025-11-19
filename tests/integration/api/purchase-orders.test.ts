@@ -9,21 +9,21 @@ describe('Purchase Orders API Integration Tests', () => {
   const BASE_URL = 'http://localhost:3000';
 
   beforeAll(async () => {
-    const branchesRes = await fetch(`${BASE_URL}/api/branches`);
-    const branches = await branchesRes.json();
-    branchId = branches.data?.[0]?.id;
-
-    const warehousesRes = await fetch(`${BASE_URL}/api/warehouses?branchId=${branchId}`);
-    const warehouses = await warehousesRes.json();
-    warehouseId = warehouses.data?.[0]?.id;
-
-    const suppliersRes = await fetch(`${BASE_URL}/api/suppliers`);
-    const suppliers = await suppliersRes.json();
-    supplierId = suppliers.data?.[0]?.id;
-
-    const productsRes = await fetch(`${BASE_URL}/api/products`);
-    const products = await productsRes.json();
-    productId = products.data?.[0]?.id;
+    try {
+      const { prisma } = await import('@/lib/prisma');
+      const branch = await prisma.branch.findFirst();
+      const warehouse = await prisma.warehouse.findFirst({ where: { branchId: branch?.id } });
+      const supplier = await prisma.supplier.findFirst();
+      const product = await prisma.product.findFirst();
+      branchId = branch?.id as string;
+      warehouseId = warehouse?.id as string;
+      supplierId = supplier?.id as string;
+      productId = product?.id as string;
+    } catch (e) {
+      const productsRes = await fetch(`${BASE_URL}/api/products`);
+      const products = await productsRes.json();
+      productId = products.data?.[0]?.id;
+    }
   });
 
   afterAll(async () => {

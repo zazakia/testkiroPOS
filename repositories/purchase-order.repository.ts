@@ -91,12 +91,19 @@ export class PurchaseOrderRepository {
   async create(
     data: CreatePurchaseOrderInput & { poNumber: string; totalAmount: number }
   ): Promise<PurchaseOrderWithDetails> {
-    const { items, ...poData } = data;
+    const { items, supplierId, warehouseId, branchId, expectedDeliveryDate, notes, status, poNumber, totalAmount } = data;
 
     return await prisma.purchaseOrder.create({
       data: {
-        ...poData,
+        poNumber,
+        totalAmount,
+        expectedDeliveryDate,
+        notes,
+        status,
         updatedAt: new Date(),
+        branch: { connect: { id: branchId } },
+        warehouse: { connect: { id: warehouseId } },
+        supplier: { connect: { id: supplierId } },
         items: {
           create: items.map(item => ({
             productId: item.productId,

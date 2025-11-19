@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json(
-      { success: false, error: 'Failed to create purchase order' },
+      { success: false, error: 'Failed to create purchase order', details: (error as any)?.message },
       { status: 500 }
     );
   }
