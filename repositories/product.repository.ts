@@ -61,6 +61,7 @@ export class ProductRepository {
     return await prisma.product.create({
       data: {
         ...productData,
+        updatedAt: new Date(),
         alternateUOMs: alternateUOMs && alternateUOMs.length > 0
           ? {
               create: alternateUOMs,
@@ -87,6 +88,7 @@ export class ProductRepository {
         where: { id },
         data: {
           ...productData,
+          updatedAt: new Date(),
           alternateUOMs: alternateUOMs.length > 0
             ? {
                 create: alternateUOMs,
@@ -102,7 +104,7 @@ export class ProductRepository {
     // If no alternateUOMs provided, just update product data
     return await prisma.product.update({
       where: { id },
-      data: productData,
+      data: { ...productData, updatedAt: new Date() },
       include: {
         alternateUOMs: true,
       },

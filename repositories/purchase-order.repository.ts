@@ -96,6 +96,7 @@ export class PurchaseOrderRepository {
     return await prisma.purchaseOrder.create({
       data: {
         ...poData,
+        updatedAt: new Date(),
         items: {
           create: items.map(item => ({
             productId: item.productId,
@@ -103,22 +104,6 @@ export class PurchaseOrderRepository {
             unitPrice: item.unitPrice,
             subtotal: item.quantity * item.unitPrice,
           })),
-        },
-      },
-      include: {
-        supplier: true,
-        warehouse: true,
-        branch: true,
-        items: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                baseUOM: true,
-              },
-            },
-          },
         },
       },
     });
@@ -140,6 +125,7 @@ export class PurchaseOrderRepository {
         where: { id },
         data: {
           ...poData,
+          updatedAt: new Date(),
           items: {
             create: items.map(item => ({
               productId: item.productId,
@@ -149,45 +135,14 @@ export class PurchaseOrderRepository {
             })),
           },
         },
-        include: {
-          supplier: true,
-          warehouse: true,
-          branch: true,
-          items: {
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  baseUOM: true,
-                },
-              },
-            },
-          },
-        },
       });
     }
 
     // If no items provided, just update PO data
     return await prisma.purchaseOrder.update({
       where: { id },
-      data: poData,
-      include: {
-        supplier: true,
-        warehouse: true,
-        branch: true,
-        items: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                baseUOM: true,
-              },
-            },
-          },
-        },
-      },
+      data: { ...poData, updatedAt: new Date() },
+      
     });
   }
 

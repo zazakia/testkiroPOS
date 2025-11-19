@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { prisma } from '@/lib/prisma';
 
 describe('Purchase Orders API Integration Tests', () => {
   let testPOId: string;
@@ -10,15 +9,21 @@ describe('Purchase Orders API Integration Tests', () => {
   const BASE_URL = 'http://localhost:3000';
 
   beforeAll(async () => {
-    await prisma.$connect();
-    const supplier = await prisma.supplier.findFirst({ where: { status: 'active' } });
-    const branch = await prisma.branch.findFirst({ where: { status: 'active' } });
-    const warehouse = await prisma.warehouse.findFirst({ where: { branchId: branch?.id } });
-    const product = await prisma.product.findFirst({ where: { status: 'active' } });
-    supplierId = supplier?.id as string;
-    branchId = branch?.id as string;
-    warehouseId = warehouse?.id as string;
-    productId = product?.id as string;
+    const branchesRes = await fetch(`${BASE_URL}/api/branches`);
+    const branches = await branchesRes.json();
+    branchId = branches.data?.[0]?.id;
+
+    const warehousesRes = await fetch(`${BASE_URL}/api/warehouses?branchId=${branchId}`);
+    const warehouses = await warehousesRes.json();
+    warehouseId = warehouses.data?.[0]?.id;
+
+    const suppliersRes = await fetch(`${BASE_URL}/api/suppliers`);
+    const suppliers = await suppliersRes.json();
+    supplierId = suppliers.data?.[0]?.id;
+
+    const productsRes = await fetch(`${BASE_URL}/api/products`);
+    const products = await productsRes.json();
+    productId = products.data?.[0]?.id;
   });
 
   afterAll(async () => {
@@ -32,7 +37,6 @@ describe('Purchase Orders API Integration Tests', () => {
         // Ignore cleanup errors
       }
     }
-    await prisma.$disconnect();
   });
 
   describe('POST /api/purchase-orders', () => {
@@ -71,7 +75,7 @@ describe('Purchase Orders API Integration Tests', () => {
 
     it('should return 400 for invalid PO data', async () => {
       const invalidPO = {
-        supplierId: '',
+        supplierId,
         items: [],
       };
 
