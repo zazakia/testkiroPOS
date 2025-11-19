@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { CreateAuditLogInput, AuditLogFilters } from '@/types/audit.types';
 
@@ -8,6 +9,7 @@ export class AuditLogRepository {
    */
   async create(data: CreateAuditLogInput) {return prisma.auditLog.create({
       data: {
+        id: randomUUID(),
         userId: data.userId,
         action: data.action,
         resource: data.resource,
@@ -56,7 +58,7 @@ export class AuditLogRepository {
       prisma.auditLog.findMany({
         where,
         include: {
-          user: {
+          User: {
             select: {
               id: true,
               email: true,
@@ -88,7 +90,7 @@ export class AuditLogRepository {
     return prisma.auditLog.findUnique({
       where: { id: logId },
       include: {
-        user: {
+        User: {
           select: {
             id: true,
             email: true,
@@ -134,7 +136,7 @@ export class AuditLogRepository {
     return prisma.auditLog.findMany({
       where,
       include: {
-        user: {
+        User: {
           select: {
             id: true,
             email: true,

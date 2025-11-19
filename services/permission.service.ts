@@ -35,15 +35,8 @@ export class PermissionService {
    * Check if user has specific permission
    */
   async userHasPermission(userId: string, resource: string, action: string): Promise<boolean> {
-    // This would typically involve checking the user's role permissions
-    // For now, we'll implement a basic version
-    // In a full implementation, this would check the user's role and its permissions
-    const permissions = await permissionRepository.findAll();
-    const permission = permissions.find(
-      p => p.resource === resource && p.action === action
-    );
-    
-    return !!permission;
+    const permissions = await permissionRepository.findByUserId(userId);
+    return permissions.some(p => p.resource === resource && p.action === action);
   }
 
   /**

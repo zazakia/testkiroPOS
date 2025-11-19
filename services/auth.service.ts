@@ -44,7 +44,7 @@ export class AuthService {
       phone: data.phone,
       Role: { connect: { id: data.roleId } },
       Branch: data.branchId ? { connect: { id: data.branchId } } : undefined,
-      status: UserStatus.ACTIVE,
+      status: 'ACTIVE',
       emailVerified: false,
     });
 
@@ -88,7 +88,7 @@ export class AuthService {
     }
 
     // Check if user is active
-    if (user.status !== UserStatus.ACTIVE) {
+    if (user.status !== 'ACTIVE') {
       return {
         success: false,
         message: 'Account is inactive or suspended',
@@ -226,7 +226,7 @@ export class AuthService {
     }
 
     // Check if user is still active
-    if (session.User.status !== UserStatus.ACTIVE) {
+    if (session.User.status !== 'ACTIVE') {
       return null;
     }
 

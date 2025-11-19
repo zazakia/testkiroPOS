@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/services/auth.service';
 import { LoginInput } from '@/types/auth.types';
 
+const buckets: Map<string, { tokens: number; lastRefill: number }> = new Map();
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
 export async function POST(request: NextRequest) {
   try {
     const body: LoginInput = await request.json();
@@ -17,6 +21,23 @@ export async function POST(request: NextRequest) {
     // Get IP address and user agent
     const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;
     const userAgent = request.headers.get('user-agent') || undefined;
+
+    const key = `${ipAddress || 'unknown'}:${body.email}`;
+    const now = Date.now();
+    const bucket = buckets.get(key) || { tokens: RATE_LIMIT_MAX, lastRefill: now };
+    const elapsed = now - bucket.lastRefill;
+    if (elapsed >= RATE_LIMIT_WINDOW_MS) {
+      bucket.tokens = RATE_LIMIT_MAX;
+      bucket.lastRefill = now;
+    }
+    if (bucket.tokens <= 0) {
+      return NextResponse.json(
+        { success: false, message: 'Too many attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+    bucket.tokens -= 1;
+    buckets.set(key, bucket);
 
     // Attempt login
     const result = await authService.login(body, ipAddress, userAgent);
@@ -39,10 +60,10 @@ export async function POST(request: NextRequest) {
     }
 
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { success: false, message: 'An error occurred during login' },
+      { success: false, message: String(error?.message || 'An error occurred during login') },
       { status: 500 }
     );
   }

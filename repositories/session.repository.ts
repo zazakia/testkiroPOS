@@ -1,4 +1,5 @@
 import { Session, Prisma } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { CreateSessionInput, SessionFilters } from '@/types/session.types';
 
@@ -8,7 +9,7 @@ export class SessionRepository {
    */
   async create(data: CreateSessionInput) {
     return prisma.session.create({
-      data,
+      data: { id: randomUUID(), ...data },
     });
   }
 
