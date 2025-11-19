@@ -7,9 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { ColorPicker } from '@/components/ui/color-picker';
-import { FileUpload } from '@/components/ui/file-upload';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ImageUpload } from '@/components/products/image-upload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, Upload, Eye, Download, Plus, Trash2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
@@ -211,18 +210,24 @@ export function ReportTemplateConfigurator({
     setPreviewMode(true);
   };
 
-  const handleLogoUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setConfig(prev => ({
-        ...prev,
-        companySettings: {
-          ...prev.companySettings,
-          logoUrl: e.target?.result as string,
-        },
-      }));
-    };
-    reader.readAsDataURL(file);
+  const handleLogoChange = (url: string) => {
+    setConfig(prev => ({
+      ...prev,
+      companySettings: {
+        ...prev.companySettings,
+        logoUrl: url,
+      },
+    }));
+  };
+
+  const handleLogoRemove = () => {
+    setConfig(prev => ({
+      ...prev,
+      companySettings: {
+        ...prev.companySettings,
+        logoUrl: '',
+      },
+    }));
   };
 
   const updateCompanySetting = (field: keyof typeof config.companySettings, value: string) => {
@@ -351,19 +356,19 @@ export function ReportTemplateConfigurator({
               </div>
 
               <div className="flex items-center space-x-2">
-                <Switch
+                <Checkbox
                   id="isDefault"
                   checked={config.isDefault}
-                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, isDefault: checked }))}
+                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, isDefault: !!checked }))}
                 />
                 <Label htmlFor="isDefault">Set as default template</Label>
               </div>
 
               <div className="flex items-center space-x-2">
-                <Switch
+                <Checkbox
                   id="isActive"
                   checked={config.isActive}
-                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, isActive: checked }))}
+                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, isActive: !!checked }))}
                 />
                 <Label htmlFor="isActive">Active template</Label>
               </div>
@@ -388,10 +393,10 @@ export function ReportTemplateConfigurator({
                       className="h-16 w-16 object-contain border rounded"
                     />
                   )}
-                  <FileUpload
-                    accept="image/*"
-                    onFileSelect={handleLogoUpload}
-                    buttonText="Upload Logo"
+                  <ImageUpload
+                    value={config.companySettings.logoUrl || ''}
+                    onChange={handleLogoChange}
+                    onRemove={handleLogoRemove}
                   />
                 </div>
               </div>
@@ -661,10 +666,10 @@ export function ReportTemplateConfigurator({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <Switch
-                    id="headerEnabled"
-                    checked={config.sections.header.enabled}
-                    onCheckedChange={(checked) => updateSection('header', 'enabled', checked)}
+                  <Checkbox
+                  id="headerEnabled"
+                  checked={config.sections.header.enabled}
+                  onCheckedChange={(checked) => updateSection('header', 'enabled', !!checked)}
                   />
                   <Label htmlFor="headerEnabled">Enable Header</Label>
                 </div>
@@ -672,50 +677,50 @@ export function ReportTemplateConfigurator({
                 {config.sections.header.enabled && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showLogo"
                         checked={config.sections.header.showLogo}
-                        onCheckedChange={(checked) => updateSection('header', 'showLogo', checked)}
+                        onCheckedChange={(checked) => updateSection('header', 'showLogo', !!checked)}
                       />
                       <Label htmlFor="showLogo">Show Logo</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showCompanyName"
                         checked={config.sections.header.showCompanyName}
-                        onCheckedChange={(checked) => updateSection('header', 'showCompanyName', checked)}
+                        onCheckedChange={(checked) => updateSection('header', 'showCompanyName', !!checked)}
                       />
                       <Label htmlFor="showCompanyName">Show Company Name</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showAddress"
                         checked={config.sections.header.showAddress}
-                        onCheckedChange={(checked) => updateSection('header', 'showAddress', checked)}
+                        onCheckedChange={(checked) => updateSection('header', 'showAddress', !!checked)}
                       />
                       <Label htmlFor="showAddress">Show Address</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showContact"
                         checked={config.sections.header.showContact}
-                        onCheckedChange={(checked) => updateSection('header', 'showContact', checked)}
+                        onCheckedChange={(checked) => updateSection('header', 'showContact', !!checked)}
                       />
                       <Label htmlFor="showContact">Show Contact Info</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showDate"
                         checked={config.sections.header.showDate}
-                        onCheckedChange={(checked) => updateSection('header', 'showDate', checked)}
+                        onCheckedChange={(checked) => updateSection('header', 'showDate', !!checked)}
                       />
                       <Label htmlFor="showDate">Show Date</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showReportTitle"
                         checked={config.sections.header.showReportTitle}
-                        onCheckedChange={(checked) => updateSection('header', 'showReportTitle', checked)}
+                        onCheckedChange={(checked) => updateSection('header', 'showReportTitle', !!checked)}
                       />
                       <Label htmlFor="showReportTitle">Show Report Title</Label>
                     </div>
@@ -744,10 +749,10 @@ export function ReportTemplateConfigurator({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <Switch
+                  <Checkbox
                     id="footerEnabled"
                     checked={config.sections.footer.enabled}
-                    onCheckedChange={(checked) => updateSection('footer', 'enabled', checked)}
+                    onCheckedChange={(checked) => updateSection('footer', 'enabled', !!checked)}
                   />
                   <Label htmlFor="footerEnabled">Enable Footer</Label>
                 </div>
@@ -755,26 +760,26 @@ export function ReportTemplateConfigurator({
                 {config.sections.footer.enabled && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showPageNumbers"
                         checked={config.sections.footer.showPageNumbers}
-                        onCheckedChange={(checked) => updateSection('footer', 'showPageNumbers', checked)}
+                        onCheckedChange={(checked) => updateSection('footer', 'showPageNumbers', !!checked)}
                       />
                       <Label htmlFor="showPageNumbers">Show Page Numbers</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showCompanyInfo"
                         checked={config.sections.footer.showCompanyInfo}
-                        onCheckedChange={(checked) => updateSection('footer', 'showCompanyInfo', checked)}
+                        onCheckedChange={(checked) => updateSection('footer', 'showCompanyInfo', !!checked)}
                       />
                       <Label htmlFor="showCompanyInfo">Show Company Info</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showDisclaimer"
                         checked={config.sections.footer.showDisclaimer}
-                        onCheckedChange={(checked) => updateSection('footer', 'showDisclaimer', checked)}
+                        onCheckedChange={(checked) => updateSection('footer', 'showDisclaimer', !!checked)}
                       />
                       <Label htmlFor="showDisclaimer">Show Disclaimer</Label>
                     </div>
@@ -803,10 +808,10 @@ export function ReportTemplateConfigurator({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <Switch
+                  <Checkbox
                     id="summaryEnabled"
                     checked={config.sections.summary.enabled}
-                    onCheckedChange={(checked) => updateSection('summary', 'enabled', checked)}
+                    onCheckedChange={(checked) => updateSection('summary', 'enabled', !!checked)}
                   />
                   <Label htmlFor="summaryEnabled">Enable Summary</Label>
                 </div>
@@ -814,26 +819,26 @@ export function ReportTemplateConfigurator({
                 {config.sections.summary.enabled && (
                   <div className="grid grid-cols-3 gap-4">
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showTotals"
                         checked={config.sections.summary.showTotals}
-                        onCheckedChange={(checked) => updateSection('summary', 'showTotals', checked)}
+                        onCheckedChange={(checked) => updateSection('summary', 'showTotals', !!checked)}
                       />
                       <Label htmlFor="showTotals">Show Totals</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showAverages"
                         checked={config.sections.summary.showAverages}
-                        onCheckedChange={(checked) => updateSection('summary', 'showAverages', checked)}
+                        onCheckedChange={(checked) => updateSection('summary', 'showAverages', !!checked)}
                       />
                       <Label htmlFor="showAverages">Show Averages</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showPercentages"
                         checked={config.sections.summary.showPercentages}
-                        onCheckedChange={(checked) => updateSection('summary', 'showPercentages', checked)}
+                        onCheckedChange={(checked) => updateSection('summary', 'showPercentages', !!checked)}
                       />
                       <Label htmlFor="showPercentages">Show Percentages</Label>
                     </div>
@@ -849,10 +854,10 @@ export function ReportTemplateConfigurator({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <Switch
+                  <Checkbox
                     id="detailsEnabled"
                     checked={config.sections.details.enabled}
-                    onCheckedChange={(checked) => updateSection('details', 'enabled', checked)}
+                    onCheckedChange={(checked) => updateSection('details', 'enabled', !!checked)}
                   />
                   <Label htmlFor="detailsEnabled">Enable Details</Label>
                 </div>
@@ -860,18 +865,18 @@ export function ReportTemplateConfigurator({
                 {config.sections.details.enabled && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="showGrid"
                         checked={config.sections.details.showGrid}
-                        onCheckedChange={(checked) => updateSection('details', 'showGrid', checked)}
+                        onCheckedChange={(checked) => updateSection('details', 'showGrid', !!checked)}
                       />
                       <Label htmlFor="showGrid">Show Grid Lines</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch
+                      <Checkbox
                         id="alternatingRows"
                         checked={config.sections.details.alternatingRows}
-                        onCheckedChange={(checked) => updateSection('details', 'alternatingRows', checked)}
+                        onCheckedChange={(checked) => updateSection('details', 'alternatingRows', !!checked)}
                       />
                       <Label htmlFor="alternatingRows">Alternating Row Colors</Label>
                     </div>
@@ -892,10 +897,10 @@ export function ReportTemplateConfigurator({
               <div className="grid grid-cols-2 gap-4">
                 {Object.entries(config.filters).map(([filter, enabled]) => (
                   <div key={filter} className="flex items-center space-x-2">
-                    <Switch
+                    <Checkbox
                       id={`${filter}Filter`}
                       checked={enabled}
-                      onCheckedChange={(checked) => updateFilter(filter as keyof typeof config.filters, checked)}
+                      onCheckedChange={(checked) => updateFilter(filter as keyof typeof config.filters, !!checked)}
                     />
                     <Label htmlFor={`${filter}Filter`} className="capitalize">
                       {filter.replace(/([A-Z])/g, ' $1').trim()}
