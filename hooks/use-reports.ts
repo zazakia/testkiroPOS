@@ -7,6 +7,8 @@ import {
   ProfitLossStatement,
   CashFlowStatement,
   BalanceSheet,
+  CashFlowStatement,
+  BalanceSheet,
   ReportFilters,
   POSReceipt,
   DailySalesSummary,
@@ -255,6 +257,76 @@ export function usePOSReceipt(receiptId?: string) {
   return { data, loading, error, refetch: fetchReceipt };
 }
 
+export function useCashFlow(filters?: ReportFilters) {
+  const [data, setData] = useState<CashFlowStatement | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.fromDate) params.append('fromDate', filters.fromDate.toISOString());
+      if (filters?.toDate) params.append('toDate', filters.toDate.toISOString());
+
+      const response = await fetch(`/api/reports/cash-flow?${params.toString()}`);
+      const result = await response.json();
+      if (result.success) {
+        setData(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch cash flow');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, [filters?.branchId, filters?.fromDate, filters?.toDate]);
+
+  return { data, loading, error, refetch: fetchReport };
+}
+
+export function useBalanceSheet(filters?: ReportFilters) {
+  const [data, setData] = useState<BalanceSheet | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.fromDate) params.append('fromDate', filters.fromDate.toISOString());
+      if (filters?.toDate) params.append('toDate', filters.toDate.toISOString());
+
+      const response = await fetch(`/api/reports/balance-sheet?${params.toString()}`);
+      const result = await response.json();
+      if (result.success) {
+        setData(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch balance sheet');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, [filters?.branchId, filters?.fromDate, filters?.toDate]);
+
+  return { data, loading, error, refetch: fetchReport };
+}
+
 export function useDailySalesSummary(filters?: ReportFilters) {
   const [data, setData] = useState<DailySalesSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -389,6 +461,41 @@ export function usePromotionUsage(filters?: ReportFilters) {
         setError(null);
       } else {
         setError(result.error || 'Failed to fetch report');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, [filters?.branchId, filters?.fromDate, filters?.toDate]);
+
+  return { data, loading, error, refetch: fetchReport };
+}
+
+export function useReceivingVariance(filters?: ReportFilters) {
+  const [data, setData] = useState<import('@/types/receiving-voucher.types').VarianceReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      if (filters?.fromDate) params.append('startDate', filters.fromDate.toISOString());
+      if (filters?.toDate) params.append('endDate', filters.toDate.toISOString());
+
+      const response = await fetch(`/api/reports/receiving-variance?${params.toString()}`);
+      const result = await response.json();
+      if (result.success) {
+        setData(result.data || []);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch receiving variance');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
