@@ -1,11 +1,24 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { prisma } from '@/lib/prisma';
 
 describe('Purchase Orders API Integration Tests', () => {
   let testPOId: string;
+  let supplierId: string;
+  let warehouseId: string;
+  let branchId: string;
+  let productId: string;
   const BASE_URL = 'http://localhost:3000';
 
   beforeAll(async () => {
-    // Ensure server is running
+    await prisma.$connect();
+    const supplier = await prisma.supplier.findFirst({ where: { status: 'active' } });
+    const branch = await prisma.branch.findFirst({ where: { status: 'active' } });
+    const warehouse = await prisma.warehouse.findFirst({ where: { branchId: branch?.id } });
+    const product = await prisma.product.findFirst({ where: { status: 'active' } });
+    supplierId = supplier?.id as string;
+    branchId = branch?.id as string;
+    warehouseId = warehouse?.id as string;
+    productId = product?.id as string;
   });
 
   afterAll(async () => {
@@ -19,20 +32,21 @@ describe('Purchase Orders API Integration Tests', () => {
         // Ignore cleanup errors
       }
     }
+    await prisma.$disconnect();
   });
 
   describe('POST /api/purchase-orders', () => {
     it('should create a new purchase order', async () => {
       const timestamp = Date.now();
       const newPO = {
-        supplierId: 'test-supplier-id',
-        warehouseId: 'test-warehouse-id',
-        branchId: 'test-branch-id',
+        supplierId,
+        warehouseId,
+        branchId,
         expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         notes: `Integration Test PO ${timestamp}`,
         items: [
           {
-            productId: 'test-product-id',
+            productId,
             quantity: 10,
             unitPrice: 50,
           },
