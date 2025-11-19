@@ -15,7 +15,7 @@ import {
 import { CreateUserInput } from '@/types/user.types';
 import { AuditAction, AuditResource } from '@/types/audit.types';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? 'your-secret-key-change-in-production' : '');
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '24h';
 
 export class AuthService {
@@ -68,6 +68,9 @@ export class AuthService {
    * Login user
    */
   async login(credentials: LoginInput, ipAddress?: string, userAgent?: string): Promise<AuthResponse> {
+    if (!JWT_SECRET) {
+      throw new Error('JWT_SECRET is not configured');
+    }
     // Find user by email
     const user = await userRepository.findByEmail(credentials.email);
     
@@ -306,6 +309,7 @@ export class AuthService {
    */
   verifyToken(token: string): JWTPayload | null {
     try {
+      if (!JWT_SECRET) return null;
       return jwt.verify(token, JWT_SECRET) as JWTPayload;
     } catch (error) {
       return null;

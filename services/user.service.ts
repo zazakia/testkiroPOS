@@ -1,6 +1,6 @@
 // @ts-nocheck
 import bcrypt from 'bcryptjs';
-import { Prisma, UserStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { userRepository } from '@/repositories/user.repository';
 import { auditLogRepository } from '@/repositories/audit-log.repository';
 import { CreateUserInput, UpdateUserInput, UserFilters } from '@/types/user.types';
@@ -56,7 +56,7 @@ export class UserService {
       phone: data.phone,
       Role: { connect: { id: data.roleId } },
       Branch: data.branchId ? { connect: { id: data.branchId } } : undefined,
-      status: UserStatus.ACTIVE,
+      status: 'ACTIVE',
       emailVerified: false,
     };
 
@@ -156,7 +156,7 @@ export class UserService {
     }
 
     // Soft delete by setting status to INACTIVE
-    await userRepository.update(id, { status: UserStatus.INACTIVE });
+    await userRepository.update(id, { status: 'INACTIVE' });
 
     // Log the action
     await auditLogRepository.create({
@@ -188,14 +188,14 @@ export class UserService {
       throw new Error('User not found');
     }
 
-    await userRepository.update(id, { status: UserStatus.ACTIVE });
+    await userRepository.update(id, { status: 'ACTIVE' });
 
     await auditLogRepository.create({
       userId: activatedById,
       action: AuditAction.USER_UPDATED,
       resource: AuditResource.USER,
       resourceId: id,
-      details: { status: UserStatus.ACTIVE },
+      details: { status: 'ACTIVE' },
       ipAddress,
       userAgent,
     });
@@ -215,14 +215,14 @@ export class UserService {
       throw new Error('User not found');
     }
 
-    await userRepository.update(id, { status: UserStatus.SUSPENDED });
+    await userRepository.update(id, { status: 'SUSPENDED' });
 
     await auditLogRepository.create({
       userId: suspendedById,
       action: AuditAction.USER_UPDATED,
       resource: AuditResource.USER,
       resourceId: id,
-      details: { status: UserStatus.SUSPENDED },
+      details: { status: 'SUSPENDED' },
       ipAddress,
       userAgent,
     });

@@ -28,7 +28,7 @@ export class DashboardService {
     const batches = await prisma.inventoryBatch.findMany({
       where: {
         status: 'active',
-        ...(filters?.branchId ? { warehouse: { branchId: filters.branchId } } : {}),
+        ...(filters?.branchId ? { Warehouse: { branchId: filters.branchId } } : {}),
       },
     });
     const totalStock = batches.reduce((sum, b) => sum + Number(b.quantity), 0);
@@ -63,17 +63,17 @@ export class DashboardService {
     const products = await prisma.product.findMany({
       where: { status: 'active' },
       include: {
-        inventoryBatches: {
+        InventoryBatch: {
           where: {
             status: 'active',
-            ...(filters?.branchId ? { warehouse: { branchId: filters.branchId } } : {}),
+            ...(filters?.branchId ? { Warehouse: { branchId: filters.branchId } } : {}),
           },
         },
       },
     });
 
     for (const product of products) {
-      for (const batch of product.inventoryBatches) {
+      for (const batch of product.InventoryBatch) {
         const batchValue = new Decimal(batch.quantity).times(batch.unitCost);
         inventoryValue = inventoryValue.plus(batchValue);
       }
@@ -164,10 +164,10 @@ export class DashboardService {
   async getTopSellingProducts(limit: number = 5, branchId?: string): Promise<TopProduct[]> {
     const salesItems = await prisma.pOSSaleItem.findMany({
       where: {
-        ...(branchId ? { sale: { branchId } } : {}),
+        ...(branchId ? { POSSale: { branchId } } : {}),
       },
       include: {
-        product: true,
+        Product: true,
       },
     });
 
@@ -181,7 +181,7 @@ export class DashboardService {
         existing.revenue = existing.revenue.plus(item.subtotal);
       } else {
         productMap.set(item.productId, {
-          name: item.product.name,
+          name: item.Product.name,
           quantity: new Decimal(item.quantity),
           revenue: new Decimal(item.subtotal),
         });
@@ -207,14 +207,14 @@ export class DashboardService {
         ...(branchId ? { branchId } : {}),
       },
       include: {
-        inventoryBatches: {
+        InventoryBatch: {
           where: { status: 'active' },
         },
       },
     });
 
     return warehouses.map((warehouse) => {
-      const currentStock = warehouse.inventoryBatches.reduce(
+      const currentStock = warehouse.InventoryBatch.reduce(
         (sum, batch) => sum + Number(batch.quantity),
         0
       );
@@ -246,12 +246,12 @@ export class DashboardService {
     const branches = await prisma.branch.findMany({
       where: { status: 'active' },
       include: {
-        posSales: {
+        POSSale: {
           include: {
-            items: true,
+            POSSaleItem: true,
           },
         },
-        expenses: true,
+        Expense: true,
       },
     });
 
@@ -259,20 +259,20 @@ export class DashboardService {
 
     for (const branch of branches) {
       // Calculate revenue
-      const revenue = branch.posSales.reduce(
+      const revenue = branch.POSSale.reduce(
         (sum, sale) => sum.plus(sale.totalAmount),
         new Decimal(0)
       );
 
       // Calculate expenses
-      const expenses = branch.expenses.reduce(
+      const expenses = branch.Expense.reduce(
         (sum, exp) => sum.plus(exp.amount),
         new Decimal(0)
       );
 
       // Calculate COGS
-      const cogs = branch.posSales.reduce((sum, sale) => {
-        const saleCogs = sale.items.reduce(
+      const cogs = branch.POSSale.reduce((sum, sale) => {
+        const saleCogs = sale.POSSaleItem.reduce(
           (itemSum, item) => itemSum.plus(item.costOfGoodsSold),
           new Decimal(0)
         );
@@ -286,7 +286,7 @@ export class DashboardService {
       const batches = await prisma.inventoryBatch.findMany({
         where: {
           status: 'active',
-          warehouse: { branchId: branch.id },
+          Warehouse: { branchId: branch.id },
         },
       });
 

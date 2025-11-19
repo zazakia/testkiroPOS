@@ -1,4 +1,4 @@
-import { UserStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { UserFilters } from '@/types/user.types';
 
@@ -142,7 +142,7 @@ export class UserRepository {
   /**
    * Update user status
    */
-  async updateStatus(userId: string, status: UserStatus) {
+  async updateStatus(userId: string, status: string) {
     return prisma.user.update({
       where: { id: userId },
       data: { status },
