@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 import { userRepository } from '@/repositories/user.repository';
 import { sessionRepository } from '@/repositories/session.repository';
 import { auditLogRepository } from '@/repositories/audit-log.repository';
@@ -34,13 +35,18 @@ export class AuthService {
     // Hash password
     const passwordHash = await bcrypt.hash(data.password, 12);
 
+    // Generate unique ID for user
+    const userId = randomUUID();
+
     // Create user
     const user = await userRepository.create({
+      id: userId,
       email: data.email,
       passwordHash,
       firstName: data.firstName,
       lastName: data.lastName,
       phone: data.phone,
+      updatedAt: new Date(),
       Role: { connect: { id: data.roleId } },
       Branch: data.branchId ? { connect: { id: data.branchId } } : undefined,
       status: 'ACTIVE',

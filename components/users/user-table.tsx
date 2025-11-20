@@ -102,7 +102,7 @@ export function UserTable({ users, onEdit }: UserTableProps) {
                     {user.firstName} {user.lastName}
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.role.name}</TableCell>
+                  <TableCell>{user.role?.name || 'No Role'}</TableCell>
                   <TableCell>{user.branch?.name || '-'}</TableCell>
                   <TableCell>{getStatusBadge(user.status)}</TableCell>
                   <TableCell>{getEmailVerifiedBadge(user.emailVerified)}</TableCell>

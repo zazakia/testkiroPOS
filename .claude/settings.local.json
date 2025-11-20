@@ -22,7 +22,10 @@
       "Bash(node seed-auth.js:*)",
       "Bash(node -e:*)",
       "Bash(node check-user.js:*)",
-      "Bash(node test-login.js:*)"
+      "Bash(node test-login.js:*)",
+      "Bash(node check-roles.js:*)",
+      "Bash(node test-registration.js:*)",
+      "Bash(node test-apis.js:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth.context';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,19 @@ export default function RegisterPage() {
     password: '',
     firstName: '',
     lastName: '',
-    roleId: '', // Note: This should be set to a default role or selected
+    roleId: '', // Will be set to default role on mount
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Default to Cashier role (lowest privilege - safe for public registration)
+  // Role ID from database: Cashier = '64d6a622-3682-43b9-af52-cb19e35ff18b'
+  const CASHIER_ROLE_ID = '64d6a622-3682-43b9-af52-cb19e35ff18b';
+
+  useEffect(() => {
+    // Set default role on mount
+    setFormData(prev => ({ ...prev, roleId: CASHIER_ROLE_ID }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,11 +44,15 @@ export default function RegisterPage() {
       return;
     }
 
+    // Validate roleId is set
+    if (!formData.roleId) {
+      setError('System error: Role not set. Please refresh the page.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const result = await register({
-        ...formData,
-        roleId: 'default-role-id', // TODO: Set proper default role or let user select
-      });
+      const result = await register(formData);
 
       if (result.success) {
         router.push('/login');

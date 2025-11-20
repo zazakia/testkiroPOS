@@ -25,7 +25,7 @@ export class ProductRepository {
     return await prisma.product.findMany({
       where,
       include: {
-        alternateUOMs: true,
+        ProductUOM: true,
       },
       orderBy: { name: 'asc' },
     });
@@ -35,7 +35,7 @@ export class ProductRepository {
     return await prisma.product.findUnique({
       where: { id },
       include: {
-        alternateUOMs: true,
+        ProductUOM: true,
       },
     });
   }
@@ -50,36 +50,36 @@ export class ProductRepository {
     return await prisma.product.findMany({
       where: { status: 'active' },
       include: {
-        alternateUOMs: true,
+        ProductUOM: true,
       },
       orderBy: { name: 'asc' },
     });
   }
 
   async create(data: CreateProductInput): Promise<ProductWithUOMs> {
-    const { alternateUOMs, ...productData } = data;
+    const { ProductUOM, ...productData } = data;
 
     return await prisma.product.create({
       data: {
         ...productData,
         updatedAt: new Date(),
-        alternateUOMs: alternateUOMs && alternateUOMs.length > 0
+        ProductUOM: ProductUOM && ProductUOM.length > 0
           ? {
-              create: alternateUOMs.map(u => ({ id: randomUUID(), ...u })),
+              create: ProductUOM.map(u => ({ id: randomUUID(), ...u })),
             }
           : undefined,
       },
       include: {
-        alternateUOMs: true,
+        ProductUOM: true,
       },
     });
   }
 
   async update(id: string, data: UpdateProductInput): Promise<ProductWithUOMs> {
-    const { alternateUOMs, ...productData } = data;
+    const { ProductUOM, ...productData } = data;
 
-    // If alternateUOMs are provided, we need to handle them separately
-    if (alternateUOMs !== undefined) {
+    // If ProductUOM are provided, we need to handle them separately
+    if (ProductUOM !== undefined) {
       // Delete existing alternate UOMs and create new ones
       await prisma.productUOM.deleteMany({
         where: { productId: id },
@@ -90,24 +90,24 @@ export class ProductRepository {
         data: {
           ...productData,
           updatedAt: new Date(),
-          alternateUOMs: alternateUOMs.length > 0
+          ProductUOM: ProductUOM.length > 0
             ? {
-                create: alternateUOMs.map(u => ({ id: randomUUID(), ...u })),
+                create: ProductUOM.map(u => ({ id: randomUUID(), ...u })),
               }
             : undefined,
         },
         include: {
-          alternateUOMs: true,
+          ProductUOM: true,
         },
       });
     }
 
-    // If no alternateUOMs provided, just update product data
+    // If no ProductUOM provided, just update product data
     return await prisma.product.update({
       where: { id },
       data: { ...productData, updatedAt: new Date() },
       include: {
-        alternateUOMs: true,
+        ProductUOM: true,
       },
     });
   }

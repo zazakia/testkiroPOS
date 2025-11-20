@@ -16,18 +16,27 @@ export async function GET(request: NextRequest) {
 
     const products = await productService.getAllProducts(filters);
     return NextResponse.json({ success: true, data: products });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching products:', error);
-    
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+
     if (error instanceof AppError) {
       return NextResponse.json(
         { success: false, error: error.message },
         { status: error.statusCode }
       );
     }
-    
+
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch products' },
+      {
+        success: false,
+        error: 'Failed to fetch products',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   }
