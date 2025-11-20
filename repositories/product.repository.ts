@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { randomUUID } from 'crypto';
 import { Product } from '@prisma/client';
 import { CreateProductInput, UpdateProductInput, ProductWithUOMs, ProductFilters } from '@/types/product.types';
 
@@ -64,7 +65,7 @@ export class ProductRepository {
         updatedAt: new Date(),
         alternateUOMs: alternateUOMs && alternateUOMs.length > 0
           ? {
-              create: alternateUOMs,
+              create: alternateUOMs.map(u => ({ id: randomUUID(), ...u })),
             }
           : undefined,
       },
@@ -91,7 +92,7 @@ export class ProductRepository {
           updatedAt: new Date(),
           alternateUOMs: alternateUOMs.length > 0
             ? {
-                create: alternateUOMs,
+                create: alternateUOMs.map(u => ({ id: randomUUID(), ...u })),
               }
             : undefined,
         },

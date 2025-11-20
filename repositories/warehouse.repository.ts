@@ -6,7 +6,7 @@ export class WarehouseRepository {
   async findAll(): Promise<Warehouse[]> {
     return await prisma.warehouse.findMany({
       include: {
-        branch: true,
+        Branch: true,
       },
       orderBy: { name: 'asc' },
     });
@@ -16,7 +16,7 @@ export class WarehouseRepository {
     return await prisma.warehouse.findUnique({
       where: { id },
       include: {
-        branch: true,
+        Branch: true,
       },
     });
   }
@@ -25,7 +25,7 @@ export class WarehouseRepository {
     return await prisma.warehouse.findMany({
       where: { branchId },
       include: {
-        branch: true,
+        Branch: true,
       },
       orderBy: { name: 'asc' },
     });
@@ -41,7 +41,7 @@ export class WarehouseRepository {
         branchId: data.branchId,
       },
       include: {
-        branch: true,
+        Branch: true,
       },
     });
   }
@@ -51,7 +51,7 @@ export class WarehouseRepository {
       where: { id },
       data,
       include: {
-        branch: true,
+        Branch: true,
       },
     });
   }
@@ -84,7 +84,7 @@ export class WarehouseRepository {
         quantity: { gt: 0 },
       },
       include: {
-        product: {
+        Product: {
           select: {
             id: true,
             name: true,
@@ -95,14 +95,14 @@ export class WarehouseRepository {
     });
 
     // Group by product and sum quantities
-    const distribution = batches.reduce((acc, batch) => {
-      const productId = batch.product.id;
+    const distribution = batches.reduce((acc, batch: any) => {
+      const productId = batch.Product.id;
       if (!acc[productId]) {
         acc[productId] = {
-          productId: batch.product.id,
-          productName: batch.product.name,
+          productId: batch.Product.id,
+          productName: batch.Product.name,
           quantity: 0,
-          baseUOM: batch.product.baseUOM,
+          baseUOM: batch.Product.baseUOM,
         };
       }
       acc[productId].quantity += Number(batch.quantity);

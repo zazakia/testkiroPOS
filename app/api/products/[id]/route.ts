@@ -50,7 +50,7 @@ export async function PUT(
     }
     
     return NextResponse.json(
-      { success: false, error: 'Failed to update product' },
+      { success: false, error: (error as any)?.message || 'Failed to update product' },
       { status: 500 }
     );
   }

@@ -39,16 +39,21 @@ export class RoleRepository {
    * Find role by ID with permissions
    */
   async findByIdWithPermissions(roleId: string) {
-    return prisma.role.findUnique({
+    const row = await prisma.role.findUnique({
       where: { id: roleId },
       include: {
-        permissions: {
+        RolePermission: {
           include: {
-            permission: true,
+            Permission: true,
           },
         },
       },
     });
+    if (!row) return null as any;
+    return {
+      ...row,
+      permissions: (row as any).RolePermission?.map((rp: any) => ({ ...rp, permission: rp.Permission })) || [],
+    } as any;
   }
 
   /**

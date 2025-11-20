@@ -36,32 +36,41 @@ export class POSRepository {
       };
     }
 
-    return await prisma.pOSSale.findMany({
+    const rows = await prisma.pOSSale.findMany({
       where,
       include: {
-        items: {
+        POSSaleItem: {
           include: {
-            product: true,
+            Product: true,
           },
         },
-        branch: true,
+        Branch: true,
       },
       orderBy: { createdAt: 'desc' },
     });
+    return rows.map((s: any) => ({
+      ...s,
+      items: (s.POSSaleItem || []).map((it: any) => ({ ...it, product: it.Product })),
+    }));
   }
 
   async findById(id: string): Promise<POSSaleWithItems | null> {
-    return await prisma.pOSSale.findUnique({
+    const row = await prisma.pOSSale.findUnique({
       where: { id },
       include: {
-        items: {
+        POSSaleItem: {
           include: {
-            product: true,
+            Product: true,
           },
         },
-        branch: true,
+        Branch: true,
       },
     });
+    if (!row) return null;
+    return {
+      ...row,
+      items: (row as any).POSSaleItem?.map((it: any) => ({ ...it, product: it.Product })) || [],
+    } as any;
   }
 
   async findByReceiptNumber(receiptNumber: string): Promise<POSSale | null> {
@@ -89,7 +98,7 @@ export class POSRepository {
     }
 
     // Only pass fields that exist on the Prisma POSSale model.
-    return await prisma.pOSSale.create({
+    const row = await prisma.pOSSale.create({
       data: {
         branchId: saleData.branchId,
         subtotal: saleData.subtotal,
@@ -100,7 +109,7 @@ export class POSRepository {
         change: saleData.change,
         convertedFromOrderId: saleData.convertedFromOrderId,
         receiptNumber,
-        items: {
+        POSSaleItem: {
           create: items.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -112,14 +121,18 @@ export class POSRepository {
         },
       },
       include: {
-        items: {
+        POSSaleItem: {
           include: {
-            product: true,
+            Product: true,
           },
         },
-        branch: true,
+        Branch: true,
       },
     });
+    return {
+      ...row,
+      items: (row as any).POSSaleItem?.map((it: any) => ({ ...it, product: it.Product })) || [],
+    } as any;
   }
 
   async getTodaySummary(branchId?: string): Promise<POSTodaySummary> {

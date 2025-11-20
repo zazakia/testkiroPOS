@@ -4,25 +4,28 @@ import { ARFilters } from '@/types/ar.types';
 
 export class ARRepository {
   async create(data: Prisma.AccountsReceivableCreateInput): Promise<AccountsReceivable> {
-    return await prisma.accountsReceivable.create({
+    const row = await prisma.accountsReceivable.create({
       data,
       include: {
-        branch: true,
-        payments: true,
+        Branch: true,
+        ARPayment: true,
       },
     });
+    return { ...row, payments: (row as any).ARPayment, branch: (row as any).Branch } as any;
   }
 
   async findById(id: string) {
-    return await prisma.accountsReceivable.findUnique({
+    const row = await prisma.accountsReceivable.findUnique({
       where: { id },
       include: {
-        branch: true,
-        payments: {
+        Branch: true,
+        ARPayment: {
           orderBy: { paymentDate: 'desc' },
         },
       },
     });
+    if (!row) return null;
+    return { ...row, payments: (row as any).ARPayment, branch: (row as any).Branch } as any;
   }
 
   async findAll(filters?: ARFilters) {
@@ -53,25 +56,27 @@ export class ARRepository {
       }
     }
 
-    return await prisma.accountsReceivable.findMany({
+    const rows = await prisma.accountsReceivable.findMany({
       where,
       include: {
-        branch: true,
-        payments: true,
+        Branch: true,
+        ARPayment: true,
       },
       orderBy: { createdAt: 'desc' },
     });
+    return rows.map((r: any) => ({ ...r, payments: r.ARPayment, branch: r.Branch }));
   }
 
   async update(id: string, data: Prisma.AccountsReceivableUpdateInput) {
-    return await prisma.accountsReceivable.update({
+    const row2 = await prisma.accountsReceivable.update({
       where: { id },
       data,
       include: {
-        branch: true,
-        payments: true,
+        Branch: true,
+        ARPayment: true,
       },
     });
+    return { ...row2, payments: (row2 as any).ARPayment, branch: (row2 as any).Branch } as any;
   }
 
   async delete(id: string) {
@@ -104,13 +109,14 @@ export class ARRepository {
       where.branchId = branchId;
     }
 
-    return await prisma.accountsReceivable.findMany({
+    const rows2 = await prisma.accountsReceivable.findMany({
       where,
       include: {
-        branch: true,
+        Branch: true,
       },
       orderBy: { dueDate: 'asc' },
     });
+    return rows2.map((r: any) => ({ ...r, branch: r.Branch }));
   }
 
   async getSummary(branchId?: string) {

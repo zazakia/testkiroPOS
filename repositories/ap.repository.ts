@@ -4,27 +4,30 @@ import { APFilters } from '@/types/ap.types';
 
 export class APRepository {
   async create(data: Prisma.AccountsPayableCreateInput): Promise<AccountsPayable> {
-    return await prisma.accountsPayable.create({
+    const row = await prisma.accountsPayable.create({
       data,
       include: {
-        branch: true,
-        supplier: true,
-        payments: true,
+        Branch: true,
+        Supplier: true,
+        APPayment: true,
       },
     });
+    return { ...row, branch: (row as any).Branch, supplier: (row as any).Supplier, payments: (row as any).APPayment } as any;
   }
 
   async findById(id: string) {
-    return await prisma.accountsPayable.findUnique({
+    const row = await prisma.accountsPayable.findUnique({
       where: { id },
       include: {
-        branch: true,
-        supplier: true,
-        payments: {
+        Branch: true,
+        Supplier: true,
+        APPayment: {
           orderBy: { paymentDate: 'desc' },
         },
       },
     });
+    if (!row) return null;
+    return { ...row, branch: (row as any).Branch, supplier: (row as any).Supplier, payments: (row as any).APPayment } as any;
   }
 
   async findAll(filters?: APFilters) {
@@ -52,27 +55,29 @@ export class APRepository {
       }
     }
 
-    return await prisma.accountsPayable.findMany({
+    const rows = await prisma.accountsPayable.findMany({
       where,
       include: {
-        branch: true,
-        supplier: true,
-        payments: true,
+        Branch: true,
+        Supplier: true,
+        APPayment: true,
       },
       orderBy: { createdAt: 'desc' },
     });
+    return rows.map((r: any) => ({ ...r, branch: r.Branch, supplier: r.Supplier, payments: r.APPayment }));
   }
 
   async update(id: string, data: Prisma.AccountsPayableUpdateInput) {
-    return await prisma.accountsPayable.update({
+    const row2 = await prisma.accountsPayable.update({
       where: { id },
       data,
       include: {
-        branch: true,
-        supplier: true,
-        payments: true,
+        Branch: true,
+        Supplier: true,
+        APPayment: true,
       },
     });
+    return { ...row2, branch: (row2 as any).Branch, supplier: (row2 as any).Supplier, payments: (row2 as any).APPayment } as any;
   }
 
   async delete(id: string) {
@@ -105,14 +110,15 @@ export class APRepository {
       where.branchId = branchId;
     }
 
-    return await prisma.accountsPayable.findMany({
+    const rows2 = await prisma.accountsPayable.findMany({
       where,
       include: {
-        branch: true,
-        supplier: true,
+        Branch: true,
+        Supplier: true,
       },
       orderBy: { dueDate: 'asc' },
     });
+    return rows2.map((r: any) => ({ ...r, branch: r.Branch, supplier: r.Supplier }));
   }
 
   async getSummary(branchId?: string) {

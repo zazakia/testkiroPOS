@@ -33,7 +33,7 @@ describe('Products API Integration Tests', () => {
         shelfLifeDays: 365,
       };
 
-      const response = await fetch('http://localhost:3000/api/products', {
+      const response = await fetch(`${BASE_URL}/api/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProduct),
@@ -55,7 +55,7 @@ describe('Products API Integration Tests', () => {
         sku: '',
       };
 
-      const response = await fetch('http://localhost:3000/api/products', {
+      const response = await fetch(`${BASE_URL}/api/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(invalidProduct),
@@ -70,7 +70,7 @@ describe('Products API Integration Tests', () => {
 
   describe('GET /api/products', () => {
     it('should return list of products', async () => {
-      const response = await fetch('http://localhost:3000/api/products');
+      const response = await fetch(`${BASE_URL}/api/products`);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -79,7 +79,7 @@ describe('Products API Integration Tests', () => {
     });
 
     it('should filter products by category', async () => {
-      const response = await fetch('http://localhost:3000/api/products?category=Water');
+      const response = await fetch(`${BASE_URL}/api/products?category=Water`);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -95,7 +95,7 @@ describe('Products API Integration Tests', () => {
     it('should return a product by ID', async () => {
       if (!testProductId) return;
 
-      const response = await fetch(`http://localhost:3000/api/products/${testProductId}`);
+      const response = await fetch(`${BASE_URL}/api/products/${testProductId}`);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -104,7 +104,7 @@ describe('Products API Integration Tests', () => {
     });
 
     it('should return 404 for non-existent product', async () => {
-      const response = await fetch('http://localhost:3000/api/products/non-existent-id');
+      const response = await fetch(`${BASE_URL}/api/products/non-existent-id`);
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -112,3 +112,4 @@ describe('Products API Integration Tests', () => {
     });
   });
 });
+import { BASE_URL } from '../config'

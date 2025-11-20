@@ -7,7 +7,7 @@ export class ExpenseRepository {
     return await prisma.expense.create({
       data,
       include: {
-        branch: true,
+        Branch: true,
       },
     });
   }
@@ -16,7 +16,7 @@ export class ExpenseRepository {
     return await prisma.expense.findUnique({
       where: { id },
       include: {
-        branch: true,
+        Branch: true,
       },
     });
   }
@@ -56,7 +56,7 @@ export class ExpenseRepository {
     return await prisma.expense.findMany({
       where,
       include: {
-        branch: true,
+        Branch: true,
       },
       orderBy: { expenseDate: 'desc' },
     });
@@ -67,7 +67,7 @@ export class ExpenseRepository {
       where: { id },
       data,
       include: {
-        branch: true,
+        Branch: true,
       },
     });
   }

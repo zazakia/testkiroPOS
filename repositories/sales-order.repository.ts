@@ -54,30 +54,43 @@ export class SalesOrderRepository {
       ];
     }
 
-    return await prisma.salesOrder.findMany({
+    const rows = await prisma.salesOrder.findMany({
       where,
       include: {
-        items: true,
-        warehouse: true,
-        branch: true,
+        SalesOrderItem: {
+          include: {
+            Product: true,
+          },
+        },
+        Warehouse: true,
+        Branch: true,
       },
       orderBy: { createdAt: 'desc' },
     });
+    return rows.map((o: any) => ({
+      ...o,
+      items: (o.SalesOrderItem || []).map((it: any) => ({ ...it, product: it.Product })),
+    }));
   }
 
   async findById(id: string): Promise<SalesOrderWithItems | null> {
-    return await prisma.salesOrder.findUnique({
+    const row = await prisma.salesOrder.findUnique({
       where: { id },
       include: {
-        items: {
+        SalesOrderItem: {
           include: {
-            product: true,
+            Product: true,
           },
         },
-        warehouse: true,
-        branch: true,
+        Warehouse: true,
+        Branch: true,
       },
     });
+    if (!row) return null;
+    return {
+      ...row,
+      items: (row as any).SalesOrderItem?.map((it: any) => ({ ...it, product: it.Product })) || [],
+    } as any;
   }
 
   async findByOrderNumber(orderNumber: string): Promise<SalesOrder | null> {
@@ -96,37 +109,47 @@ export class SalesOrderRepository {
       where.branchId = branchId;
     }
 
-    return await prisma.salesOrder.findMany({
+    const rows = await prisma.salesOrder.findMany({
       where,
       include: {
-        items: {
+        SalesOrderItem: {
           include: {
-            product: true,
+            Product: true,
           },
         },
-        warehouse: true,
-        branch: true,
+        Warehouse: true,
+        Branch: true,
       },
       orderBy: { deliveryDate: 'asc' },
     });
+    return rows.map((o: any) => ({
+      ...o,
+      items: (o.SalesOrderItem || []).map((it: any) => ({ ...it, product: it.Product })),
+    }));
   }
 
   async create(data: CreateSalesOrderInput): Promise<SalesOrderWithItems> {
     const { items, ...orderData } = data;
 
-    return await prisma.salesOrder.create({
+    const row = await prisma.salesOrder.create({
       data: {
         ...orderData,
-        items: {
+        SalesOrderItem: {
           create: items,
         },
       },
       include: {
-        items: true,
-        warehouse: true,
-        branch: true,
+        SalesOrderItem: {
+          include: { Product: true },
+        },
+        Warehouse: true,
+        Branch: true,
       },
     });
+    return {
+      ...row,
+      items: (row as any).SalesOrderItem?.map((it: any) => ({ ...it, product: it.Product })) || [],
+    } as any;
   }
 
   async update(id: string, data: UpdateSalesOrderInput): Promise<SalesOrderWithItems> {
@@ -138,34 +161,42 @@ export class SalesOrderRepository {
         where: { soId: id },
       });
 
-      return await prisma.salesOrder.update({
+      const updated = await prisma.salesOrder.update({
         where: { id },
         data: {
           ...orderData,
-          items: items.length > 0
+          SalesOrderItem: items.length > 0
             ? {
                 create: items,
               }
             : undefined,
         },
         include: {
-          items: true,
-          warehouse: true,
-          branch: true,
+          SalesOrderItem: { include: { Product: true } },
+          Warehouse: true,
+          Branch: true,
         },
       });
+      return {
+        ...updated,
+        items: (updated as any).SalesOrderItem?.map((it: any) => ({ ...it, product: it.Product })) || [],
+      } as any;
     }
 
     // If no items provided, just update order data
-    return await prisma.salesOrder.update({
+    const row2 = await prisma.salesOrder.update({
       where: { id },
       data: orderData,
       include: {
-        items: true,
-        warehouse: true,
-        branch: true,
+        SalesOrderItem: { include: { Product: true } },
+        Warehouse: true,
+        Branch: true,
       },
     });
+    return {
+      ...row2,
+      items: (row2 as any).SalesOrderItem?.map((it: any) => ({ ...it, product: it.Product })) || [],
+    } as any;
   }
 
   async delete(id: string): Promise<SalesOrder> {

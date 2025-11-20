@@ -38,10 +38,10 @@ export class InventoryRepository {
       }
     }
 
-    return await prisma.inventoryBatch.findMany({
+    const rows = await prisma.inventoryBatch.findMany({
       where,
       include: {
-        product: {
+        Product: {
           select: {
             id: true,
             name: true,
@@ -49,7 +49,7 @@ export class InventoryRepository {
             category: true,
           },
         },
-        warehouse: {
+        Warehouse: {
           select: {
             id: true,
             name: true,
@@ -62,13 +62,19 @@ export class InventoryRepository {
         { createdAt: 'desc' },
       ],
     });
+
+    return rows.map((b: any) => ({
+      ...b,
+      product: b.Product,
+      warehouse: b.Warehouse,
+    }));
   }
 
   async findBatchById(id: string): Promise<InventoryBatchWithRelations | null> {
-    return await prisma.inventoryBatch.findUnique({
+    const row = await prisma.inventoryBatch.findUnique({
       where: { id },
       include: {
-        product: {
+        Product: {
           select: {
             id: true,
             name: true,
@@ -76,7 +82,7 @@ export class InventoryRepository {
             category: true,
           },
         },
-        warehouse: {
+        Warehouse: {
           select: {
             id: true,
             name: true,
@@ -85,6 +91,8 @@ export class InventoryRepository {
         },
       },
     });
+    if (!row) return null;
+    return { ...row, product: (row as any).Product, warehouse: (row as any).Warehouse } as any;
   }
 
   async findBatchByNumber(batchNumber: string): Promise<InventoryBatch | null> {
@@ -192,19 +200,19 @@ export class InventoryRepository {
       }
     }
 
-    return await prisma.stockMovement.findMany({
+    const rows = await prisma.stockMovement.findMany({
       where,
       include: {
         batch: {
           include: {
-            product: {
+            Product: {
               select: {
                 id: true,
                 name: true,
                 baseUOM: true,
               },
             },
-            warehouse: {
+            Warehouse: {
               select: {
                 id: true,
                 name: true,
@@ -215,6 +223,14 @@ export class InventoryRepository {
       },
       orderBy: { createdAt: 'desc' },
     });
+    return rows.map((m: any) => ({
+      ...m,
+      batch: {
+        ...m.batch,
+        product: m.batch.Product,
+        warehouse: m.batch.Warehouse,
+      },
+    }));
   }
 
   async findMovementById(id: string): Promise<StockMovementWithRelations | null> {
@@ -308,7 +324,7 @@ export class InventoryRepository {
     const futureDate = new Date();
     futureDate.setDate(today.getDate() + daysUntilExpiry);
 
-    return await prisma.inventoryBatch.findMany({
+    const rows = await prisma.inventoryBatch.findMany({
       where: {
         status: 'active',
         quantity: { gt: 0 },
@@ -318,7 +334,7 @@ export class InventoryRepository {
         },
       },
       include: {
-        product: {
+        Product: {
           select: {
             id: true,
             name: true,
@@ -326,7 +342,7 @@ export class InventoryRepository {
             category: true,
           },
         },
-        warehouse: {
+        Warehouse: {
           select: {
             id: true,
             name: true,
@@ -336,12 +352,13 @@ export class InventoryRepository {
       },
       orderBy: { expiryDate: 'asc' },
     });
+    return rows.map((b: any) => ({ ...b, product: b.Product, warehouse: b.Warehouse }));
   }
 
   async getExpiredBatches(): Promise<InventoryBatchWithRelations[]> {
     const today = new Date();
 
-    return await prisma.inventoryBatch.findMany({
+    const rows = await prisma.inventoryBatch.findMany({
       where: {
         status: 'active',
         quantity: { gt: 0 },
@@ -350,7 +367,7 @@ export class InventoryRepository {
         },
       },
       include: {
-        product: {
+        Product: {
           select: {
             id: true,
             name: true,
@@ -358,7 +375,7 @@ export class InventoryRepository {
             category: true,
           },
         },
-        warehouse: {
+        Warehouse: {
           select: {
             id: true,
             name: true,
@@ -368,6 +385,7 @@ export class InventoryRepository {
       },
       orderBy: { expiryDate: 'asc' },
     });
+    return rows.map((b: any) => ({ ...b, product: b.Product, warehouse: b.Warehouse }));
   }
 }
 

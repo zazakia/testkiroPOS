@@ -29,32 +29,45 @@ export class CustomerRepository {
       ];
     }
 
-    return await prisma.customer.findMany({
+    const rows = await prisma.customer.findMany({
       where,
       include: {
         _count: {
           select: {
-            salesOrders: true,
-            arRecords: true,
+            SalesOrder: true,
+            AccountsReceivable: true,
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
+    return rows.map((c: any) => ({
+      ...c,
+      _count: c._count
+        ? { salesOrders: c._count.SalesOrder || 0, arRecords: c._count.AccountsReceivable || 0 }
+        : undefined,
+    }));
   }
 
   async findById(id: string): Promise<CustomerWithRelations | null> {
-    return await prisma.customer.findUnique({
+    const row = await prisma.customer.findUnique({
       where: { id },
       include: {
         _count: {
           select: {
-            salesOrders: true,
-            arRecords: true,
+            SalesOrder: true,
+            AccountsReceivable: true,
           },
         },
       },
     });
+    if (!row) return null;
+    return {
+      ...row,
+      _count: row._count
+        ? { salesOrders: (row as any)._count.SalesOrder || 0, arRecords: (row as any)._count.AccountsReceivable || 0 }
+        : undefined,
+    } as any;
   }
 
   async findByCustomerCode(customerCode: string): Promise<Customer | null> {

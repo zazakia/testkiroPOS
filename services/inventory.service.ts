@@ -465,14 +465,14 @@ export class InventoryService {
         ...(warehouseId && { warehouseId }),
       },
       include: {
-        product: {
+        Product: {
           select: {
             id: true,
             name: true,
             baseUOM: true,
           },
         },
-        warehouse: {
+        Warehouse: {
           select: {
             id: true,
             name: true,
@@ -492,10 +492,10 @@ export class InventoryService {
       if (!acc[key]) {
         acc[key] = {
           productId: batch.productId,
-          productName: batch.product.name,
+          productName: (batch as any).Product.name,
           warehouseId: batch.warehouseId,
-          warehouseName: batch.warehouse.name,
-          baseUOM: batch.product.baseUOM,
+          warehouseName: (batch as any).Warehouse.name,
+          baseUOM: (batch as any).Product.baseUOM,
           batches: [],
           totalQuantity: 0,
           totalCost: 0,

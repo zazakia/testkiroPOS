@@ -17,16 +17,16 @@ export class ReceivingVoucherRepository {
     return await prisma.receivingVoucher.findUnique({
       where: { id },
       include: {
-        purchaseOrder: {
+        PurchaseOrder: {
           include: {
             supplier: true,
           },
         },
-        warehouse: true,
-        branch: true,
-        items: {
+        Warehouse: true,
+        Branch: true,
+        ReceivingVoucherItem: {
           include: {
-            product: true,
+            Product: true,
           },
         },
       },
@@ -37,16 +37,16 @@ export class ReceivingVoucherRepository {
     return await prisma.receivingVoucher.findUnique({
       where: { rvNumber },
       include: {
-        purchaseOrder: {
+        PurchaseOrder: {
           include: {
             supplier: true,
           },
         },
-        warehouse: true,
-        branch: true,
-        items: {
+        Warehouse: true,
+        Branch: true,
+        ReceivingVoucherItem: {
           include: {
-            product: true,
+            Product: true,
           },
         },
       },
@@ -76,7 +76,7 @@ export class ReceivingVoucherRepository {
     }
 
     if (filters.poNumber) {
-      where.purchaseOrder = {
+      where.PurchaseOrder = {
         poNumber: {
           contains: filters.poNumber,
           mode: 'insensitive',
@@ -97,16 +97,16 @@ export class ReceivingVoucherRepository {
     return await prisma.receivingVoucher.findMany({
       where,
       include: {
-        purchaseOrder: {
+        PurchaseOrder: {
           include: {
             supplier: true,
           },
         },
-        warehouse: true,
-        branch: true,
-        items: {
+        Warehouse: true,
+        Branch: true,
+        ReceivingVoucherItem: {
           include: {
-            product: true,
+            Product: true,
           },
         },
       },
@@ -120,16 +120,16 @@ export class ReceivingVoucherRepository {
     return await prisma.receivingVoucher.findMany({
       where: { purchaseOrderId: poId },
       include: {
-        purchaseOrder: {
+        PurchaseOrder: {
           include: {
             supplier: true,
           },
         },
-        warehouse: true,
-        branch: true,
-        items: {
+        Warehouse: true,
+        Branch: true,
+        ReceivingVoucherItem: {
           include: {
-            product: true,
+            Product: true,
           },
         },
       },
