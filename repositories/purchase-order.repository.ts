@@ -96,6 +96,7 @@ export class PurchaseOrderRepository {
 
     return await prisma.purchaseOrder.create({
       data: {
+        id: randomUUID(),
         poNumber,
         totalAmount,
         expectedDeliveryDate,
@@ -107,11 +108,28 @@ export class PurchaseOrderRepository {
         Supplier: { connect: { id: supplierId } },
         PurchaseOrderItem: {
           create: items.map(item => ({
+            id: randomUUID(),
             productId: item.productId,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             subtotal: item.quantity * item.unitPrice,
           })),
+        },
+      },
+      include: {
+        Supplier: true,
+        Warehouse: true,
+        Branch: true,
+        PurchaseOrderItem: {
+          include: {
+            Product: {
+              select: {
+                id: true,
+                name: true,
+                baseUOM: true,
+              },
+            },
+          },
         },
       },
     });

@@ -134,9 +134,9 @@ export function PurchaseOrderTable({
               purchaseOrders.map((po) => (
                 <TableRow key={po.id}>
                   <TableCell className="font-medium">{po.poNumber}</TableCell>
-                  <TableCell>{po.supplier.companyName}</TableCell>
-                  <TableCell>{po.warehouse.name}</TableCell>
-                  <TableCell>{po.branch.name}</TableCell>
+                  <TableCell>{po.Supplier.companyName}</TableCell>
+                  <TableCell>{po.Warehouse.name}</TableCell>
+                  <TableCell>{po.Branch.name}</TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(Number(po.totalAmount))}
                   </TableCell>
@@ -200,12 +200,12 @@ export function PurchaseOrderTable({
           purchaseOrder={{
             id: selectedPO.id,
             poNumber: selectedPO.poNumber,
-            items: selectedPO.items.map((item) => ({
+            items: selectedPO.PurchaseOrderItem.map((item) => ({
               id: item.id,
               productId: item.productId,
               product: {
-                name: item.product.name,
-                baseUOM: item.product.baseUOM,
+                name: item.Product.name,
+                baseUOM: item.Product.baseUOM,
               },
               quantity: Number(item.quantity),
               unitPrice: Number(item.unitPrice),

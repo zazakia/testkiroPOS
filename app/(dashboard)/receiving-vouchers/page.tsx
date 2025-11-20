@@ -32,8 +32,8 @@ export default function ReceivingVouchersPage() {
     const searchLower = searchTerm.toLowerCase();
     return (
       rv.rvNumber.toLowerCase().includes(searchLower) ||
-      rv.purchaseOrder.poNumber.toLowerCase().includes(searchLower) ||
-      rv.purchaseOrder.supplier.companyName.toLowerCase().includes(searchLower)
+      rv.PurchaseOrder.poNumber.toLowerCase().includes(searchLower) ||
+      rv.PurchaseOrder.Supplier.companyName.toLowerCase().includes(searchLower)
     );
   });
 
@@ -85,7 +85,7 @@ export default function ReceivingVouchersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {receivingVouchers?.reduce((sum, rv) => sum + rv.items.length, 0) || 0}
+              {receivingVouchers?.reduce((sum, rv) => sum + rv.ReceivingVoucherItem.length, 0) || 0}
             </div>
           </CardContent>
         </Card>
@@ -146,12 +146,12 @@ export default function ReceivingVouchersPage() {
                           href={`/purchase-orders/${rv.purchaseOrderId}`}
                           className="text-primary hover:underline"
                         >
-                          {rv.purchaseOrder.poNumber}
+                          {rv.PurchaseOrder.poNumber}
                         </Link>
                       </TableCell>
-                      <TableCell>{rv.purchaseOrder.supplier.companyName}</TableCell>
-                      <TableCell>{rv.warehouse.name}</TableCell>
-                      <TableCell>{rv.items.length}</TableCell>
+                      <TableCell>{rv.PurchaseOrder.Supplier.companyName}</TableCell>
+                      <TableCell>{rv.Warehouse.name}</TableCell>
+                      <TableCell>{rv.ReceivingVoucherItem.length}</TableCell>
                       <TableCell className="text-right">
                         ₱{Number(rv.totalOrderedAmount).toFixed(2)}
                       </TableCell>

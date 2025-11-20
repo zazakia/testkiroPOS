@@ -282,23 +282,23 @@ export function PurchaseOrderPrint({ purchaseOrder, open, onClose }: PurchaseOrd
               <div className="space-y-2">
                 <div className="flex text-xs">
                   <span className="text-gray-600 font-medium min-w-[120px]">Company:</span>
-                  <span className="font-semibold">{purchaseOrder.supplier.companyName}</span>
+                  <span className="font-semibold">{purchaseOrder.Supplier.companyName}</span>
                 </div>
                 <div className="flex text-xs">
                   <span className="text-gray-600 font-medium min-w-[120px]">Contact Person:</span>
-                  <span className="font-semibold">{purchaseOrder.supplier.contactPerson}</span>
+                  <span className="font-semibold">{purchaseOrder.Supplier.contactPerson}</span>
                 </div>
                 <div className="flex text-xs">
                   <span className="text-gray-600 font-medium min-w-[120px]">Phone:</span>
-                  <span className="font-semibold">{purchaseOrder.supplier.phone}</span>
+                  <span className="font-semibold">{purchaseOrder.Supplier.phone}</span>
                 </div>
                 <div className="flex text-xs">
                   <span className="text-gray-600 font-medium min-w-[120px]">Email:</span>
-                  <span className="font-semibold">{purchaseOrder.supplier.email}</span>
+                  <span className="font-semibold">{purchaseOrder.Supplier.email}</span>
                 </div>
                 <div className="flex text-xs">
                   <span className="text-gray-600 font-medium min-w-[120px]">Payment Terms:</span>
-                  <span className="font-semibold">{purchaseOrder.supplier.paymentTerms}</span>
+                  <span className="font-semibold">{purchaseOrder.Supplier.paymentTerms}</span>
                 </div>
               </div>
             </div>
@@ -309,15 +309,15 @@ export function PurchaseOrderPrint({ purchaseOrder, open, onClose }: PurchaseOrd
               <div className="space-y-2">
                 <div className="flex text-xs">
                   <span className="text-gray-600 font-medium min-w-[120px]">Warehouse:</span>
-                  <span className="font-semibold">{purchaseOrder.warehouse.name}</span>
+                  <span className="font-semibold">{purchaseOrder.Warehouse.name}</span>
                 </div>
                 <div className="flex text-xs">
                   <span className="text-gray-600 font-medium min-w-[120px]">Location:</span>
-                  <span className="font-semibold">{purchaseOrder.warehouse.location}</span>
+                  <span className="font-semibold">{purchaseOrder.Warehouse.location}</span>
                 </div>
                 <div className="flex text-xs">
                   <span className="text-gray-600 font-medium min-w-[120px]">Branch:</span>
-                  <span className="font-semibold">{purchaseOrder.branch.name}</span>
+                  <span className="font-semibold">{purchaseOrder.Branch.name}</span>
                 </div>
                 <div className="flex text-xs">
                   <span className="text-gray-600 font-medium min-w-[120px]">Order Date:</span>
@@ -354,11 +354,11 @@ export function PurchaseOrderPrint({ purchaseOrder, open, onClose }: PurchaseOrd
                 </tr>
               </thead>
               <tbody>
-                {purchaseOrder.items.map((item, index) => (
+                {purchaseOrder.PurchaseOrderItem.map((item, index) => (
                   <tr key={item.id}>
                     <td className="border border-gray-300 p-2 text-center">{index + 1}</td>
-                    <td className="border border-gray-300 p-2">{item.product.name}</td>
-                    <td className="border border-gray-300 p-2 text-center">{item.product.baseUOM}</td>
+                    <td className="border border-gray-300 p-2">{item.Product.name}</td>
+                    <td className="border border-gray-300 p-2 text-center">{item.Product.baseUOM}</td>
                     <td className="border border-gray-300 p-2 text-right">{Number(item.quantity).toFixed(2)}</td>
                     <td className="border border-gray-300 p-2 text-right">{formatCurrency(Number(item.unitPrice))}</td>
                     <td className="border border-gray-300 p-2 text-right font-semibold">
@@ -394,7 +394,7 @@ export function PurchaseOrderPrint({ purchaseOrder, open, onClose }: PurchaseOrd
             <ul className="text-xs leading-relaxed space-y-1">
               <li>All items must be delivered on or before the expected delivery date.</li>
               <li>Items delivered must match the specifications and quantities ordered.</li>
-              <li>Payment terms: {purchaseOrder.supplier.paymentTerms}</li>
+              <li>Payment terms: {purchaseOrder.Supplier.paymentTerms}</li>
               <li>Supplier must provide delivery receipt upon delivery.</li>
               <li>Any discrepancies must be reported immediately.</li>
             </ul>

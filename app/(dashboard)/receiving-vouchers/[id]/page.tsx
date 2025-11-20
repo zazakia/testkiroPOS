@@ -92,16 +92,16 @@ export default function ReceivingVoucherDetailPage({
                 href={`/purchase-orders/${rv.purchaseOrderId}`}
                 className="font-medium text-primary hover:underline"
               >
-                {rv.purchaseOrder.poNumber}
+                {rv.PurchaseOrder.poNumber}
               </Link>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Supplier:</span>
-              <span className="font-medium">{rv.purchaseOrder.supplier.companyName}</span>
+              <span className="font-medium">{rv.PurchaseOrder.Supplier.companyName}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Contact:</span>
-              <span className="font-medium">{rv.purchaseOrder.supplier.contactPerson}</span>
+              <span className="font-medium">{rv.PurchaseOrder.Supplier.contactPerson}</span>
             </div>
           </CardContent>
         </Card>
@@ -113,11 +113,11 @@ export default function ReceivingVoucherDetailPage({
           <CardContent className="space-y-2">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Warehouse:</span>
-              <span className="font-medium">{rv.warehouse.name}</span>
+              <span className="font-medium">{rv.Warehouse.name}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Branch:</span>
-              <span className="font-medium">{rv.branch.name}</span>
+              <span className="font-medium">{rv.Branch.name}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Received By:</span>
@@ -154,9 +154,9 @@ export default function ReceivingVoucherDetailPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rv.items.map((item) => (
+                {rv.ReceivingVoucherItem.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.product.name}</TableCell>
+                    <TableCell className="font-medium">{item.Product.name}</TableCell>
                     <TableCell className="text-right">{Number(item.orderedQuantity).toFixed(2)}</TableCell>
                     <TableCell className="text-right">{Number(item.receivedQuantity).toFixed(2)}</TableCell>
                     <TableCell className="text-right">
@@ -207,7 +207,7 @@ export default function ReceivingVoucherDetailPage({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Items Fully Received:</span>
               <span className="font-medium">
-                {rv.items.filter((i) => Number(i.varianceQuantity) === 0).length} / {rv.items.length}
+                {rv.ReceivingVoucherItem.filter((i) => Number(i.varianceQuantity) === 0).length} / {rv.ReceivingVoucherItem.length}
               </span>
             </div>
           </div>

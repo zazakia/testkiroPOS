@@ -274,15 +274,15 @@ export default function PurchaseOrderDetailPage({
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Supplier</div>
-                <div className="font-medium">{purchaseOrder.supplier.companyName}</div>
+                <div className="font-medium">{purchaseOrder.Supplier.companyName}</div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Warehouse</div>
-                <div className="font-medium">{purchaseOrder.warehouse.name}</div>
+                <div className="font-medium">{purchaseOrder.Warehouse.name}</div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Branch</div>
-                <div className="font-medium">{purchaseOrder.branch.name}</div>
+                <div className="font-medium">{purchaseOrder.Branch.name}</div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Expected Delivery</div>
@@ -330,11 +330,11 @@ export default function PurchaseOrderDetailPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {purchaseOrder.items.map((item) => (
+                {purchaseOrder.PurchaseOrderItem.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell>{item.product.name}</TableCell>
+                    <TableCell>{item.Product.name}</TableCell>
                     <TableCell className="text-right">
-                      {Number(item.quantity)} {item.product.baseUOM}
+                      {Number(item.quantity)} {item.Product.baseUOM}
                     </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(Number(item.unitPrice))}
@@ -363,14 +363,16 @@ export default function PurchaseOrderDetailPage({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Submit Purchase Order</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to submit PO {purchaseOrder.poNumber}? This will:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Change status to "Ordered"</li>
-                <li>Lock the PO from further editing</li>
-                <li>Ready the PO for receiving</li>
-              </ul>
-              You can still cancel the order if needed.
+            <AlertDialogDescription asChild>
+              <div>
+                Are you sure you want to submit PO {purchaseOrder.poNumber}? This will:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Change status to "Ordered"</li>
+                  <li>Lock the PO from further editing</li>
+                  <li>Ready the PO for receiving</li>
+                </ul>
+                You can still cancel the order if needed.
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -396,12 +398,12 @@ export default function PurchaseOrderDetailPage({
           purchaseOrder={{
             id: purchaseOrder.id,
             poNumber: purchaseOrder.poNumber,
-            items: purchaseOrder.items.map((item) => ({
+            items: purchaseOrder.PurchaseOrderItem.map((item) => ({
               id: item.id,
               productId: item.productId,
               product: {
-                name: item.product.name,
-                baseUOM: item.product.baseUOM,
+                name: item.Product.name,
+                baseUOM: item.Product.baseUOM,
               },
               quantity: Number(item.quantity),
               unitPrice: Number(item.unitPrice),

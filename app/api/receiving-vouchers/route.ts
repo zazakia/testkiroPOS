@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: rv,
-      message: `Receiving voucher ${rv.rvNumber} created successfully. ${rv.items.filter(i => Number(i.receivedQuantity) > 0).length} inventory batches created.`,
+      message: `Receiving voucher ${rv.rvNumber} created successfully. ${rv.ReceivingVoucherItem.filter(i => Number(i.receivedQuantity) > 0).length} inventory batches created.`,
     });
   } catch (error) {
     console.error('Error creating receiving voucher:', error);

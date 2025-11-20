@@ -39,7 +39,7 @@ export class ReceivingVoucherRepository {
       include: {
         PurchaseOrder: {
           include: {
-            supplier: true,
+            Supplier: true,
           },
         },
         Warehouse: true,
@@ -99,7 +99,7 @@ export class ReceivingVoucherRepository {
       include: {
         PurchaseOrder: {
           include: {
-            supplier: true,
+            Supplier: true,
           },
         },
         Warehouse: true,
@@ -122,7 +122,7 @@ export class ReceivingVoucherRepository {
       include: {
         PurchaseOrder: {
           include: {
-            supplier: true,
+            Supplier: true,
           },
         },
         Warehouse: true,
