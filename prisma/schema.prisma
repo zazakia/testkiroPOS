@@ -1,15 +1,15 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextIndex", "fullTextSearch"]
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model APPayment {
-  id              String          @id
+  id              String          @id @default(cuid())
   apId            String
   amount          Float
   paymentMethod   String
@@ -23,7 +23,7 @@ model APPayment {
 }
 
 model ARPayment {
-  id                 String             @id
+  id                 String             @id @default(cuid())
   arId               String
   amount             Float
   paymentMethod      String
@@ -37,7 +37,7 @@ model ARPayment {
 }
 
 model AccountsPayable {
-  id              String      @id
+  id              String      @id @default(cuid())
   branchId        String
   supplierId      String
   purchaseOrderId String?
@@ -47,7 +47,7 @@ model AccountsPayable {
   dueDate         DateTime
   status          String      @default("pending")
   createdAt       DateTime    @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime    @updatedAt
   APPayment       APPayment[]
   Supplier        Supplier    @relation(fields: [supplierId], references: [id])
   Branch          Branch      @relation(fields: [branchId], references: [id])
@@ -63,7 +63,7 @@ model AccountsPayable {
 }
 
 model AccountsReceivable {
-  id           String      @id
+  id           String      @id @default(cuid())
   branchId     String
   customerId   String?
   customerName String
@@ -74,7 +74,7 @@ model AccountsReceivable {
   dueDate      DateTime
   status       String      @default("pending")
   createdAt    DateTime    @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime    @updatedAt
   ARPayment    ARPayment[]
   Branch       Branch      @relation(fields: [branchId], references: [id])
   Customer     Customer?   @relation(fields: [customerId], references: [id])
@@ -90,7 +90,7 @@ model AccountsReceivable {
 }
 
 model AuditLog {
-  id         String   @id
+  id         String   @id @default(cuid())
   userId     String?
   action     String
   resource   String
@@ -109,7 +109,7 @@ model AuditLog {
 }
 
 model Branch {
-  id                      String                    @id
+  id                      String                    @id @default(cuid())
   name                    String
   code                    String                    @unique
   location                String
@@ -117,7 +117,7 @@ model Branch {
   phone                   String
   status                  String                    @default("active")
   createdAt               DateTime                  @default(now())
-  updatedAt               DateTime
+  updatedAt               DateTime                  @updatedAt
   AccountsPayable         AccountsPayable[]
   AccountsReceivable      AccountsReceivable[]
   CustomerPurchaseHistory CustomerPurchaseHistory[]
@@ -140,7 +140,7 @@ model Branch {
 }
 
 model CompanySettings {
-  id                String   @id
+  id                String   @id @default(cuid())
   companyName       String
   address           String
   phone             String?
@@ -159,11 +159,11 @@ model CompanySettings {
   thermalPrinter    Boolean  @default(false)
   autoPrintReceipts Boolean  @default(false)
   createdAt         DateTime @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime @updatedAt
 }
 
 model Customer {
-  id                      String                    @id
+  id                      String                    @id @default(cuid())
   customerCode            String                    @unique
   companyName             String?
   contactPerson           String
@@ -180,7 +180,7 @@ model Customer {
   notes                   String?
   status                  String                    @default("active")
   createdAt               DateTime                  @default(now())
-  updatedAt               DateTime
+  updatedAt               DateTime                  @updatedAt
   AccountsReceivable      AccountsReceivable[]
   CustomerPurchaseHistory CustomerPurchaseHistory[]
   POSReceipt              POSReceipt[]
@@ -196,7 +196,7 @@ model Customer {
 }
 
 model CustomerPurchaseHistory {
-  id                  String   @id
+  id                  String   @id @default(cuid())
   customerId          String
   saleId              String   @unique
   branchId            String
@@ -218,7 +218,7 @@ model CustomerPurchaseHistory {
 }
 
 model DailySalesSummary {
-  id                 String   @id
+  id                 String   @id @default(cuid())
   branchId           String
   date               DateTime
   totalSales         Float
@@ -232,7 +232,7 @@ model DailySalesSummary {
   totalDiscount      Float
   grossProfit        Float
   createdAt          DateTime @default(now())
-  updatedAt          DateTime
+  updatedAt          DateTime @updatedAt
   Branch             Branch   @relation(fields: [branchId], references: [id])
 
   @@unique([branchId, date])
@@ -242,7 +242,7 @@ model DailySalesSummary {
 }
 
 model EmployeePerformance {
-  id                   String   @id
+  id                   String   @id @default(cuid())
   userId               String
   branchId             String
   date                 DateTime
@@ -253,7 +253,7 @@ model EmployeePerformance {
   returnsHandled       Int      @default(0)
   customerSatisfaction Float?
   createdAt            DateTime @default(now())
-  updatedAt            DateTime
+  updatedAt            DateTime @updatedAt
   Branch               Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
   User                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -266,7 +266,7 @@ model EmployeePerformance {
 }
 
 model Expense {
-  id            String   @id
+  id            String   @id @default(cuid())
   branchId      String
   expenseDate   DateTime
   category      String
@@ -276,7 +276,7 @@ model Expense {
   vendor        String?
   receiptUrl    String?
   createdAt     DateTime @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime @updatedAt
   Branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@index([category, expenseDate])
@@ -289,7 +289,7 @@ model Expense {
 }
 
 model InventoryBatch {
-  id            String          @id
+  id            String          @id @default(cuid())
   batchNumber   String          @unique
   productId     String
   warehouseId   String
@@ -299,7 +299,7 @@ model InventoryBatch {
   receivedDate  DateTime
   status        String          @default("active")
   createdAt     DateTime        @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime        @updatedAt
   Warehouse     Warehouse       @relation(fields: [warehouseId], references: [id])
   Product       Product         @relation(fields: [productId], references: [id])
   StockMovement StockMovement[]
@@ -314,7 +314,7 @@ model InventoryBatch {
 }
 
 model POSReceipt {
-  id             String    @id
+  id             String    @id @default(cuid())
   saleId         String    @unique
   receiptNumber  String    @unique
   branchId       String
@@ -335,7 +335,7 @@ model POSReceipt {
   isPrinted      Boolean   @default(false)
   printCount     Int       @default(0)
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime  @updatedAt
   POSSale        POSSale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
   Customer       Customer? @relation(fields: [customerId], references: [id])
   User           User      @relation(fields: [cashierId], references: [id], onDelete: Cascade)
@@ -350,7 +350,7 @@ model POSReceipt {
 }
 
 model POSSale {
-  id                      String                   @id
+  id                      String                   @id @default(cuid())
   receiptNumber           String                   @unique
   branchId                String
   subtotal                Float
@@ -376,7 +376,7 @@ model POSSale {
 }
 
 model POSSaleItem {
-  id              String  @id
+  id              String  @id @default(cuid())
   saleId          String
   productId       String
   quantity        Float
@@ -392,7 +392,7 @@ model POSSaleItem {
 }
 
 model PasswordResetToken {
-  id        String   @id
+  id        String   @id @default(cuid())
   userId    String
   token     String   @unique
   expiresAt DateTime
@@ -406,7 +406,7 @@ model PasswordResetToken {
 }
 
 model Permission {
-  id             String           @id
+  id             String           @id @default(cuid())
   resource       String
   action         String
   description    String?
@@ -419,7 +419,7 @@ model Permission {
 }
 
 model Product {
-  id                   String                 @id
+  id                   String                 @id @default(cuid())
   name                 String                 @unique
   description          String?
   category             String
@@ -430,7 +430,7 @@ model Product {
   shelfLifeDays        Int
   status               String                 @default("active")
   createdAt            DateTime               @default(now())
-  updatedAt            DateTime
+  updatedAt            DateTime               @updatedAt
   InventoryBatch       InventoryBatch[]
   POSSaleItem          POSSaleItem[]
   ProductUOM           ProductUOM[]
@@ -446,7 +446,7 @@ model Product {
 }
 
 model ProductUOM {
-  id               String   @id
+  id               String   @id @default(cuid())
   productId        String
   name             String
   conversionFactor Float
@@ -459,7 +459,7 @@ model ProductUOM {
 }
 
 model PromotionUsage {
-  id             String    @id
+  id             String    @id @default(cuid())
   promotionName  String
   promotionCode  String?
   saleId         String
@@ -483,7 +483,7 @@ model PromotionUsage {
 }
 
 model PurchaseOrder {
-  id                   String              @id
+  id                   String              @id @default(cuid())
   poNumber             String              @unique
   supplierId           String
   warehouseId          String
@@ -495,7 +495,7 @@ model PurchaseOrder {
   actualDeliveryDate   DateTime?
   notes                String?
   createdAt            DateTime            @default(now())
-  updatedAt            DateTime
+  updatedAt            DateTime            @updatedAt
   Branch               Branch              @relation(fields: [branchId], references: [id])
   Warehouse            Warehouse           @relation(fields: [warehouseId], references: [id])
   Supplier             Supplier            @relation(fields: [supplierId], references: [id])
@@ -512,7 +512,7 @@ model PurchaseOrder {
 }
 
 model PurchaseOrderItem {
-  id               String        @id
+  id               String        @id @default(cuid())
   poId             String
   productId        String
   quantity         Float
@@ -527,7 +527,7 @@ model PurchaseOrderItem {
 }
 
 model ReceivingVoucher {
-  id                   String                 @id
+  id                   String                 @id @default(cuid())
   rvNumber             String                 @unique
   purchaseOrderId      String
   warehouseId          String
@@ -540,7 +540,7 @@ model ReceivingVoucher {
   varianceAmount       Float
   receivedDate         DateTime               @default(now())
   createdAt            DateTime               @default(now())
-  updatedAt            DateTime
+  updatedAt            DateTime               @updatedAt
   Branch               Branch                 @relation(fields: [branchId], references: [id])
   Warehouse            Warehouse              @relation(fields: [warehouseId], references: [id])
   PurchaseOrder        PurchaseOrder          @relation(fields: [purchaseOrderId], references: [id])
@@ -556,7 +556,7 @@ model ReceivingVoucher {
 }
 
 model ReceivingVoucherItem {
-  id                 String           @id
+  id                 String           @id @default(cuid())
   rvId               String
   productId          String
   orderedQuantity    Float
@@ -574,7 +574,7 @@ model ReceivingVoucherItem {
 }
 
 model ReportExport {
-  id           String    @id
+  id           String    @id @default(cuid())
   reportType   String
   reportName   String
   format       String
@@ -586,7 +586,7 @@ model ReportExport {
   requestedBy  String
   completedAt  DateTime?
   createdAt    DateTime  @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime  @updatedAt
 
   @@index([createdAt])
   @@index([requestedBy])
@@ -595,7 +595,7 @@ model ReportExport {
 }
 
 model ReportTemplate {
-  id          String   @id
+  id          String   @id @default(cuid())
   name        String
   type        String
   description String?
@@ -604,7 +604,7 @@ model ReportTemplate {
   isActive    Boolean  @default(true)
   createdBy   String
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
 
   @@index([isDefault])
   @@index([isActive])
@@ -612,12 +612,12 @@ model ReportTemplate {
 }
 
 model Role {
-  id             String           @id
+  id             String           @id @default(cuid())
   name           String           @unique
   description    String?
   isSystem       Boolean          @default(false)
   createdAt      DateTime         @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime         @updatedAt
   RolePermission RolePermission[]
   User           User[]
 
@@ -626,7 +626,7 @@ model Role {
 }
 
 model RolePermission {
-  id           String     @id
+  id           String     @id @default(cuid())
   roleId       String
   permissionId String
   createdAt    DateTime   @default(now())
@@ -639,7 +639,7 @@ model RolePermission {
 }
 
 model SalesOrder {
-  id                String           @id
+  id                String           @id @default(cuid())
   orderNumber       String           @unique
   customerId        String?
   customerName      String
@@ -654,7 +654,7 @@ model SalesOrder {
   deliveryDate      DateTime
   convertedToSaleId String?
   createdAt         DateTime         @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime         @updatedAt
   Branch            Branch           @relation(fields: [branchId], references: [id])
   Warehouse         Warehouse        @relation(fields: [warehouseId], references: [id])
   Customer          Customer?        @relation(fields: [customerId], references: [id])
@@ -670,7 +670,7 @@ model SalesOrder {
 }
 
 model SalesOrderItem {
-  id         String     @id
+  id         String     @id @default(cuid())
   soId       String
   productId  String
   quantity   Float
@@ -685,7 +685,7 @@ model SalesOrderItem {
 }
 
 model Session {
-  id        String   @id
+  id        String   @id @default(cuid())
   userId    String
   token     String   @unique
   ipAddress String?
@@ -700,7 +700,7 @@ model Session {
 }
 
 model StockMovement {
-  id             String         @id
+  id             String         @id @default(cuid())
   batchId        String
   type           String
   quantity       Float
@@ -716,7 +716,7 @@ model StockMovement {
 }
 
 model Supplier {
-  id              String            @id
+  id              String            @id @default(cuid())
   companyName     String
   contactPerson   String
   phone           String
@@ -724,7 +724,7 @@ model Supplier {
   paymentTerms    String
   status          String            @default("active")
   createdAt       DateTime          @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime          @updatedAt
   AccountsPayable AccountsPayable[]
   PurchaseOrder   PurchaseOrder[]
 
@@ -733,7 +733,7 @@ model Supplier {
 }
 
 model User {
-  id                  String                @id
+  id                  String                @id @default(cuid())
   email               String                @unique
   passwordHash        String
   firstName           String
@@ -746,7 +746,7 @@ model User {
   lastLoginAt         DateTime?
   passwordChangedAt   DateTime?
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime              @updatedAt
   AuditLog            AuditLog[]
   EmployeePerformance EmployeePerformance[]
   POSReceipt          POSReceipt[]
@@ -764,7 +764,7 @@ model User {
 }
 
 model UserBranchAccess {
-  id        String   @id
+  id        String   @id @default(cuid())
   userId    String
   branchId  String
   createdAt DateTime @default(now())
@@ -777,14 +777,14 @@ model UserBranchAccess {
 }
 
 model Warehouse {
-  id               String             @id
+  id               String             @id @default(cuid())
   name             String
   location         String
   manager          String
   maxCapacity      Int
   branchId         String
   createdAt        DateTime           @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime           @updatedAt
   InventoryBatch   InventoryBatch[]
   PurchaseOrder    PurchaseOrder[]
   ReceivingVoucher ReceivingVoucher[]

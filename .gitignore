@@ -49,3 +49,11 @@ mobile-pos-app/node_modules
 
 # Windows reserved files
 nul
+
+# SQLite database files (no longer used - migrated to Neon PostgreSQL)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+/prisma/*.db
+/prisma/*.db-journal

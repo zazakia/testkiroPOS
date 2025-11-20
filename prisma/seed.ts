@@ -272,7 +272,7 @@ async function main() {
     await prisma.product.create({
       data: {
         ...productInfo,
-        alternateUOMs: {
+        ProductUOM: {
           create: alternateUOMs,
         },
       },

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const expenseSchema = z.object({
-  branchId: z.string().uuid('Invalid branch ID'),
+  branchId: z.string().cuid('Invalid branch ID'),
   expenseDate: z.date({
     required_error: 'Expense date is required',
     invalid_type_error: 'Invalid expense date',

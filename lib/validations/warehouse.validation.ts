@@ -5,7 +5,7 @@ export const warehouseSchema = z.object({
   location: z.string().min(1, 'Location is required').max(200, 'Location is too long'),
   manager: z.string().min(1, 'Manager name is required').max(100, 'Manager name is too long'),
   maxCapacity: z.number().int().positive('Maximum capacity must be greater than 0'),
-  branchId: z.string().uuid('Invalid branch ID'),
+  branchId: z.string().cuid('Invalid branch ID'),
 });
 
 export const updateWarehouseSchema = warehouseSchema.partial();

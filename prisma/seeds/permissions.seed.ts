@@ -1,4 +1,28 @@
-import { PrismaClient, PermissionResource, PermissionAction } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+
+// Define permission resources and actions as constants
+const PermissionResource = {
+  USERS: 'USERS',
+  ROLES: 'ROLES',
+  PRODUCTS: 'PRODUCTS',
+  INVENTORY: 'INVENTORY',
+  SALES: 'SALES',
+  PURCHASES: 'PURCHASES',
+  CUSTOMERS: 'CUSTOMERS',
+  SUPPLIERS: 'SUPPLIERS',
+  REPORTS: 'REPORTS',
+  SETTINGS: 'SETTINGS',
+  ACCOUNTING: 'ACCOUNTING',
+  BRANCHES: 'BRANCHES',
+} as const;
+
+const PermissionAction = {
+  READ: 'READ',
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+  MANAGE: 'MANAGE',
+} as const;
 
 const prisma = new PrismaClient();
 

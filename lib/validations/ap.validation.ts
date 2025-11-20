@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const accountsPayableSchema = z.object({
-  branchId: z.string().uuid('Invalid branch ID'),
-  supplierId: z.string().uuid('Invalid supplier ID'),
+  branchId: z.string().cuid('Invalid branch ID'),
+  supplierId: z.string().cuid('Invalid supplier ID'),
   totalAmount: z.number().positive('Total amount must be greater than 0'),
   paidAmount: z.number().nonnegative('Paid amount must be zero or greater').default(0),
   balance: z.number().nonnegative('Balance must be zero or greater'),
@@ -11,7 +11,7 @@ export const accountsPayableSchema = z.object({
     invalid_type_error: 'Invalid due date',
   }),
   status: z.enum(['pending', 'partial', 'paid', 'overdue']).default('pending'),
-  purchaseOrderId: z.string().uuid('Invalid purchase order ID').optional(),
+  purchaseOrderId: z.string().cuid('Invalid purchase order ID').optional(),
   notes: z.string().optional(),
 }).refine(
   (data) => data.balance === data.totalAmount - data.paidAmount,

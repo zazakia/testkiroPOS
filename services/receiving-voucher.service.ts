@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma';
 import { receivingVoucherRepository } from '@/repositories/receiving-voucher.repository';
-import { inventoryService } from '@/services/inventory.service';
 import { randomUUID } from 'crypto';
 import {
   CreateReceivingVoucherInput,
@@ -157,16 +156,42 @@ export class ReceivingVoucherService {
           const product = po.PurchaseOrderItem.find((p) => p.productId === item.productId)?.Product;
           if (!product) continue;
 
-          // Add stock using inventory service
-          await inventoryService.addStock({
-            productId: item.productId,
-            warehouseId: po.warehouseId,
-            quantity: item.receivedQuantity,
-            uom: product.baseUOM,
-            unitCost: item.unitPrice,
-            referenceId: rv.id,
-            referenceType: 'RV',
-            reason: `Received from RV ${rvNumber} (PO ${po.poNumber})`,
+          // Generate batch number
+          const batchCount = await tx.inventoryBatch.count();
+          const batchNumber = `BATCH-${String(batchCount + 1).padStart(6, '0')}`;
+
+          // Calculate dates
+          const receivedDate = new Date();
+          const expiryDate = new Date(receivedDate);
+          expiryDate.setDate(expiryDate.getDate() + product.shelfLifeDays);
+
+          // Create inventory batch directly within the transaction
+          const batch = await tx.inventoryBatch.create({
+            data: {
+              id: randomUUID(),
+              batchNumber,
+              productId: item.productId,
+              warehouseId: po.warehouseId,
+              quantity: item.receivedQuantity,
+              unitCost: item.unitPrice,
+              receivedDate,
+              expiryDate,
+              status: 'active',
+              updatedAt: new Date(),
+            },
+          });
+
+          // Record stock movement within the transaction
+          await tx.stockMovement.create({
+            data: {
+              id: randomUUID(),
+              batchId: batch.id,
+              type: 'IN',
+              quantity: item.receivedQuantity,
+              reason: `Received from RV ${rvNumber} (PO ${po.poNumber})`,
+              referenceId: rv.id,
+              referenceType: 'RV',
+            },
           });
 
           // Update PO item received quantity

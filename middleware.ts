@@ -1,43 +1,70 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Define protected routes that require authentication
-const protectedRoutes = [
-  '/dashboard',
-  '/api/users',
-  '/api/roles',
-  '/api/permissions',
-];
-
-// Define public routes that don't require authentication
-const publicRoutes = [
-  '/',
+// Define public API routes that don't require authentication
+const publicApiRoutes = [
   '/api/auth/login',
   '/api/auth/register',
+  '/api/auth/verify-email',
+];
+
+// Define public page routes
+const publicPageRoutes = [
+  '/',
+  '/login',
+  '/register',
+  '/verify-email',
 ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
-  const isPublicRoute = publicRoutes.some((route) => pathname === route);
-  
-  // Get the auth token from cookies
-  const token = request.cookies.get('auth-token')?.value;
-  
-  // If accessing a protected route without a token, redirect to login
-  if (isProtectedRoute && !token) {
+
+  // Check if this is an API route
+  const isApiRoute = pathname.startsWith('/api');
+
+  // Check if the route is public
+  const isPublicApi = publicApiRoutes.some((route) => pathname.startsWith(route));
+  const isPublicPage = publicPageRoutes.some((route) => pathname === route || pathname.startsWith(route + '/'));
+
+  // Get the auth token from cookies or Authorization header
+  const cookieToken = request.cookies.get('auth-token')?.value;
+  const authHeader = request.headers.get('authorization');
+  const headerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+
+  const token = cookieToken || headerToken;
+
+  // Handle API routes
+  if (isApiRoute) {
+    // If it's a public API route, allow access
+    if (isPublicApi) {
+      return NextResponse.next();
+    }
+
+    // If it's a protected API route without token, return 401 JSON response
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - Authentication token required' },
+        { status: 401 }
+      );
+    }
+
+    // Token exists, allow API request to proceed
+    return NextResponse.next();
+  }
+
+  // Handle page routes
+  // If accessing protected pages without a token, redirect to login
+  if (!isPublicPage && !token) {
     const url = new URL('/login', request.url);
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
-  
+
   // If accessing login/register with a valid token, redirect to dashboard
   if ((pathname === '/login' || pathname === '/register') && token) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
-  
+
   return NextResponse.next();
 }
 

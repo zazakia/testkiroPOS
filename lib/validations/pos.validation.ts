@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const posSaleItemSchema = z.object({
-  productId: z.string().uuid('Invalid product ID'),
+  productId: z.string().cuid('Invalid product ID'),
   quantity: z.number().positive('Quantity must be greater than 0'),
   uom: z.string().min(1, 'UOM is required'),
   unitPrice: z.number().positive('Unit price must be greater than 0'),
@@ -12,9 +12,9 @@ export const posSaleItemSchema = z.object({
 export const posSaleSchema = z
   .object({
     receiptNumber: z.string().optional(),
-    branchId: z.string().uuid('Invalid branch ID'),
-    warehouseId: z.string().uuid('Invalid warehouse ID'),
-    customerId: z.string().uuid('Invalid customer ID').optional(),
+    branchId: z.string().cuid('Invalid branch ID'),
+    warehouseId: z.string().cuid('Invalid warehouse ID'),
+    customerId: z.string().cuid('Invalid customer ID').optional(),
     customerName: z.string().min(1, 'Customer name is required for credit sales').optional(),
     subtotal: z.number().positive('Subtotal must be greater than 0'),
     tax: z.number().nonnegative('Tax must be zero or greater'),
@@ -26,7 +26,7 @@ export const posSaleSchema = z
     amountReceived: z.number().optional(),
     partialPayment: z.number().optional(),
     change: z.number().optional(),
-    convertedFromOrderId: z.string().uuid('Invalid order ID').optional(),
+    convertedFromOrderId: z.string().cuid('Invalid order ID').optional(),
     items: z.array(posSaleItemSchema).min(1, 'At least one item is required'),
   })
   .superRefine((data, ctx) => {

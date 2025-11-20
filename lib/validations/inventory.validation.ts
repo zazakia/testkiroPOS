@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const addStockSchema = z.object({
-  productId: z.string().uuid('Invalid product ID'),
-  warehouseId: z.string().uuid('Invalid warehouse ID'),
+  productId: z.string().cuid('Invalid product ID'),
+  warehouseId: z.string().cuid('Invalid warehouse ID'),
   quantity: z.number().positive('Quantity must be greater than 0'),
   uom: z.string().min(1, 'UOM is required'),
   unitCost: z.number().positive('Unit cost must be greater than 0'),
@@ -19,8 +19,8 @@ export const addStockSchema = z.object({
 });
 
 export const deductStockSchema = z.object({
-  productId: z.string().uuid('Invalid product ID'),
-  warehouseId: z.string().uuid('Invalid warehouse ID'),
+  productId: z.string().cuid('Invalid product ID'),
+  warehouseId: z.string().cuid('Invalid warehouse ID'),
   quantity: z.number().positive('Quantity must be greater than 0'),
   uom: z.string().min(1, 'UOM is required'),
   reason: z.string().min(1, 'Reason is required'),
@@ -29,9 +29,9 @@ export const deductStockSchema = z.object({
 });
 
 export const transferStockSchema = z.object({
-  productId: z.string().uuid('Invalid product ID'),
-  fromWarehouseId: z.string().uuid('Invalid source warehouse ID'),
-  toWarehouseId: z.string().uuid('Invalid destination warehouse ID'),
+  productId: z.string().cuid('Invalid product ID'),
+  fromWarehouseId: z.string().cuid('Invalid source warehouse ID'),
+  toWarehouseId: z.string().cuid('Invalid destination warehouse ID'),
   quantity: z.number().positive('Quantity must be greater than 0'),
   uom: z.string().min(1, 'UOM is required'),
   reason: z.string().min(1, 'Reason is required'),
@@ -44,7 +44,7 @@ export const transferStockSchema = z.object({
 );
 
 export const adjustStockSchema = z.object({
-  batchId: z.string().uuid('Invalid batch ID'),
+  batchId: z.string().cuid('Invalid batch ID'),
   newQuantity: z.number().nonnegative('Quantity must be zero or greater'),
   reason: z.string().min(1, 'Reason is required'),
 });

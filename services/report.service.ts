@@ -349,7 +349,7 @@ export class ReportService {
     const batches = await prisma.inventoryBatch.findMany({
       where: {
         status: 'active',
-        ...(branchId ? { warehouse: { branchId } } : {}),
+        ...(branchId ? { Warehouse: { branchId } } : {}),
       },
     });
 
