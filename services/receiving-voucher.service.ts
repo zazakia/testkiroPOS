@@ -120,6 +120,7 @@ export class ReceivingVoucherService {
       // 6. Create ReceivingVoucher
       const rv = await tx.receivingVoucher.create({
         data: {
+          id: randomUUID(),
           rvNumber,
           purchaseOrderId: po.id,
           warehouseId: po.warehouseId,
@@ -130,13 +131,23 @@ export class ReceivingVoucherService {
           totalOrderedAmount: Number(totalOrderedAmount.toFixed(2)),
           totalReceivedAmount: Number(totalReceivedAmount.toFixed(2)),
           varianceAmount: Number(varianceAmount.toFixed(2)),
-          items: {
-            create: processedItems,
-          },
+          updatedAt: new Date(),
         },
-        include: {
-          items: true,
-        },
+      });
+
+      // Create receiving voucher items
+      await tx.receivingVoucherItem.createMany({
+        data: processedItems.map(item => ({
+          id: randomUUID(),
+          receivingVoucherId: rv.id,
+          productId: item.productId,
+          orderedQuantity: item.orderedQuantity,
+          receivedQuantity: item.receivedQuantity,
+          unitCost: item.unitCost,
+          subtotal: item.subtotal,
+          notes: item.notes,
+          updatedAt: new Date(),
+        })),
       });
 
       // 7. Create inventory batches for received quantities
