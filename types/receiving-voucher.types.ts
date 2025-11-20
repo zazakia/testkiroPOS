@@ -6,16 +6,16 @@ export type ReceivingVoucherItem = Prisma.ReceivingVoucherItemGetPayload<{}>;
 
 export type ReceivingVoucherWithDetails = Prisma.ReceivingVoucherGetPayload<{
   include: {
-    purchaseOrder: {
+    PurchaseOrder: {
       include: {
-        supplier: true;
+        Supplier: true;
       };
     };
-    warehouse: true;
-    branch: true;
-    items: {
+    Warehouse: true;
+    Branch: true;
+    ReceivingVoucherItem: {
       include: {
-        product: true;
+        Product: true;
       };
     };
   };

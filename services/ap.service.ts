@@ -2,20 +2,23 @@ import { apRepository } from '@/repositories/ap.repository';
 import { CreateAPInput, RecordAPPaymentInput, APFilters, APAgingReport, APAgingBucket } from '@/types/ap.types';
 import { prisma } from '@/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
+import { randomUUID } from 'crypto';
 
 export class APService {
   async createAP(data: CreateAPInput) {
     const balance = new Decimal(data.totalAmount);
 
     return await apRepository.create({
-      branch: { connect: { id: data.branchId } },
-      supplier: { connect: { id: data.supplierId } },
+      id: randomUUID(),
+      Branch: { connect: { id: data.branchId } },
+      Supplier: { connect: { id: data.supplierId } },
       purchaseOrderId: data.purchaseOrderId,
       totalAmount: data.totalAmount,
       paidAmount: 0,
       balance: balance.toNumber(),
       dueDate: data.dueDate,
       status: 'pending',
+      updatedAt: new Date(),
     });
   }
 
@@ -60,11 +63,13 @@ export class APService {
 
       await tx.aPPayment.create({
         data: {
-          ap: { connect: { id: data.apId } },
+          id: randomUUID(),
+          AccountsPayable: { connect: { id: data.apId } },
           amount: data.amount,
           paymentMethod: data.paymentMethod,
           referenceNumber: data.referenceNumber,
           paymentDate: data.paymentDate,
+          updatedAt: new Date(),
         },
       });
 

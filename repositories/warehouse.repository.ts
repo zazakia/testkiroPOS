@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { Warehouse } from '@prisma/client';
 import { CreateWarehouseInput, UpdateWarehouseInput } from '@/types/warehouse.types';
+import { randomUUID } from 'crypto';
 
 export class WarehouseRepository {
   async findAll(): Promise<Warehouse[]> {
@@ -34,11 +35,13 @@ export class WarehouseRepository {
   async create(data: CreateWarehouseInput): Promise<Warehouse> {
     return await prisma.warehouse.create({
       data: {
+        id: randomUUID(),
         name: data.name,
         location: data.location,
         manager: data.manager,
         maxCapacity: data.maxCapacity,
         branchId: data.branchId,
+        updatedAt: new Date(),
       },
       include: {
         Branch: true,

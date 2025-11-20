@@ -1,4 +1,5 @@
 import { expenseRepository } from '@/repositories/expense.repository';
+import { randomUUID } from 'crypto';
 import { 
   CreateExpenseInput, 
   UpdateExpenseInput, 
@@ -15,7 +16,8 @@ export class ExpenseService {
     }
 
     return await expenseRepository.create({
-      branch: { connect: { id: data.branchId } },
+      id: randomUUID(),
+      Branch: { connect: { id: data.branchId } },
       expenseDate: data.expenseDate,
       category: data.category,
       amount: data.amount,
@@ -23,6 +25,7 @@ export class ExpenseService {
       paymentMethod: data.paymentMethod,
       vendor: data.vendor,
       receiptUrl: data.receiptUrl,
+      updatedAt: new Date(),
     });
   }
 

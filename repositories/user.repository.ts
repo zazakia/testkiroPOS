@@ -189,7 +189,7 @@ export class UserRepository {
     return prisma.user.findMany({
       where: { branchId },
       include: {
-        role: true,
+        Role: true,
       },
     });
   }
@@ -201,7 +201,7 @@ export class UserRepository {
     return prisma.user.findMany({
       where: { roleId },
       include: {
-        branch: true,
+        Branch: true,
       },
     });
   }

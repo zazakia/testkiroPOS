@@ -78,11 +78,11 @@ export class ReportService {
     const batches = await prisma.inventoryBatch.findMany({
       where: {
         status: 'active',
-        warehouse: {
+        Warehouse: {
           ...(filters?.branchId ? { branchId: filters.branchId } : {}),
           ...(filters?.warehouseId ? { id: filters.warehouseId } : {}),
         },
-        product: {
+        Product: {
           ...(filters?.category ? { category: filters.category } : {}),
         },
       },
@@ -194,7 +194,7 @@ export class ReportService {
     const items = await prisma.pOSSaleItem.findMany({
       where,
       include: {
-        product: true,
+        Product: true,
       },
     });
 

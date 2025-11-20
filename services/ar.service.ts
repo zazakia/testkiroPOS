@@ -2,21 +2,24 @@ import { arRepository } from '@/repositories/ar.repository';
 import { CreateARInput, RecordARPaymentInput, ARFilters, ARAgingReport, ARAgingBucket } from '@/types/ar.types';
 import { prisma } from '@/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
+import { randomUUID } from 'crypto';
 
 export class ARService {
   async createAR(data: CreateARInput) {
     const balance = new Decimal(data.totalAmount);
 
     return await arRepository.create({
-      branch: { connect: { id: data.branchId } },
-      customer: data.customerId ? { connect: { id: data.customerId } } : undefined,
+      id: randomUUID(),
+      Branch: { connect: { id: data.branchId } },
+      Customer: data.customerId ? { connect: { id: data.customerId } } : undefined,
       customerName: data.customerName,
       salesOrderId: data.salesOrderId,
       totalAmount: data.totalAmount,
       paidAmount: 0,
-      balance,
+      balance: balance.toNumber(),
       dueDate: data.dueDate,
       status: 'pending',
+      updatedAt: new Date(),
     });
   }
 
@@ -43,11 +46,13 @@ export class ARService {
       // Create payment record
       await tx.aRPayment.create({
         data: {
-          ar: { connect: { id: data.arId } },
+          id: randomUUID(),
+          AccountsReceivable: { connect: { id: data.arId } },
           amount: data.amount,
           paymentMethod: data.paymentMethod,
           referenceNumber: data.referenceNumber,
           paymentDate: data.paymentDate,
+          updatedAt: new Date(),
         },
       });
 
@@ -71,13 +76,13 @@ export class ARService {
       return await tx.accountsReceivable.update({
         where: { id: data.arId },
         data: {
-          paidAmount: newPaidAmount,
-          balance: newBalance,
+          paidAmount: newPaidAmount.toNumber(),
+          balance: newBalance.toNumber(),
           status: newStatus,
         },
         include: {
-          branch: true,
-          payments: true,
+          Branch: true,
+          ARPayment: true,
         },
       });
     });

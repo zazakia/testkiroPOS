@@ -39,16 +39,16 @@ export class AlertService {
     const products = await prisma.product.findMany({
       where: { status: 'active' },
       include: {
-        inventoryBatches: {
+        InventoryBatch: {
           where: {
             status: 'active',
-            warehouse: {
+            Warehouse: {
               ...(branchId ? { branchId } : {}),
               ...(warehouseId ? { id: warehouseId } : {}),
             },
           },
           include: {
-            warehouse: true,
+            Warehouse: true,
           },
         },
       },
@@ -58,16 +58,14 @@ export class AlertService {
     for (const product of products) {
       const warehouseStockMap = new Map<string, { stock: Decimal; warehouse: any }>();
 
-      for (const batch of product.inventoryBatches) {
+      for (const batch of product.InventoryBatch) {
         const existing = warehouseStockMap.get(batch.warehouseId);
         if (existing) {
           existing.stock = existing.stock.plus(batch.quantity);
         } else {
-          warehouseStockMap.set(batch.warehouseId, {
-            stock: new Decimal(batch.quantity),
-            warehouse: batch.warehouse,
-          });
+          warehouseStockMap.set(batch.warehouseId, { stock: new Decimal(batch.quantity), warehouse: batch.Warehouse });
         }
+      }
       }
 
       // Check each warehouse
@@ -116,8 +114,8 @@ export class AlertService {
         },
       },
       include: {
-        product: true,
-        warehouse: true,
+        Product: true,
+        Warehouse: true,
       },
     });
 
@@ -131,10 +129,10 @@ export class AlertService {
         type: 'expiring_soon' as AlertType,
         severity: daysUntilExpiry <= 7 ? 'critical' : 'warning' as AlertSeverity,
         productId: batch.productId,
-        productName: batch.product.name,
+        productName: batch.Product.name,
         warehouseId: batch.warehouseId,
-        warehouseName: batch.warehouse.name,
-        branchId: batch.warehouse.branchId,
+        warehouseName: batch.Warehouse.name,
+        branchId: batch.Warehouse.branchId,
         batchId: batch.id,
         batchNumber: batch.batchNumber,
         expiryDate: batch.expiryDate,
@@ -152,14 +150,14 @@ export class AlertService {
         status: 'active',
         quantity: { gt: 0 },
         expiryDate: { lt: today },
-        warehouse: {
+        Warehouse: {
           ...(branchId ? { branchId } : {}),
           ...(warehouseId ? { id: warehouseId } : {}),
         },
       },
       include: {
-        product: true,
-        warehouse: true,
+        Product: true,
+        Warehouse: true,
       },
     });
 
@@ -173,14 +171,14 @@ export class AlertService {
         type: 'expired' as AlertType,
         severity: 'critical' as AlertSeverity,
         productId: batch.productId,
-        productName: batch.product.name,
+        productName: batch.Product.name,
         warehouseId: batch.warehouseId,
-        warehouseName: batch.warehouse.name,
-        branchId: batch.warehouse.branchId,
+        warehouseName: batch.Warehouse.name,
+        branchId: batch.Warehouse.branchId,
         batchId: batch.id,
         batchNumber: batch.batchNumber,
         expiryDate: batch.expiryDate,
-        daysUntilExpiry: -daysExpired,
+        daysExpired,
         details: `Batch ${batch.batchNumber} expired ${daysExpired} day${daysExpired !== 1 ? 's' : ''} ago`,
       };
     });
