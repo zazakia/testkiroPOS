@@ -1,4 +1,4 @@
-import { PrismaClient, UserStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -36,7 +36,7 @@ export async function seedAdminUser() {
       firstName: 'Cyber',
       lastName: 'Gada',
       roleId: superAdminRole.id,
-      status: UserStatus.ACTIVE,
+      status: 'ACTIVE',
       emailVerified: true,
     },
   });

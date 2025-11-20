@@ -7,12 +7,7 @@ import { AddStockInput } from '@/types/inventory.types';
 export async function POST(request: NextRequest) {
   try {
     const body: AddStockInput = await request.json();
-    
-    // Convert receivedDate string to Date if provided
-    if (body.receivedDate) {
-      body.receivedDate = new Date(body.receivedDate);
-    }
-    
+
     const batch = await inventoryService.addStock(body);
     
     return NextResponse.json(

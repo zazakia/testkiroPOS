@@ -95,8 +95,9 @@ export type InventoryBatchWithRelations = InventoryBatch & {
   };
 };
 
-// Alias for compatibility
+// Aliases for compatibility
 export type BatchWithRelations = InventoryBatchWithRelations;
+export type BatchFilters = InventoryBatchFilters;
 
 export type StockMovementWithRelations = StockMovement & {
   batch: InventoryBatch & {

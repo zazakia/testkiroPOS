@@ -18,12 +18,15 @@ export class InventoryService {
   /**
    * Generate a unique batch number in format: BATCH-YYYYMMDD-XXXX
    */
-  async generateBatchNumber(): Promise<string> {
+  async generateBatchNumber(tx?: any): Promise<string> {
     const date = new Date();
     const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-    
+
+    // Use transaction context if provided, otherwise use global prisma
+    const client = tx || prisma;
+
     // Find the last batch number for today
-    const lastBatch = await prisma.inventoryBatch.findFirst({
+    const lastBatch = await client.inventoryBatch.findFirst({
       where: {
         batchNumber: {
           startsWith: `BATCH-${dateStr}`,
@@ -137,9 +140,6 @@ export class InventoryService {
       });
     }
 
-    // Generate batch number
-    const batchNumber = await this.generateBatchNumber();
-
     // Calculate expiry date
     const receivedDate = new Date();
     const expiryDate = new Date(receivedDate);
@@ -147,6 +147,9 @@ export class InventoryService {
 
     // Create batch and movement in a transaction
     const result = await prisma.$transaction(async (tx) => {
+      // Generate batch number inside transaction for consistency
+      const batchNumber = await this.generateBatchNumber(tx);
+
       // Create inventory batch
       const batch = await tx.inventoryBatch.create({
         data: {
@@ -347,8 +350,8 @@ export class InventoryService {
       }
 
       // Step 2: Add to destination warehouse as new batch
-      // Generate batch number
-      const batchNumber = await this.generateBatchNumber();
+      // Generate batch number (pass transaction context)
+      const batchNumber = await this.generateBatchNumber(tx);
 
       // Calculate expiry date based on product shelf life
       const receivedDate = new Date();

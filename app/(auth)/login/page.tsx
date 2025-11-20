@@ -90,11 +90,31 @@ export default function LoginPage() {
               <div className="text-sm">
                 <button
                   type="button"
-                  onClick={() => {
-                    setEmail('admin@inventorypro.com');
-                    setPassword('Admin@123456!');
+                  onClick={async () => {
+                    setEmail('cybergada@gmail.com');
+                    setPassword('Qweasd145698@');
+                    setError('');
+                    setIsLoading(true);
+
+                    try {
+                      const result = await login({
+                        email: 'cybergada@gmail.com',
+                        password: 'Qweasd145698@'
+                      });
+
+                      if (result.success) {
+                        router.push('/dashboard');
+                      } else {
+                        setError(result.message || 'Login failed');
+                      }
+                    } catch (err: any) {
+                      setError(err.message || 'An error occurred during login');
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }}
                   className="text-gray-600 hover:text-gray-500 underline"
+                  disabled={isLoading}
                 >
                   Use demo admin
                 </button>

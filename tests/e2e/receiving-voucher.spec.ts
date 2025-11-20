@@ -4,8 +4,8 @@ test.describe('Receiving Voucher Workflow', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to login and authenticate
     await page.goto('/login');
-    await page.fill('input[type="email"]', 'admin@inventorypro.com');
-    await page.fill('input[type="password"]', 'Admin@123456!');
+    await page.fill('input[type="email"]', 'cybergada@gmail.com');
+    await page.fill('input[type="password"]', 'Qweasd145698@');
     await page.click('button[type="submit"]');
     await page.waitForURL('/dashboard');
   });

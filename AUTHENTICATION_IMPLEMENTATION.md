@@ -32,8 +32,8 @@ Comprehensive user and role management system with modern authentication for Nex
   - Staff (basic permissions)
   - Viewer (read-only permissions)
 - **Default Admin User**:
-  - Email: admin@inventorypro.com
-  - Password: Admin@123456!
+  - Email: cybergada@gmail.com
+  - Password: Qweasd145698@
 
 ### 3. Repository Layer (Phase 2)
 - `user.repository.ts`: User CRUD with filtering, pagination
@@ -158,7 +158,7 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 2. **Test Login**:
    - Navigate to /login
-   - Use admin@inventorypro.com / Admin@123456!
+   - Use cybergada@gmail.com / Qweasd145698@
    - Verify redirect to /dashboard
 
 3. **Test User Management**:

@@ -1,7 +1,10 @@
-import { User, UserStatus, Role, Branch, Session, AuditLog, UserBranchAccess, PasswordResetToken } from '@prisma/client';
+import { User, Role, Branch, Session, AuditLog, UserBranchAccess, PasswordResetToken } from '@prisma/client';
+
+// Custom UserStatus type (Prisma schema uses String, not enum)
+export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 // Base User type
-export type { User, UserStatus };
+export type { User };
 
 // User with relations
 export type UserWithRole = User & {

@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
-import { UserStatus } from '@prisma/client';
 import { userRepository } from '@/repositories/user.repository';
 import { sessionRepository } from '@/repositories/session.repository';
 import { auditLogRepository } from '@/repositories/audit-log.repository';
