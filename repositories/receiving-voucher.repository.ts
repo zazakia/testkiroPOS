@@ -71,7 +71,6 @@ export class ReceivingVoucherRepository {
     if (filters.rvNumber) {
       where.rvNumber = {
         contains: filters.rvNumber,
-        mode: 'insensitive',
       };
     }
 
@@ -79,7 +78,6 @@ export class ReceivingVoucherRepository {
       where.PurchaseOrder = {
         poNumber: {
           contains: filters.poNumber,
-          mode: 'insensitive',
         },
       };
     }

@@ -70,6 +70,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching receiving vouchers:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error details:', JSON.stringify(error, null, 2));
 
     if (error instanceof AppError) {
       return NextResponse.json(
@@ -79,7 +81,11 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch receiving vouchers' },
+      {
+        success: false,
+        error: 'Failed to fetch receiving vouchers',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

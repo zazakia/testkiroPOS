@@ -14,7 +14,6 @@ export class SupplierRepository {
     if (filters?.search) {
       where.companyName = {
         contains: filters.search,
-        mode: 'insensitive',
       };
     }
 
@@ -32,7 +31,7 @@ export class SupplierRepository {
 
   async findByCompanyName(companyName: string): Promise<Supplier | null> {
     return await prisma.supplier.findFirst({
-      where: { 
+      where: {
         companyName: {
           equals: companyName,
         }

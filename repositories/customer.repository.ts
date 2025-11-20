@@ -1,10 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { Customer } from '@prisma/client';
-import { 
-  CreateCustomerInput, 
-  UpdateCustomerInput, 
+import {
+  CreateCustomerInput,
+  UpdateCustomerInput,
   CustomerFilters,
-  CustomerWithRelations 
+  CustomerWithRelations
 } from '@/types/customer.types';
 
 export class CustomerRepository {
@@ -21,11 +21,11 @@ export class CustomerRepository {
 
     if (filters?.search) {
       where.OR = [
-        { customerCode: { contains: filters.search, mode: 'insensitive' } },
-        { companyName: { contains: filters.search, mode: 'insensitive' } },
-        { contactPerson: { contains: filters.search, mode: 'insensitive' } },
-        { email: { contains: filters.search, mode: 'insensitive' } },
-        { phone: { contains: filters.search, mode: 'insensitive' } },
+        { customerCode: { contains: filters.search } },
+        { companyName: { contains: filters.search } },
+        { contactPerson: { contains: filters.search } },
+        { email: { contains: filters.search } },
+        { phone: { contains: filters.search } },
       ];
     }
 
@@ -78,10 +78,9 @@ export class CustomerRepository {
 
   async findByEmail(email: string): Promise<Customer | null> {
     return await prisma.customer.findFirst({
-      where: { 
+      where: {
         email: {
           equals: email,
-          mode: 'insensitive',
         }
       },
     });
@@ -98,10 +97,10 @@ export class CustomerRepository {
     return await prisma.customer.findMany({
       where: {
         OR: [
-          { customerCode: { contains: searchTerm, mode: 'insensitive' } },
-          { companyName: { contains: searchTerm, mode: 'insensitive' } },
-          { contactPerson: { contains: searchTerm, mode: 'insensitive' } },
-          { email: { contains: searchTerm, mode: 'insensitive' } },
+          { customerCode: { contains: searchTerm } },
+          { companyName: { contains: searchTerm } },
+          { contactPerson: { contains: searchTerm } },
+          { email: { contains: searchTerm } },
           { phone: { contains: searchTerm } },
         ],
       },
@@ -180,7 +179,7 @@ export class CustomerRepository {
         },
       }),
       prisma.accountsReceivable.findMany({
-        where: { 
+        where: {
           customerId,
           status: 'pending',
         },
@@ -192,15 +191,15 @@ export class CustomerRepository {
 
     const totalOrders = salesOrders.length;
     const totalRevenue = salesOrders.reduce(
-      (sum, order) => sum + Number(order.totalAmount), 
+      (sum, order) => sum + Number(order.totalAmount),
       0
     );
     const outstandingBalance = arRecords.reduce(
-      (sum, ar) => sum + Number(ar.balance), 
+      (sum, ar) => sum + Number(ar.balance),
       0
     );
-    const lastOrderDate = salesOrders.length > 0 
-      ? salesOrders[0].createdAt 
+    const lastOrderDate = salesOrders.length > 0
+      ? salesOrders[0].createdAt
       : undefined;
 
     return {
