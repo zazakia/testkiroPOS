@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { receivingVoucherRepository } from '@/repositories/receiving-voucher.repository';
 import { inventoryService } from '@/services/inventory.service';
+import { randomUUID } from 'crypto';
 import {
   CreateReceivingVoucherInput,
   ReceivingVoucherWithDetails,
@@ -51,14 +52,14 @@ export class ReceivingVoucherService {
       const po = await tx.purchaseOrder.findUnique({
         where: { id: data.purchaseOrderId },
         include: {
-          items: {
+          PurchaseOrderItem: {
             include: {
-              product: true,
+              Product: true,
             },
           },
-          supplier: true,
-          warehouse: true,
-          branch: true,
+          Supplier: true,
+          Warehouse: true,
+          Branch: true,
         },
       });
 
@@ -102,6 +103,7 @@ export class ReceivingVoucherService {
         totalReceivedAmount += lineTotal;
 
         return {
+          id: randomUUID(),
           productId: item.productId,
           orderedQuantity: orderedQty,
           receivedQuantity: receivedQty,
@@ -140,7 +142,7 @@ export class ReceivingVoucherService {
       // 7. Create inventory batches for received quantities
       for (const item of processedItems) {
         if (item.receivedQuantity > 0) {
-          const product = po.items.find((p) => p.productId === item.productId)?.product;
+          const product = po.PurchaseOrderItem.find((p) => p.productId === item.productId)?.Product;
           if (!product) continue;
 
           // Add stock using inventory service
@@ -156,7 +158,7 @@ export class ReceivingVoucherService {
           });
 
           // Update PO item received quantity
-          const poItem = po.items.find((p) => p.productId === item.productId);
+          const poItem = po.PurchaseOrderItem.find((p) => p.productId === item.productId);
           if (poItem) {
             await tx.purchaseOrderItem.update({
               where: { id: poItem.id },
@@ -200,10 +202,11 @@ export class ReceivingVoucherService {
 
       // 9. Create Accounts Payable for received amount
       if (totalReceivedAmount > 0 && allItemsFullyReceived) {
-        const dueDate = this.calculateDueDate(po.supplier.paymentTerms, new Date());
+        const dueDate = this.calculateDueDate(po.Supplier.paymentTerms, new Date());
 
         await tx.accountsPayable.create({
           data: {
+            id: randomUUID(),
             branchId: po.branchId,
             supplierId: po.supplierId,
             purchaseOrderId: po.id,
@@ -212,6 +215,7 @@ export class ReceivingVoucherService {
             balance: Number(totalReceivedAmount.toFixed(2)),
             dueDate,
             status: 'pending',
+            updatedAt: new Date(),
           },
         });
       }
@@ -220,16 +224,16 @@ export class ReceivingVoucherService {
       const createdRV = await tx.receivingVoucher.findUnique({
         where: { id: rv.id },
         include: {
-          purchaseOrder: {
+          PurchaseOrder: {
             include: {
-              supplier: true,
+              Supplier: true,
             },
           },
-          warehouse: true,
-          branch: true,
-          items: {
+          Warehouse: true,
+          Branch: true,
+          ReceivingVoucherItem: {
             include: {
-              product: true,
+              Product: true,
             },
           },
         },
@@ -319,8 +323,8 @@ export class ReceivingVoucherService {
     const supplierMap = new Map<string, VarianceReport>();
 
     for (const rv of rvs) {
-      const supplierId = rv.purchaseOrder.supplier.id;
-      const supplierName = rv.purchaseOrder.supplier.companyName;
+      const supplierId = rv.purchaseOrder.Supplier.id;
+      const supplierName = rv.purchaseOrder.Supplier.companyName;
 
       if (!supplierMap.has(supplierId)) {
         supplierMap.set(supplierId, {

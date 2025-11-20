@@ -22,22 +22,34 @@ export class ProductRepository {
       };
     }
 
-    return await prisma.product.findMany({
+    const products = await prisma.product.findMany({
       where,
       include: {
         ProductUOM: true,
       },
       orderBy: { name: 'asc' },
     });
+
+    return products.map(product => ({
+      ...product,
+      alternateUOMs: product.ProductUOM,
+    }));
   }
 
   async findById(id: string): Promise<ProductWithUOMs | null> {
-    return await prisma.product.findUnique({
+    const product = await prisma.product.findUnique({
       where: { id },
       include: {
         ProductUOM: true,
       },
     });
+
+    if (!product) return null;
+
+    return {
+      ...product,
+      alternateUOMs: product.ProductUOM,
+    };
   }
 
   async findByName(name: string): Promise<Product | null> {
@@ -47,25 +59,30 @@ export class ProductRepository {
   }
 
   async findActive(): Promise<ProductWithUOMs[]> {
-    return await prisma.product.findMany({
+    const products = await prisma.product.findMany({
       where: { status: 'active' },
       include: {
         ProductUOM: true,
       },
       orderBy: { name: 'asc' },
     });
+
+    return products.map(product => ({
+      ...product,
+      alternateUOMs: product.ProductUOM,
+    }));
   }
 
   async create(data: CreateProductInput): Promise<ProductWithUOMs> {
-    const { ProductUOM, ...productData } = data;
+    const { alternateUOMs, ...productData } = data;
 
-    return await prisma.product.create({
+    const product = await prisma.product.create({
       data: {
         ...productData,
         updatedAt: new Date(),
-        ProductUOM: ProductUOM && ProductUOM.length > 0
+        ProductUOM: alternateUOMs && alternateUOMs.length > 0
           ? {
-              create: ProductUOM.map(u => ({ id: randomUUID(), ...u })),
+              create: alternateUOMs.map(u => ({ id: randomUUID(), ...u })),
             }
           : undefined,
       },
@@ -73,26 +90,31 @@ export class ProductRepository {
         ProductUOM: true,
       },
     });
+
+    return {
+      ...product,
+      alternateUOMs: product.ProductUOM,
+    };
   }
 
   async update(id: string, data: UpdateProductInput): Promise<ProductWithUOMs> {
-    const { ProductUOM, ...productData } = data;
+    const { alternateUOMs, ...productData } = data;
 
-    // If ProductUOM are provided, we need to handle them separately
-    if (ProductUOM !== undefined) {
+    // If alternateUOMs are provided, we need to handle them separately
+    if (alternateUOMs !== undefined) {
       // Delete existing alternate UOMs and create new ones
       await prisma.productUOM.deleteMany({
         where: { productId: id },
       });
 
-      return await prisma.product.update({
+      const product = await prisma.product.update({
         where: { id },
         data: {
           ...productData,
           updatedAt: new Date(),
-          ProductUOM: ProductUOM.length > 0
+          ProductUOM: alternateUOMs.length > 0
             ? {
-                create: ProductUOM.map(u => ({ id: randomUUID(), ...u })),
+                create: alternateUOMs.map(u => ({ id: randomUUID(), ...u })),
               }
             : undefined,
         },
@@ -100,16 +122,26 @@ export class ProductRepository {
           ProductUOM: true,
         },
       });
+
+      return {
+        ...product,
+        alternateUOMs: product.ProductUOM,
+      };
     }
 
-    // If no ProductUOM provided, just update product data
-    return await prisma.product.update({
+    // If no alternateUOMs provided, just update product data
+    const product = await prisma.product.update({
       where: { id },
       data: { ...productData, updatedAt: new Date() },
       include: {
         ProductUOM: true,
       },
     });
+
+    return {
+      ...product,
+      alternateUOMs: product.ProductUOM,
+    };
   }
 
   async delete(id: string): Promise<Product> {

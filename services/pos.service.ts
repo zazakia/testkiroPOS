@@ -76,7 +76,7 @@ export class POSService {
         status: 'active',
       },
       include: {
-        alternateUOMs: true,
+        ProductUOM: true,
         InventoryBatch: {
           where: {
             warehouseId,
@@ -90,7 +90,7 @@ export class POSService {
 
     return products.map((product: any) => {
       const currentStock = product.InventoryBatch.reduce(
-        (sum, batch) => sum + Number(batch.quantity),
+        (sum: number, batch: any) => sum + Number(batch.quantity),
         0
       );
 
@@ -103,7 +103,7 @@ export class POSService {
         basePrice: Number(product.basePrice),
         baseUOM: product.baseUOM,
         status: product.status,
-        alternateUOMs: product.alternateUOMs.map((uom: any) => ({
+        alternateUOMs: product.ProductUOM.map((uom: any) => ({
           id: uom.id,
           name: uom.name,
           conversionFactor: Number(uom.conversionFactor),

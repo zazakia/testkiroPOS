@@ -16,17 +16,17 @@ export class ReportService {
     const batches = await prisma.inventoryBatch.findMany({
       where: {
         status: 'active',
-        warehouse: {
+        Warehouse: {
           ...(filters?.branchId ? { branchId: filters.branchId } : {}),
           ...(filters?.warehouseId ? { id: filters.warehouseId } : {}),
         },
-        product: {
+        Product: {
           ...(filters?.category ? { category: filters.category } : {}),
         },
       },
       include: {
-        product: true,
-        warehouse: true,
+        Product: true,
+        Warehouse: true,
       },
     });
 
@@ -54,19 +54,19 @@ export class ReportService {
       let status: 'adequate' | 'low' | 'critical' = 'adequate';
       if (currentStock === 0) {
         status = 'critical';
-      } else if (currentStock < batch.product.minStockLevel) {
+      } else if (currentStock < batch.Product.minStockLevel) {
         status = 'low';
       }
 
       report.push({
         productId: batch.productId,
-        productName: batch.product.name,
-        category: batch.product.category,
+        productName: batch.Product.name,
+        category: batch.Product.category,
         warehouseId: batch.warehouseId,
-        warehouseName: batch.warehouse.name,
+        warehouseName: batch.Warehouse.name,
         currentStock,
-        baseUOM: batch.product.baseUOM,
-        minStockLevel: batch.product.minStockLevel,
+        baseUOM: batch.Product.baseUOM,
+        minStockLevel: batch.Product.minStockLevel,
         status,
       });
     }
@@ -87,7 +87,7 @@ export class ReportService {
         },
       },
       include: {
-        product: true,
+        Product: true,
       },
     });
 
@@ -134,7 +134,7 @@ export class ReportService {
     const sales = await prisma.pOSSale.findMany({
       where,
       include: {
-        items: true,
+        POSSaleItem: true,
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -145,7 +145,7 @@ export class ReportService {
       const dateKey = sale.createdAt.toISOString().split('T')[0];
       const existing = dailyMap.get(dateKey);
       
-      const saleCOGS = sale.items.reduce(
+      const saleCOGS = sale.POSSaleItem.reduce(
         (sum, item) => sum.plus(item.costOfGoodsSold),
         new Decimal(0)
       );
@@ -209,8 +209,8 @@ export class ReportService {
         existing.cogs = existing.cogs.plus(item.costOfGoodsSold);
       } else {
         productMap.set(item.productId, {
-          name: item.product.name,
-          category: item.product.category,
+          name: item.Product.name,
+          category: item.Product.category,
           quantity: new Decimal(item.quantity),
           revenue: new Decimal(item.subtotal),
           cogs: new Decimal(item.costOfGoodsSold),
@@ -246,12 +246,12 @@ export class ReportService {
 
     const sales = await prisma.pOSSale.findMany({
       where,
-      include: { items: true },
+      include: { POSSaleItem: true },
     });
 
     const revenue = sales.reduce((sum, sale) => sum.plus(sale.totalAmount), new Decimal(0));
     const cogs = sales.reduce((sum, sale) => {
-      const saleCOGS = sale.items.reduce((itemSum, item) => itemSum.plus(item.costOfGoodsSold), new Decimal(0));
+      const saleCOGS = sale.POSSaleItem.reduce((itemSum, item) => itemSum.plus(item.costOfGoodsSold), new Decimal(0));
       return sum.plus(saleCOGS);
     }, new Decimal(0));
 

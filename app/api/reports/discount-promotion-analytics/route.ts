@@ -23,9 +23,8 @@ export async function GET(request: NextRequest) {
         const promotionUsage = await prisma.promotionUsage.findMany({
           where: whereClause,
           include: {
-            promotion: true,
-            customer: true,
-            branch: true,
+            Customer: true,
+            Branch: true,
           },
           orderBy: { createdAt: 'desc' },
         });
@@ -34,12 +33,6 @@ export async function GET(request: NextRequest) {
           where: whereClause,
           _sum: {
             discountAmount: true,
-            originalAmount: true,
-            finalAmount: true,
-          },
-          _avg: {
-            discountAmount: true,
-            originalAmount: true,
           },
           _count: {
             id: true,
@@ -68,9 +61,9 @@ export async function POST(request: NextRequest) {
     return withPermission(authRequest, 'REPORT', 'CREATE', async (permissionRequest) => {
       try {
         const body = await request.json();
-        const { promotionId, customerId, branchId, originalAmount, discountAmount, finalAmount, receiptNumber } = body;
+        const { promotionName, promotionCode, customerId, branchId, discountAmount, discountType, discountValue, saleId } = body;
 
-        if (!promotionId || !customerId || !branchId || !originalAmount || !discountAmount || !finalAmount || !receiptNumber) {
+        if (!promotionName || !customerId || !branchId || discountAmount === undefined || !discountType || discountValue === undefined || !saleId) {
           return NextResponse.json(
             { success: false, error: 'Missing required fields' },
             { status: 400 }
@@ -79,19 +72,19 @@ export async function POST(request: NextRequest) {
 
         const promotionUsage = await prisma.promotionUsage.create({
           data: {
-            promotionId,
+            promotionName,
+            promotionCode,
             customerId,
             branchId,
-            originalAmount,
             discountAmount,
-            finalAmount,
-            receiptNumber,
-            status: 'USED',
+            discountType,
+            discountValue,
+            saleId,
+            usageDate: new Date(),
           },
           include: {
-            promotion: true,
-            customer: true,
-            branch: true,
+            Customer: true,
+            Branch: true,
           },
         });
 

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { PurchaseOrder, PurchaseOrderItem } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import {
   CreatePurchaseOrderInput,
   UpdatePurchaseOrderInput,
@@ -41,12 +42,12 @@ export class PurchaseOrderRepository {
     return await prisma.purchaseOrder.findMany({
       where,
       include: {
-        supplier: true,
-        warehouse: true,
-        branch: true,
-        items: {
+        Supplier: true,
+        Warehouse: true,
+        Branch: true,
+        PurchaseOrderItem: {
           include: {
-            product: {
+            Product: {
               select: {
                 id: true,
                 name: true,
@@ -64,12 +65,12 @@ export class PurchaseOrderRepository {
     return await prisma.purchaseOrder.findUnique({
       where: { id },
       include: {
-        supplier: true,
-        warehouse: true,
-        branch: true,
-        items: {
+        Supplier: true,
+        Warehouse: true,
+        Branch: true,
+        PurchaseOrderItem: {
           include: {
-            product: {
+            Product: {
               select: {
                 id: true,
                 name: true,
@@ -101,10 +102,10 @@ export class PurchaseOrderRepository {
         notes,
         status,
         updatedAt: new Date(),
-        branch: { connect: { id: branchId } },
-        warehouse: { connect: { id: warehouseId } },
-        supplier: { connect: { id: supplierId } },
-        items: {
+        Branch: { connect: { id: branchId } },
+        Warehouse: { connect: { id: warehouseId } },
+        Supplier: { connect: { id: supplierId } },
+        PurchaseOrderItem: {
           create: items.map(item => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -133,13 +134,30 @@ export class PurchaseOrderRepository {
         data: {
           ...poData,
           updatedAt: new Date(),
-          items: {
+          PurchaseOrderItem: {
             create: items.map(item => ({
+              id: randomUUID(),
               productId: item.productId,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               subtotal: item.quantity * item.unitPrice,
             })),
+          },
+        },
+        include: {
+          Supplier: true,
+          Warehouse: true,
+          Branch: true,
+          PurchaseOrderItem: {
+            include: {
+              Product: {
+                select: {
+                  id: true,
+                  name: true,
+                  baseUOM: true,
+                },
+              },
+            },
           },
         },
       });
@@ -149,7 +167,22 @@ export class PurchaseOrderRepository {
     return await prisma.purchaseOrder.update({
       where: { id },
       data: { ...poData, updatedAt: new Date() },
-      
+      include: {
+        Supplier: true,
+        Warehouse: true,
+        Branch: true,
+        PurchaseOrderItem: {
+          include: {
+            Product: {
+              select: {
+                id: true,
+                name: true,
+                baseUOM: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 

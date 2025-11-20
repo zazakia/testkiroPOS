@@ -13,7 +13,7 @@ export class APService {
       purchaseOrderId: data.purchaseOrderId,
       totalAmount: data.totalAmount,
       paidAmount: 0,
-      balance,
+      balance: balance.toNumber(),
       dueDate: data.dueDate,
       status: 'pending',
     });
@@ -86,14 +86,14 @@ export class APService {
       return await tx.accountsPayable.update({
         where: { id: data.apId },
         data: {
-          paidAmount: newPaidAmount,
-          balance: newBalance,
+          paidAmount: newPaidAmount.toNumber(),
+          balance: newBalance.toNumber(),
           status: newStatus,
         },
         include: {
-          branch: true,
-          supplier: true,
-          payments: true,
+          Branch: true,
+          Supplier: true,
+          APPayment: true,
         },
       });
     });

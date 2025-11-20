@@ -3,6 +3,7 @@ import { purchaseOrderRepository } from '@/repositories/purchase-order.repositor
 import { productRepository } from '@/repositories/product.repository';
 import { supplierRepository } from '@/repositories/supplier.repository';
 import { inventoryService } from '@/services/inventory.service';
+import { randomUUID } from 'crypto';
 import {
   CreatePurchaseOrderInput,
   UpdatePurchaseOrderInput,
@@ -291,12 +292,12 @@ export class PurchaseOrderService {
       const po = await tx.purchaseOrder.findUnique({
         where: { id },
         include: {
-          items: {
+          PurchaseOrderItem: {
             include: {
-              product: true,
+              Product: true,
             },
           },
-          supplier: true,
+          Supplier: true,
         },
       });
 
@@ -319,14 +320,14 @@ export class PurchaseOrderService {
       const receivedDate = new Date();
 
       // Create inventory batches for each item
-      for (const item of po.items) {
+      for (const item of po.PurchaseOrderItem) {
         // Add stock using inventory service
         // Note: inventory service will calculate expiry date based on product shelf life
         await inventoryService.addStock({
           productId: item.productId,
           warehouseId: po.warehouseId,
           quantity: Number(item.quantity),
-          uom: item.product.baseUOM, // PO items are in base UOM
+          uom: item.Product.baseUOM, // PO items are in base UOM
           unitCost: Number(item.unitPrice),
           referenceId: po.id,
           referenceType: 'PO',
@@ -344,10 +345,11 @@ export class PurchaseOrderService {
       });
 
       // Create Accounts Payable record
-      const dueDate = this.calculateDueDate(po.supplier.paymentTerms, receivedDate);
+      const dueDate = this.calculateDueDate(po.Supplier.paymentTerms, receivedDate);
 
       await tx.accountsPayable.create({
         data: {
+          id: randomUUID(),
           branchId: po.branchId,
           supplierId: po.supplierId,
           purchaseOrderId: po.id,
@@ -356,6 +358,7 @@ export class PurchaseOrderService {
           balance: po.totalAmount,
           dueDate,
           status: 'pending',
+          updatedAt: new Date(),
         },
       });
 
@@ -363,12 +366,12 @@ export class PurchaseOrderService {
       const updatedPO = await tx.purchaseOrder.findUnique({
         where: { id },
         include: {
-          supplier: true,
-          warehouse: true,
-          branch: true,
-          items: {
+          Supplier: true,
+          Warehouse: true,
+          Branch: true,
+          PurchaseOrderItem: {
             include: {
-              product: {
+              Product: {
                 select: {
                   id: true,
                   name: true,

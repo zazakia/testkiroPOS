@@ -24,6 +24,7 @@ export interface UpdatePurchaseOrderInput {
   expectedDeliveryDate?: Date;
   notes?: string;
   items?: PurchaseOrderItemInput[];
+  status?: PurchaseOrderStatus;
 }
 
 export interface CancelPurchaseOrderInput {
@@ -31,11 +32,11 @@ export interface CancelPurchaseOrderInput {
 }
 
 export type PurchaseOrderWithDetails = PurchaseOrder & {
-  supplier: Supplier;
-  warehouse: Warehouse;
-  branch: Branch;
-  items: (PurchaseOrderItem & {
-    product: {
+  Supplier: Supplier;
+  Warehouse: Warehouse;
+  Branch: Branch;
+  PurchaseOrderItem: (PurchaseOrderItem & {
+    Product: {
       id: string;
       name: string;
       baseUOM: string;

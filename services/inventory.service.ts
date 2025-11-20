@@ -2,6 +2,7 @@ import { InventoryBatch } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { inventoryRepository } from '@/repositories/inventory.repository';
 import { productService } from '@/services/product.service';
+import { randomUUID } from 'crypto';
 import {
   AddStockInput,
   DeductStockInput,
@@ -90,7 +91,7 @@ export class InventoryService {
 
     // Find the alternate UOM
     const alternateUOM = product.alternateUOMs.find(
-      (u) => u.name.toLowerCase() === uom.toLowerCase()
+      (u: any) => u.name.toLowerCase() === uom.toLowerCase()
     );
 
     if (!alternateUOM) {
@@ -153,6 +154,7 @@ export class InventoryService {
       // Create inventory batch
       const batch = await tx.inventoryBatch.create({
         data: {
+          id: randomUUID(),
           batchNumber,
           productId: data.productId,
           warehouseId: data.warehouseId,
@@ -161,12 +163,14 @@ export class InventoryService {
           receivedDate,
           expiryDate,
           status: 'active',
+          updatedAt: new Date(),
         },
       });
 
       // Record stock movement
       await tx.stockMovement.create({
         data: {
+          id: randomUUID(),
           batchId: batch.id,
           type: 'IN',
           quantity: baseQuantity,
@@ -246,6 +250,7 @@ export class InventoryService {
         // Record stock movement
         await tx.stockMovement.create({
           data: {
+            id: randomUUID(),
             batchId: batch.id,
             type: 'OUT',
             quantity: deductFromBatch,
@@ -338,6 +343,7 @@ export class InventoryService {
         // Record stock movement OUT from source warehouse
         await tx.stockMovement.create({
           data: {
+            id: randomUUID(),
             batchId: batch.id,
             type: 'OUT',
             quantity: deductFromBatch,
@@ -361,6 +367,7 @@ export class InventoryService {
       // Create new batch in destination warehouse
       const newBatch = await tx.inventoryBatch.create({
         data: {
+          id: randomUUID(),
           batchNumber,
           productId: data.productId,
           warehouseId: data.destinationWarehouseId,
@@ -369,12 +376,14 @@ export class InventoryService {
           receivedDate,
           expiryDate,
           status: 'active',
+          updatedAt: new Date(),
         },
       });
 
       // Record stock movement IN to destination warehouse
       await tx.stockMovement.create({
         data: {
+          id: randomUUID(),
           batchId: newBatch.id,
           type: 'IN',
           quantity: baseQuantity,
@@ -423,6 +432,7 @@ export class InventoryService {
       // Record stock movement
       await tx.stockMovement.create({
         data: {
+          id: randomUUID(),
           batchId: data.batchId,
           type: 'ADJUSTMENT',
           quantity: Math.abs(quantityDifference),

@@ -53,12 +53,13 @@ export async function GET(request: NextRequest) {
         const employeePerformance = await prisma.employeePerformance.findMany({
           where: whereClause,
           include: {
-            user: {
+            User: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
-                branch: {
+                Branch: {
                   select: {
                     id: true,
                     name: true,
@@ -77,14 +78,11 @@ export async function GET(request: NextRequest) {
           where: whereClause,
           _sum: {
             totalSales: true,
-            totalTransactions: true,
-            totalItems: true,
-            discountAmount: true,
-            refundAmount: true,
+            transactionCount: true,
+            itemsSold: true,
           },
           _avg: {
-            averageTransactionValue: true,
-            averageItemsPerTransaction: true,
+            averageTransaction: true,
           },
           _count: {
             id: true,
@@ -94,12 +92,13 @@ export async function GET(request: NextRequest) {
         const topPerformers = await prisma.employeePerformance.findMany({
           where: whereClause,
           include: {
-            user: {
+            User: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
-                branch: {
+                Branch: {
                   select: {
                     id: true,
                     name: true,
@@ -120,14 +119,11 @@ export async function GET(request: NextRequest) {
           where: whereClause,
           _sum: {
             totalSales: true,
-            totalTransactions: true,
-            totalItems: true,
-            discountAmount: true,
-            refundAmount: true,
+            transactionCount: true,
+            itemsSold: true,
           },
           _avg: {
-            averageTransactionValue: true,
-            averageItemsPerTransaction: true,
+            averageTransaction: true,
           },
           _count: {
             id: true,
