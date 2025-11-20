@@ -69,7 +69,6 @@ export class APService {
           paymentMethod: data.paymentMethod,
           referenceNumber: data.referenceNumber,
           paymentDate: data.paymentDate,
-          updatedAt: new Date(),
         },
       });
 

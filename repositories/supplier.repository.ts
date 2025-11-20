@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { Supplier } from '@prisma/client';
 import { CreateSupplierInput, UpdateSupplierInput, SupplierFilters } from '@/types/supplier.types';
+import { randomUUID } from 'crypto';
 
 export class SupplierRepository {
   async findAll(filters?: SupplierFilters): Promise<Supplier[]> {
@@ -34,7 +35,6 @@ export class SupplierRepository {
       where: { 
         companyName: {
           equals: companyName,
-          mode: 'insensitive',
         }
       },
     });
@@ -52,7 +52,6 @@ export class SupplierRepository {
       where: {
         companyName: {
           contains: searchTerm,
-          mode: 'insensitive',
         },
       },
       orderBy: { companyName: 'asc' },
@@ -62,8 +61,10 @@ export class SupplierRepository {
   async create(data: CreateSupplierInput): Promise<Supplier> {
     return await prisma.supplier.create({
       data: {
+        id: randomUUID(),
         ...data,
         status: data.status || 'active',
+        updatedAt: new Date(),
       },
     });
   }

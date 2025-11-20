@@ -305,7 +305,6 @@ export class AuthService {
    * Generate JWT token
    */
   private generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-    // @ts-expect-error - TypeScript issue with jwt.sign signature
     return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
   }
 

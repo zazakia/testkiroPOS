@@ -1,7 +1,7 @@
-import { Role, Permission, RolePermission, PermissionResource, PermissionAction } from '@prisma/client';
+import { Role, Permission, RolePermission } from '@prisma/client';
 
 // Base Role and Permission types
-export type { Role, Permission, RolePermission, PermissionResource, PermissionAction };
+export type { Role, Permission, RolePermission };
 
 // Role with relations
 export type RoleWithPermissions = Role & {
@@ -66,8 +66,8 @@ export interface RoleWithPermissionsResponse extends RoleResponse {
 // Permission response types
 export interface PermissionResponse {
   id: string;
-  resource: PermissionResource;
-  action: PermissionAction;
+  resource: string;
+  action: string;
   description: string | null;
   createdAt: Date;
 }
@@ -84,4 +84,4 @@ export interface PermissionCheckResult {
 }
 
 // Permission key format: resource:action
-export type PermissionKey = `${PermissionResource}:${PermissionAction}`;
+export type PermissionKey = `${string}:${string}`;

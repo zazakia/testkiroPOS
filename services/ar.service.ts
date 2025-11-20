@@ -52,7 +52,6 @@ export class ARService {
           paymentMethod: data.paymentMethod,
           referenceNumber: data.referenceNumber,
           paymentDate: data.paymentDate,
-          updatedAt: new Date(),
         },
       });
 

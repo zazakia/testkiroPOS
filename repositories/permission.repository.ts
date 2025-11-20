@@ -1,4 +1,4 @@
-import { Permission, PermissionResource, PermissionAction } from '@prisma/client';
+import { Permission } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class PermissionRepository {
@@ -69,11 +69,11 @@ export class PermissionRepository {
     const rolePermissions = await prisma.rolePermission.findMany({
       where: { roleId },
       include: {
-        permission: true,
+        Permission: true,
       },
     });
 
-    return rolePermissions.map(rp => rp.permission);
+    return rolePermissions.map(rp => rp.Permission);
   }
 
   /**

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { randomUUID } from 'crypto';
 
 export class RolePermissionRepository {
   /**
@@ -8,7 +9,7 @@ export class RolePermissionRepository {
     return prisma.rolePermission.findMany({
       where: { roleId },
       include: {
-        permission: true,
+        Permission: true,
       },
     });
   }
@@ -20,7 +21,7 @@ export class RolePermissionRepository {
     return prisma.rolePermission.findMany({
       where: { permissionId },
       include: {
-        role: true,
+        Role: true,
       },
     });
   }
@@ -31,6 +32,7 @@ export class RolePermissionRepository {
   async create(roleId: string, permissionId: string) {
     return prisma.rolePermission.create({
       data: {
+        id: randomUUID(),
         roleId,
         permissionId,
       },
@@ -67,8 +69,10 @@ export class RolePermissionRepository {
 
     // Create new permissions
     const data = permissionIds.map(permissionId => ({
+      id: randomUUID(),
       roleId,
       permissionId,
+      updatedAt: new Date(),
     }));
 
     return prisma.rolePermission.createMany({

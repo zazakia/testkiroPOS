@@ -102,7 +102,7 @@ export class ReportService {
         existing.totalCost = existing.totalCost.plus(batchCost);
       } else {
         productMap.set(batch.productId, {
-          name: batch.product.name,
+          name: batch.Product.name,
           quantity: new Decimal(batch.quantity),
           totalCost: batchCost,
         });

@@ -139,13 +139,15 @@ export class ReceivingVoucherService {
       await tx.receivingVoucherItem.createMany({
         data: processedItems.map(item => ({
           id: randomUUID(),
-          receivingVoucherId: rv.id,
+          rvId: rv.id,
           productId: item.productId,
           orderedQuantity: item.orderedQuantity,
           receivedQuantity: item.receivedQuantity,
-          unitCost: item.unitCost,
-          subtotal: item.subtotal,
-          notes: item.notes,
+          varianceQuantity: item.varianceQuantity,
+          variancePercentage: item.variancePercentage,
+          varianceReason: item.varianceReason,
+          unitPrice: item.unitPrice,
+          lineTotal: item.lineTotal,
           updatedAt: new Date(),
         })),
       });
@@ -334,8 +336,8 @@ export class ReceivingVoucherService {
     const supplierMap = new Map<string, VarianceReport>();
 
     for (const rv of rvs) {
-      const supplierId = rv.purchaseOrder.Supplier.id;
-      const supplierName = rv.purchaseOrder.Supplier.companyName;
+      const supplierId = rv.PurchaseOrder.Supplier.id;
+      const supplierName = rv.PurchaseOrder.Supplier.companyName;
 
       if (!supplierMap.has(supplierId)) {
         supplierMap.set(supplierId, {
@@ -354,7 +356,7 @@ export class ReceivingVoucherService {
       report.totalPOs++;
 
       // Analyze variance
-      for (const item of rv.items) {
+      for (const item of rv.ReceivingVoucherItem) {
         const variance = Number(item.varianceQuantity);
 
         if (variance > 0) {
@@ -378,7 +380,7 @@ export class ReceivingVoucherService {
         } else {
           report.products.push({
             productId: item.productId,
-            productName: item.product.name,
+            productName: item.Product.name,
             totalOrdered: Number(item.orderedQuantity),
             totalReceived: Number(item.receivedQuantity),
             totalVariance: variance,

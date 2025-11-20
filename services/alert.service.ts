@@ -66,7 +66,6 @@ export class AlertService {
           warehouseStockMap.set(batch.warehouseId, { stock: new Decimal(batch.quantity), warehouse: batch.Warehouse });
         }
       }
-      }
 
       // Check each warehouse
       for (const [warehouseId, data] of warehouseStockMap) {
@@ -108,7 +107,7 @@ export class AlertService {
           gte: today,
           lte: thirtyDaysFromNow,
         },
-        warehouse: {
+        Warehouse: {
           ...(branchId ? { branchId } : {}),
           ...(warehouseId ? { id: warehouseId } : {}),
         },

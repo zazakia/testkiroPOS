@@ -11,9 +11,9 @@ export class UserRepository {
 
     if (filters?.search) {
       where.OR = [
-        { email: { contains: filters.search, mode: 'insensitive' } },
-        { firstName: { contains: filters.search, mode: 'insensitive' } },
-        { lastName: { contains: filters.search, mode: 'insensitive' } },
+        { email: { contains: filters.search } },
+        { firstName: { contains: filters.search } },
+        { lastName: { contains: filters.search } },
       ];
     }
 
