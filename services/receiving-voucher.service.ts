@@ -48,211 +48,232 @@ export class ReceivingVoucherService {
     data: CreateReceivingVoucherInput
   ): Promise<ReceivingVoucherWithDetails> {
     return await prisma.$transaction(async (tx) => {
-      // 1. Get PO with items and related data
-      const po = await tx.purchaseOrder.findUnique({
-        where: { id: data.purchaseOrderId },
-        include: {
-          PurchaseOrderItem: {
-            include: {
-              Product: true,
-            },
-          },
-          Supplier: true,
-          Warehouse: true,
-          Branch: true,
-        },
-      });
+      try {
+        console.log('Starting createReceivingVoucher transaction...');
 
-      if (!po) {
-        throw new NotFoundError('Purchase Order');
-      }
-
-      // 2. Validate PO status
-      if (po.status !== 'ordered') {
-        throw new ValidationError('Invalid purchase order status', {
-          status: 'Purchase order must be in ordered status',
-        });
-      }
-
-      // 3. Validate at least one item has received quantity > 0
-      const hasReceivedItems = data.items.some((item) => item.receivedQuantity > 0);
-      if (!hasReceivedItems) {
-        throw new ValidationError('No items received', {
-          items: 'At least one item must have received quantity greater than zero',
-        });
-      }
-
-      // 4. Generate RV number
-      const rvNumber = await this.generateRVNumber();
-
-      // 5. Calculate totals and variances
-      let totalOrderedAmount = 0;
-      let totalReceivedAmount = 0;
-
-      const processedItems = data.items.map((item) => {
-        const orderedQty = Number(item.orderedQuantity);
-        const receivedQty = Number(item.receivedQuantity);
-        const unitPrice = Number(item.unitPrice);
-
-        const varianceQty = receivedQty - orderedQty;
-        const variancePercentage =
-          orderedQty > 0 ? (varianceQty / orderedQty) * 100 : 0;
-        const lineTotal = receivedQty * unitPrice;
-
-        totalOrderedAmount += orderedQty * unitPrice;
-        totalReceivedAmount += lineTotal;
-
-        return {
-          id: randomUUID(),
-          productId: item.productId,
-          orderedQuantity: orderedQty,
-          receivedQuantity: receivedQty,
-          varianceQuantity: varianceQty,
-          variancePercentage: Number(variancePercentage.toFixed(2)),
-          varianceReason: item.varianceReason || null,
-          unitPrice: unitPrice,
-          lineTotal: Number(lineTotal.toFixed(2)),
-        };
-      });
-
-      const varianceAmount = totalReceivedAmount - totalOrderedAmount;
-
-      // 6. Create ReceivingVoucher
-      const rv = await tx.receivingVoucher.create({
-        data: {
-          id: randomUUID(),
-          rvNumber,
-          purchaseOrderId: po.id,
-          warehouseId: po.warehouseId,
-          branchId: po.branchId,
-          receiverName: data.receiverName,
-          deliveryNotes: data.deliveryNotes,
-          status: 'complete',
-          totalOrderedAmount: Number(totalOrderedAmount.toFixed(2)),
-          totalReceivedAmount: Number(totalReceivedAmount.toFixed(2)),
-          varianceAmount: Number(varianceAmount.toFixed(2)),
-          updatedAt: new Date(),
-        },
-      });
-
-      // Create receiving voucher items
-      await tx.receivingVoucherItem.createMany({
-        data: processedItems.map(item => ({
-          id: randomUUID(),
-          rvId: rv.id,
-          productId: item.productId,
-          orderedQuantity: item.orderedQuantity,
-          receivedQuantity: item.receivedQuantity,
-          varianceQuantity: item.varianceQuantity,
-          variancePercentage: item.variancePercentage,
-          varianceReason: item.varianceReason,
-          unitPrice: item.unitPrice,
-          lineTotal: item.lineTotal,
-          updatedAt: new Date(),
-        })),
-      });
-
-      // 7. Create inventory batches for received quantities
-      for (const item of processedItems) {
-        if (item.receivedQuantity > 0) {
-          const product = po.PurchaseOrderItem.find((p) => p.productId === item.productId)?.Product;
-          if (!product) continue;
-
-          // Add stock using inventory service
-          await inventoryService.addStock({
-            productId: item.productId,
-            warehouseId: po.warehouseId,
-            quantity: item.receivedQuantity,
-            uom: product.baseUOM,
-            unitCost: item.unitPrice,
-            referenceId: rv.id,
-            referenceType: 'RV',
-            reason: `Received from RV ${rvNumber} (PO ${po.poNumber})`,
-          });
-
-          // Update PO item received quantity
-          const poItem = po.PurchaseOrderItem.find((p) => p.productId === item.productId);
-          if (poItem) {
-            await tx.purchaseOrderItem.update({
-              where: { id: poItem.id },
-              data: {
-                receivedQuantity: {
-                  increment: item.receivedQuantity,
-                },
+        // 1. Get PO with items and related data
+        const po = await tx.purchaseOrder.findUnique({
+          where: { id: data.purchaseOrderId },
+          include: {
+            PurchaseOrderItem: {
+              include: {
+                Product: true,
               },
-            });
-          }
+            },
+            Supplier: true,
+            Warehouse: true,
+            Branch: true,
+          },
+        });
+
+        if (!po) {
+          throw new NotFoundError('Purchase Order');
         }
-      }
+        console.log('PO found:', po.id);
 
-      // 8. Update PO receiving status
-      const updatedPOItems = await tx.purchaseOrderItem.findMany({
-        where: { poId: po.id },
-      });
+        // 2. Validate PO status
+        if (po.status !== 'ordered') {
+          throw new ValidationError('Invalid purchase order status', {
+            status: 'Purchase order must be in ordered status',
+          });
+        }
 
-      const allItemsFullyReceived = updatedPOItems.every(
-        (item) => Number(item.receivedQuantity) >= Number(item.quantity)
-      );
-      const someItemsReceived = updatedPOItems.some(
-        (item) => Number(item.receivedQuantity) > 0
-      );
+        // 3. Validate at least one item has received quantity > 0
+        const hasReceivedItems = data.items.some((item) => item.receivedQuantity > 0);
+        if (!hasReceivedItems) {
+          throw new ValidationError('No items received', {
+            items: 'At least one item must have received quantity greater than zero',
+          });
+        }
 
-      let receivingStatus = 'pending';
-      if (allItemsFullyReceived) {
-        receivingStatus = 'fully_received';
-      } else if (someItemsReceived) {
-        receivingStatus = 'partially_received';
-      }
+        // 4. Generate RV number
+        const rvNumber = await this.generateRVNumber();
+        console.log('Generated RV Number:', rvNumber);
 
-      await tx.purchaseOrder.update({
-        where: { id: po.id },
-        data: {
-          receivingStatus,
-          status: allItemsFullyReceived ? 'received' : po.status,
-          actualDeliveryDate: allItemsFullyReceived ? new Date() : po.actualDeliveryDate,
-        },
-      });
+        // 5. Calculate totals and variances
+        let totalOrderedAmount = 0;
+        let totalReceivedAmount = 0;
 
-      // 9. Create Accounts Payable for received amount
-      if (totalReceivedAmount > 0 && allItemsFullyReceived) {
-        const dueDate = this.calculateDueDate(po.Supplier.paymentTerms, new Date());
+        const processedItems = data.items.map((item) => {
+          const orderedQty = Number(item.orderedQuantity);
+          const receivedQty = Number(item.receivedQuantity);
+          const unitPrice = Number(item.unitPrice);
 
-        await tx.accountsPayable.create({
+          const varianceQty = receivedQty - orderedQty;
+          const variancePercentage =
+            orderedQty > 0 ? (varianceQty / orderedQty) * 100 : 0;
+          const lineTotal = receivedQty * unitPrice;
+
+          totalOrderedAmount += orderedQty * unitPrice;
+          totalReceivedAmount += lineTotal;
+
+          return {
+            id: randomUUID(),
+            productId: item.productId,
+            orderedQuantity: orderedQty,
+            receivedQuantity: receivedQty,
+            varianceQuantity: varianceQty,
+            variancePercentage: Number(variancePercentage.toFixed(2)),
+            varianceReason: item.varianceReason || null,
+            unitPrice: unitPrice,
+            lineTotal: Number(lineTotal.toFixed(2)),
+          };
+        });
+
+        const varianceAmount = totalReceivedAmount - totalOrderedAmount;
+
+        // 6. Create ReceivingVoucher
+        console.log('Creating ReceivingVoucher record...');
+        const rv = await tx.receivingVoucher.create({
           data: {
             id: randomUUID(),
-            branchId: po.branchId,
-            supplierId: po.supplierId,
+            rvNumber,
             purchaseOrderId: po.id,
-            totalAmount: Number(totalReceivedAmount.toFixed(2)),
-            paidAmount: 0,
-            balance: Number(totalReceivedAmount.toFixed(2)),
-            dueDate,
-            status: 'pending',
+            warehouseId: po.warehouseId,
+            branchId: po.branchId,
+            receiverName: data.receiverName,
+            deliveryNotes: data.deliveryNotes,
+            status: 'complete',
+            totalOrderedAmount: Number(totalOrderedAmount.toFixed(2)),
+            totalReceivedAmount: Number(totalReceivedAmount.toFixed(2)),
+            varianceAmount: Number(varianceAmount.toFixed(2)),
             updatedAt: new Date(),
           },
         });
+        console.log('ReceivingVoucher created:', rv.id);
+
+        // Create receiving voucher items
+        console.log('Creating ReceivingVoucher items...');
+        await tx.receivingVoucherItem.createMany({
+          data: processedItems.map(item => ({
+            id: randomUUID(),
+            rvId: rv.id,
+            productId: item.productId,
+            orderedQuantity: item.orderedQuantity,
+            receivedQuantity: item.receivedQuantity,
+            varianceQuantity: item.varianceQuantity,
+            variancePercentage: item.variancePercentage,
+            varianceReason: item.varianceReason,
+            unitPrice: item.unitPrice,
+            lineTotal: item.lineTotal,
+            updatedAt: new Date(),
+          })),
+        });
+
+        // 7. Create inventory batches for received quantities
+        console.log('Processing inventory batches...');
+        for (const item of processedItems) {
+          if (item.receivedQuantity > 0) {
+            const product = po.PurchaseOrderItem.find((p) => p.productId === item.productId)?.Product;
+            if (!product) {
+              console.error('Product not found for item:', item.productId);
+              continue;
+            }
+
+            console.log('Adding stock for product:', product.name);
+            // Add stock using inventory service
+            await inventoryService.addStock({
+              productId: item.productId,
+              warehouseId: po.warehouseId,
+              quantity: item.receivedQuantity,
+              uom: product.baseUOM,
+              unitCost: item.unitPrice,
+              referenceId: rv.id,
+              referenceType: 'RV',
+              reason: `Received from RV ${rvNumber} (PO ${po.poNumber})`,
+            });
+
+            // Update PO item received quantity
+            const poItem = po.PurchaseOrderItem.find((p) => p.productId === item.productId);
+            if (poItem) {
+              await tx.purchaseOrderItem.update({
+                where: { id: poItem.id },
+                data: {
+                  receivedQuantity: {
+                    increment: item.receivedQuantity,
+                  },
+                },
+              });
+            }
+          }
+        }
+
+        // 8. Update PO receiving status
+        console.log('Updating PO status...');
+        const updatedPOItems = await tx.purchaseOrderItem.findMany({
+          where: { poId: po.id },
+        });
+
+        const allItemsFullyReceived = updatedPOItems.every(
+          (item) => Number(item.receivedQuantity) >= Number(item.quantity)
+        );
+        const someItemsReceived = updatedPOItems.some(
+          (item) => Number(item.receivedQuantity) > 0
+        );
+
+        let receivingStatus = 'pending';
+        if (allItemsFullyReceived) {
+          receivingStatus = 'fully_received';
+        } else if (someItemsReceived) {
+          receivingStatus = 'partially_received';
+        }
+
+        await tx.purchaseOrder.update({
+          where: { id: po.id },
+          data: {
+            receivingStatus,
+            status: allItemsFullyReceived ? 'received' : po.status,
+            actualDeliveryDate: allItemsFullyReceived ? new Date() : po.actualDeliveryDate,
+          },
+        });
+
+        // 9. Create Accounts Payable for received amount
+        if (totalReceivedAmount > 0 && allItemsFullyReceived) {
+          console.log('Creating Accounts Payable...');
+          const dueDate = this.calculateDueDate(po.Supplier.paymentTerms, new Date());
+
+          await tx.accountsPayable.create({
+            data: {
+              id: randomUUID(),
+              branchId: po.branchId,
+              supplierId: po.supplierId,
+              purchaseOrderId: po.id,
+              totalAmount: Number(totalReceivedAmount.toFixed(2)),
+              paidAmount: 0,
+              balance: Number(totalReceivedAmount.toFixed(2)),
+              dueDate,
+              status: 'pending',
+              updatedAt: new Date(),
+            },
+          });
+        }
+
+        // 10. Return created RV with details
+        console.log('Fetching created RV details...');
+        const createdRV = await tx.receivingVoucher.findUnique({
+          where: { id: rv.id },
+          include: {
+            PurchaseOrder: {
+              include: {
+                Supplier: true,
+              },
+            },
+            Warehouse: true,
+            Branch: true,
+            ReceivingVoucherItem: {
+              include: {
+                Product: true,
+              },
+            },
+          },
+        });
+
+        console.log('Receiving Voucher creation successful!');
+        return createdRV!;
+      } catch (error) {
+        console.error('Error in createReceivingVoucher transaction:', error);
+        throw error;
       }
-
-      // 10. Return created RV with details
-      const createdRV = await tx.receivingVoucher.findUnique({
-        where: { id: rv.id },
-        include: {
-          PurchaseOrder: {
-            include: {
-              Supplier: true,
-            },
-          },
-          Warehouse: true,
-          Branch: true,
-          ReceivingVoucherItem: {
-            include: {
-              Product: true,
-            },
-          },
-        },
-      });
-
-      return createdRV!;
     });
   }
 
