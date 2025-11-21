@@ -3,21 +3,43 @@
 ```yaml
 - generic [active] [ref=e1]:
   - generic [ref=e3]:
-    - heading "404" [level=1] [ref=e4]
-    - heading "This page could not be found." [level=2] [ref=e6]
+    - generic [ref=e4]:
+      - generic [ref=e5]: Sign in
+      - generic [ref=e6]: Enter your credentials to access your account
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - text: Email
+          - textbox "Email" [ref=e10]:
+            - /placeholder: admin@inventorypro.com
+            - text: cybergada@gmail.com
+        - generic [ref=e11]:
+          - text: Password
+          - textbox "Password" [ref=e12]:
+            - /placeholder: ••••••••
+        - generic [ref=e13]:
+          - link "Forgot password?" [ref=e15] [cursor=pointer]:
+            - /url: /forgot-password
+          - button "Use demo admin" [ref=e17] [cursor=pointer]
+      - generic [ref=e18]:
+        - button "Sign in" [ref=e19] [cursor=pointer]
+        - generic [ref=e20]:
+          - text: Don't have an account?
+          - link "Sign up" [ref=e21] [cursor=pointer]:
+            - /url: /register
   - region "Notifications (F8)":
     - list
   - region "Notifications alt+T"
-  - generic [ref=e7]:
-    - img [ref=e9]
-    - button "Open Tanstack query devtools" [ref=e58] [cursor=pointer]:
-      - img [ref=e59]
-  - status [ref=e108]:
-    - generic [ref=e109]:
-      - img [ref=e111]
-      - generic [ref=e113]:
+  - generic [ref=e22]:
+    - img [ref=e24]
+    - button "Open Tanstack query devtools" [ref=e73] [cursor=pointer]:
+      - img [ref=e74]
+  - status [ref=e123]:
+    - generic [ref=e124]:
+      - img [ref=e126]
+      - generic [ref=e128]:
         - text: Static route
-        - button "Hide static indicator" [ref=e114] [cursor=pointer]:
-          - img [ref=e115]
-  - alert [ref=e118]
+        - button "Hide static indicator" [ref=e129] [cursor=pointer]:
+          - img [ref=e130]
+  - alert [ref=e133]
 ```

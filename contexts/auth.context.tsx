@@ -88,12 +88,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      console.log('Starting logout process...');
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      console.log('Logout API response:', response.status, response.statusText);
+
+      if (response.ok) {
+        console.log('Logout successful, clearing user state and redirecting...');
+        setUser(null);
+        setPermissions([]);
+        window.location.href = '/login';
+      } else {
+        console.error('Logout API failed:', response.status, await response.text());
+        // Still clear state and redirect even if API fails
+        setUser(null);
+        setPermissions([]);
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear state and redirect even if there's an error
       setUser(null);
       setPermissions([]);
       window.location.href = '/login';
-    } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 

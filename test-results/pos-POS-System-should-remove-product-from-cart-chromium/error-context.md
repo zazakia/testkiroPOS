@@ -2,118 +2,44 @@
 
 ```yaml
 - generic [active] [ref=e1]:
-  - generic [ref=e2]:
-    - complementary [ref=e3]:
-      - generic [ref=e4]:
-        - img [ref=e6]
-        - generic [ref=e10]:
-          - generic [ref=e11]: InventoryPro
-          - generic [ref=e12]: Inventory & POS
-      - navigation [ref=e13]:
-        - link "Dashboard" [ref=e14] [cursor=pointer]:
-          - /url: /dashboard
-          - img [ref=e15]
-          - generic [ref=e20]: Dashboard
-        - link "Products" [ref=e21] [cursor=pointer]:
-          - /url: /products
-          - img [ref=e22]
-          - generic [ref=e26]: Products
-        - link "Inventory" [ref=e27] [cursor=pointer]:
-          - /url: /inventory
-          - img [ref=e28]
-          - generic [ref=e31]: Inventory
-        - link "Warehouses" [ref=e32] [cursor=pointer]:
-          - /url: /warehouses
-          - img [ref=e33]
-          - generic [ref=e36]: Warehouses
-        - link "Branches" [ref=e37] [cursor=pointer]:
-          - /url: /branches
-          - img [ref=e38]
-          - generic [ref=e42]: Branches
-        - link "Suppliers" [ref=e43] [cursor=pointer]:
-          - /url: /suppliers
-          - img [ref=e44]
-          - generic [ref=e49]: Suppliers
-        - link "Purchase Orders" [ref=e50] [cursor=pointer]:
-          - /url: /purchase-orders
-          - img [ref=e51]
-          - generic [ref=e55]: Purchase Orders
-        - link "Sales Orders" [ref=e56] [cursor=pointer]:
-          - /url: /sales-orders
-          - img [ref=e57]
-          - generic [ref=e60]: Sales Orders
-        - link "POS" [ref=e61] [cursor=pointer]:
-          - /url: /pos
-          - img [ref=e62]
-          - generic [ref=e67]: POS
-        - link "AR/AP" [ref=e68] [cursor=pointer]:
-          - /url: /ar-ap
-          - img [ref=e69]
-          - generic [ref=e71]: AR/AP
-        - link "Expenses" [ref=e72] [cursor=pointer]:
-          - /url: /expenses
-          - img [ref=e73]
-          - generic [ref=e76]: Expenses
-        - link "Alerts" [ref=e77] [cursor=pointer]:
-          - /url: /alerts
-          - img [ref=e78]
-          - generic [ref=e80]: Alerts
-        - link "Reports" [ref=e81] [cursor=pointer]:
-          - /url: /reports
-          - img [ref=e82]
-          - generic [ref=e84]: Reports
-        - generic [ref=e85]:
-          - paragraph [ref=e86]: Settings
-          - link "Users" [ref=e87] [cursor=pointer]:
-            - /url: /users
-            - img [ref=e88]
-            - generic [ref=e100]: Users
-          - link "Roles" [ref=e101] [cursor=pointer]:
-            - /url: /roles
-            - img [ref=e102]
-            - generic [ref=e104]: Roles
-      - generic [ref=e106]:
-        - paragraph [ref=e107]: © 2024 InventoryPro
-        - paragraph [ref=e108]: v1.0.0
-    - generic [ref=e109]:
-      - banner [ref=e110]:
-        - generic [ref=e111]:
-          - heading "Welcome to InventoryPro" [level=1] [ref=e113]
-          - generic [ref=e115]:
-            - img [ref=e116]
-            - combobox [ref=e120] [cursor=pointer]:
-              - generic: All Branches
-              - img [ref=e121]
-      - main [ref=e123]:
-        - generic [ref=e124]:
-          - generic [ref=e125]:
-            - navigation [ref=e126]:
-              - link "Dashboard" [ref=e128] [cursor=pointer]:
-                - /url: /dashboard
-              - generic [ref=e129]:
-                - img [ref=e130]
-                - generic [ref=e132]: POS
-            - generic [ref=e134]:
-              - heading "Point of Sale" [level=1] [ref=e135]
-              - paragraph [ref=e136]: Process sales transactions
-          - generic [ref=e138]:
-            - paragraph [ref=e139]: Please select a branch to start using the POS system
-            - paragraph [ref=e140]: You can select a branch from the branch selector in the navigation bar
-    - region "Notifications (F8)":
-      - list
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: Sign in
+      - generic [ref=e6]: Enter your credentials to access your account
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - text: Email
+          - textbox "Email" [ref=e10]:
+            - /placeholder: admin@inventorypro.com
+            - text: cybergada@gmail.com
+        - generic [ref=e11]:
+          - text: Password
+          - textbox "Password" [ref=e12]:
+            - /placeholder: ••••••••
+        - generic [ref=e13]:
+          - link "Forgot password?" [ref=e15] [cursor=pointer]:
+            - /url: /forgot-password
+          - button "Use demo admin" [ref=e17] [cursor=pointer]
+      - generic [ref=e18]:
+        - button "Sign in" [ref=e19] [cursor=pointer]
+        - generic [ref=e20]:
+          - text: Don't have an account?
+          - link "Sign up" [ref=e21] [cursor=pointer]:
+            - /url: /register
   - region "Notifications (F8)":
     - list
   - region "Notifications alt+T"
-  - generic [ref=e141]:
-    - img [ref=e143]
-    - button "Open Tanstack query devtools" [ref=e191] [cursor=pointer]:
-      - img [ref=e192]
-  - status [ref=e240]:
-    - generic [ref=e241]:
-      - img [ref=e243]
-      - generic [ref=e245]:
+  - generic [ref=e22]:
+    - img [ref=e24]
+    - button "Open Tanstack query devtools" [ref=e72] [cursor=pointer]:
+      - img [ref=e73]
+  - status [ref=e121]:
+    - generic [ref=e122]:
+      - img [ref=e124]
+      - generic [ref=e126]:
         - text: Static route
-        - button "Hide static indicator" [ref=e246] [cursor=pointer]:
-          - img [ref=e247]
-  - alert [ref=e250]
+        - button "Hide static indicator" [ref=e127] [cursor=pointer]:
+          - img [ref=e128]
+  - alert [ref=e131]
 ```

@@ -6,10 +6,14 @@ import { permissionService } from '@/services/permission.service';
 // GET /api/auth/me - Get current authenticated user
 export async function GET(request: NextRequest) {
   try {
+    console.log('/api/auth/me called');
+
     // Get token from cookie
     const token = request.cookies.get('auth-token')?.value;
-    
+    console.log('Token from cookie:', token ? 'present' : 'missing');
+
     if (!token) {
+      console.log('No token found, returning 401');
       return NextResponse.json(
         { success: false, message: 'Not authenticated' },
         { status: 401 }
@@ -17,14 +21,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify token
+    console.log('Verifying token...');
     const payload = authService.verifyToken(token);
-    
+    console.log('Token verification result:', payload ? 'valid' : 'invalid');
+
     if (!payload) {
+      console.log('Invalid token, returning 401');
       return NextResponse.json(
         { success: false, message: 'Invalid session' },
         { status: 401 }
       );
     }
+
+    console.log('Token valid for user:', payload.userId);
 
     // Get user details
     const user = await userService.getUserById(payload.userId);
