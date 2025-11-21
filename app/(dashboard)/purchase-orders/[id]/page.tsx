@@ -367,7 +367,7 @@ export default function PurchaseOrderDetailPage({
               <div>
                 Are you sure you want to submit PO {purchaseOrder.poNumber}? This will:
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Change status to "Ordered"</li>
+                  <li>Change status to &quot;Ordered&quot;</li>
                   <li>Lock the PO from further editing</li>
                   <li>Ready the PO for receiving</li>
                 </ul>

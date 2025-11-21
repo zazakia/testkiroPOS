@@ -384,7 +384,7 @@ export function SalesOrderInvoicePrint({
               <h4 className="text-sm font-bold mb-2 text-yellow-800">DELIVERY INSTRUCTIONS:</h4>
               <p className="text-xs text-yellow-800">
                 1. Please verify all items and quantities upon delivery.<br />
-                2. Sign the "Received Qty" column for each item received.<br />
+                2. Sign the &quot;Received Qty&quot; column for each item received.<br />
                 3. Report any discrepancies immediately to the delivery personnel.<br />
                 4. Keep this document for your records.
               </p>

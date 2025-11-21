@@ -580,8 +580,8 @@ export function ReportTemplateConfigurator({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="A4">A4 (210×297mm)</SelectItem>
-                      <SelectItem value="Letter">Letter (8.5×11")</SelectItem>
-                      <SelectItem value="Legal">Legal (8.5×14")</SelectItem>
+                      <SelectItem value="Letter">Letter (8.5×11&quot;)</SelectItem>
+                      <SelectItem value="Legal">Legal (8.5×14&quot;)</SelectItem>
                       <SelectItem value="Thermal">Thermal (80mm)</SelectItem>
                     </SelectContent>
                   </Select>

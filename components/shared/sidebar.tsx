@@ -69,7 +69,7 @@ export function Sidebar() {
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary">
             <Package className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-bold text-lg text-foreground">InventoryPro</span>
+          <span className="font-bold text-lg text-foreground">Zapweb.app</span>
         </div>
         <Button
           variant="ghost"
@@ -109,7 +109,7 @@ export function Sidebar() {
             <Package className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-lg text-foreground leading-tight">InventoryPro</span>
+            <span className="font-bold text-lg text-foreground leading-tight">Zapweb.app</span>
             <span className="text-xs text-muted-foreground">Inventory & POS</span>
           </div>
         </div>
@@ -200,7 +200,7 @@ export function Sidebar() {
 
           {/* App Version */}
           <div className="text-xs text-muted-foreground text-center">
-            <p>© 2024 InventoryPro</p>
+            <p>© 2024 Zapweb.app</p>
             <p className="mt-1">v1.0.0</p>
           </div>
         </div>
