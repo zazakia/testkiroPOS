@@ -58,12 +58,13 @@ export async function GET(request: NextRequest) {
       branchId: user.branchId,
       status: user.status,
       emailVerified: user.emailVerified,
-      role: {
+      branchLockEnabled: user.branchLockEnabled,
+      Role: {
         id: user.Role.id,
         name: user.Role.name,
         description: user.Role.description,
       },
-      branch: user.Branch ? {
+      Branch: user.Branch ? {
         id: user.Branch.id,
         name: user.Branch.name,
         code: user.Branch.code,

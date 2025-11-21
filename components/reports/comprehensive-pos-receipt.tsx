@@ -173,9 +173,9 @@ export function ComprehensivePOSReceipt({
             {companySettings.tin && (
               <p className="text-xs text-muted-foreground">TIN: {companySettings.tin}</p>
             )}
-            {sale.branch && (
+            {sale.Branch && (
               <p className="text-xs text-muted-foreground font-semibold">
-                {sale.branch.name} - {sale.branch.location}
+                {sale.Branch.name} - {sale.Branch.location}
               </p>
             )}
           </div>

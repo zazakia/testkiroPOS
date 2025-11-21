@@ -6,6 +6,7 @@ const publicApiRoutes = [
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/verify-email',
+  '/api/roles', // Allow fetching roles for registration page
 ];
 
 // Define public page routes

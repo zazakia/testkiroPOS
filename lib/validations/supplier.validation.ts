@@ -7,8 +7,8 @@ export const supplierSchema = z.object({
     .min(1, 'Phone number is required')
     .regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number format'),
   email: z.string()
-    .min(1, 'Email is required')
-    .email('Invalid email format'),
+    .email('Invalid email format')
+    .optional(),
   paymentTerms: z.enum(['Net 15', 'Net 30', 'Net 60', 'COD'], {
     errorMap: () => ({ message: 'Invalid payment terms' })
   }),

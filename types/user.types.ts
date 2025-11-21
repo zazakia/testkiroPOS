@@ -8,17 +8,17 @@ export type { User };
 
 // User with relations
 export type UserWithRole = User & {
-  role: Role;
+  Role: Role;
 };
 
 export type UserWithBranch = User & {
-  branch: Branch | null;
+  Branch: Branch | null;
 };
 
 export type UserWithRelations = User & {
-  role: Role;
-  branch: Branch | null;
-  branchAccess?: UserBranchAccess[];
+  Role: Role;
+  Branch: Branch | null;
+  UserBranchAccess?: UserBranchAccess[];
 };
 
 export type UserWithSessions = User & {
@@ -49,6 +49,7 @@ export interface UpdateUserInput {
   branchId?: string;
   status?: UserStatus;
   emailVerified?: boolean;
+  branchLockEnabled?: boolean;
 }
 
 export interface ChangePasswordInput {

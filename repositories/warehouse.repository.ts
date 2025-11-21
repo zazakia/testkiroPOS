@@ -41,7 +41,6 @@ export class WarehouseRepository {
         manager: data.manager,
         maxCapacity: data.maxCapacity,
         branchId: data.branchId,
-        updatedAt: new Date(),
       },
       include: {
         Branch: true,

@@ -46,7 +46,6 @@ export class AuthService {
       firstName: data.firstName,
       lastName: data.lastName,
       phone: data.phone,
-      updatedAt: new Date(),
       Role: { connect: { id: data.roleId } },
       Branch: data.branchId ? { connect: { id: data.branchId } } : undefined,
       status: 'ACTIVE',
@@ -182,12 +181,13 @@ export class AuthService {
         branchId: user.branchId,
         status: user.status,
         emailVerified: user.emailVerified,
-        role: {
+        branchLockEnabled: user.branchLockEnabled,
+        Role: {
           id: user.Role.id,
           name: user.Role.name,
           description: user.Role.description,
         },
-        branch: user.Branch ? {
+        Branch: user.Branch ? {
           id: user.Branch.id,
           name: user.Branch.name,
           code: user.Branch.code,

@@ -361,14 +361,22 @@ export default function POSPage() {
               />
             </>
           ) : (
-            <POSPayment
-              cart={cart}
-              branchId={selectedBranch?.id || ''}
-              warehouseId={selectedWarehouse}
-              convertedFromOrderId={convertingOrderIds.length === 1 ? convertingOrderIds[0] : undefined}
-              onComplete={handlePaymentComplete}
-              onCancel={() => setShowPayment(false)}
-            />
+            selectedBranch && selectedWarehouse ? (
+              <POSPayment
+                cart={cart}
+                branchId={selectedBranch.id}
+                warehouseId={selectedWarehouse}
+                convertedFromOrderId={convertingOrderIds.length === 1 ? convertingOrderIds[0] : undefined}
+                onComplete={handlePaymentComplete}
+                onCancel={() => setShowPayment(false)}
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  Please select a branch and warehouse to process payment
+                </CardContent>
+              </Card>
+            )
           )}
         </div>
       </div>

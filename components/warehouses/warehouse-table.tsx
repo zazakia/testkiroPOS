@@ -146,7 +146,7 @@ export function WarehouseTable({ warehouses, onEdit, onDelete }: WarehouseTableP
                   <TableCell className="font-medium">{warehouse.name}</TableCell>
                   <TableCell>{warehouse.location}</TableCell>
                   <TableCell>
-                    {(warehouse as any).branch?.name || 'N/A'}
+                    {warehouse.Branch?.name || 'N/A'}
                   </TableCell>
                   <TableCell>{warehouse.manager}</TableCell>
                   <TableCell className="text-right">

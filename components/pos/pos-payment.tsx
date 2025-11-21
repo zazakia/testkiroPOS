@@ -145,13 +145,19 @@ export function POSPayment({
         })),
       };
 
+      console.log('Sending POS sale data:', saleData);
+
       const response = await fetch('/api/pos/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(saleData),
       });
 
+      console.log('POS sale response status:', response.status);
+
       const data = await response.json();
+
+      console.log('POS sale response data:', data);
 
       if (data.success) {
         toast({
@@ -160,9 +166,20 @@ export function POSPayment({
         });
         onComplete(data.data);
       } else {
+        console.error('POS sale failed:', data);
+
+        // Show detailed error if validation errors exist
+        let errorMessage = data.error || 'Failed to process sale';
+        if (data.fields) {
+          const fieldErrors = Object.entries(data.fields)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join('; ');
+          errorMessage = `${errorMessage} - ${fieldErrors}`;
+        }
+
         toast({
           title: 'Error',
-          description: data.error || 'Failed to process sale',
+          description: errorMessage,
           variant: 'destructive',
         });
       }
@@ -170,7 +187,7 @@ export function POSPayment({
       console.error('Error processing sale:', error);
       toast({
         title: 'Error',
-        description: 'Failed to process sale',
+        description: error instanceof Error ? error.message : 'Failed to process sale',
         variant: 'destructive',
       });
     } finally {

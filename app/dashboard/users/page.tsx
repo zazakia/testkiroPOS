@@ -97,8 +97,8 @@ export default function UsersPage() {
                           {user.firstName} {user.lastName}
                         </TableCell>
                         <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.role?.name || 'N/A'}</TableCell>
-                        <TableCell>{user.branch?.name || 'N/A'}</TableCell>
+                        <TableCell>{user.Role?.name || 'N/A'}</TableCell>
+                        <TableCell>{user.Branch?.name || 'N/A'}</TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(user.status)}>
                             {user.status}

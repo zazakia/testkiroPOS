@@ -23,12 +23,14 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Default to Cashier role (lowest privilege - safe for public registration)
-  // Role ID from database: Cashier = '64d6a622-3682-43b9-af52-cb19e35ff18b'
-  const CASHIER_ROLE_ID = '64d6a622-3682-43b9-af52-cb19e35ff18b';
-
+  // Set Cashier role ID on mount
+  // Note: In production, you should fetch available roles from an admin or
+  // hard-code the Cashier role ID after running seed
   useEffect(() => {
-    // Set default role on mount
+    // Default to Cashier role (lowest privilege - safe for public registration)
+    // This ID should match your seeded Cashier role
+    // Run: node check-roles.js to get the correct ID
+    const CASHIER_ROLE_ID = 'cmi7oyndp001bvaecyykj14uc';
     setFormData(prev => ({ ...prev, roleId: CASHIER_ROLE_ID }));
   }, []);
 

@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Branch } from '@prisma/client';
 
@@ -48,6 +49,7 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
     roleId: '',
     branchId: '',
     status: 'ACTIVE' as const,
+    branchLockEnabled: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -62,6 +64,7 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
         roleId: user.roleId,
         branchId: user.branchId || '',
         status: user.status,
+        branchLockEnabled: user.branchLockEnabled || false,
       });
     } else {
       setFormData({
@@ -73,6 +76,7 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
         roleId: '',
         branchId: '',
         status: 'ACTIVE',
+        branchLockEnabled: false,
       });
     }
   }, [user]);
@@ -223,6 +227,26 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
                   <SelectItem value="SUSPENDED">Suspended</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {isEdit && (
+            <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="branchLock" className="text-base">
+                  Lock Branch Selection
+                </Label>
+                <div className="text-sm text-muted-foreground">
+                  Prevent this user from changing their selected branch
+                </div>
+              </div>
+              <Switch
+                id="branchLock"
+                checked={formData.branchLockEnabled}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, branchLockEnabled: checked })
+                }
+              />
             </div>
           )}
 

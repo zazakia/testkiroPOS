@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Check, ChevronDown } from 'lucide-react';
+import { Building2, Check, ChevronDown, Lock } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -12,7 +12,7 @@ import { useBranch } from '@/hooks/use-branch';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function BranchSelector() {
-  const { branches, selectedBranch, setSelectedBranch, isLoading } = useBranch();
+  const { branches, selectedBranch, setSelectedBranch, isLoading, canChangeBranch } = useBranch();
 
   if (isLoading) {
     return (
@@ -28,6 +28,20 @@ export function BranchSelector() {
       <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground border rounded-lg bg-muted/50">
         <Building2 className="h-4 w-4" />
         <span>No branches available</span>
+      </div>
+    );
+  }
+
+  // If user cannot change branch (e.g., Cashier role), show locked state
+  if (canChangeBranch === false) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 text-sm border rounded-lg bg-muted/50">
+        <Building2 className="h-4 w-4 text-muted-foreground" />
+        <span className="font-medium">{selectedBranch?.name || 'Loading...'}</span>
+        {selectedBranch?.code && (
+          <span className="text-xs text-muted-foreground">({selectedBranch.code})</span>
+        )}
+        <Lock className="h-3 w-3 ml-1 text-muted-foreground" />
       </div>
     );
   }

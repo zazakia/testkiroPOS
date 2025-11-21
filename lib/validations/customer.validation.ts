@@ -17,8 +17,8 @@ export const customerSchema = z.object({
     .regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number format'),
   email: z
     .string()
-    .min(1, 'Email is required')
-    .email('Invalid email format'),
+    .email('Invalid email format')
+    .optional(),
   address: z.string().max(500).optional(),
   city: z.string().max(100).optional(),
   region: z.string().max(100).optional(),

@@ -1,4 +1,4 @@
-import { Warehouse } from '@prisma/client';
+import { Warehouse, Branch } from '@prisma/client';
 
 export interface CreateWarehouseInput {
   name: string;
@@ -17,6 +17,7 @@ export interface UpdateWarehouseInput {
 }
 
 export interface WarehouseWithUtilization extends Warehouse {
+  Branch?: Branch;
   currentStock: number;
   utilization: number;
   alertLevel: 'normal' | 'warning' | 'critical';

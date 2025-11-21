@@ -168,7 +168,7 @@ model Customer {
   companyName             String?
   contactPerson           String
   phone                   String
-  email                   String
+  email                   String?
   address                 String?
   city                    String?
   region                  String?
@@ -644,7 +644,7 @@ model SalesOrder {
   customerId        String?
   customerName      String
   customerPhone     String
-  customerEmail     String
+  customerEmail     String?
   deliveryAddress   String
   warehouseId       String
   branchId          String
@@ -720,7 +720,7 @@ model Supplier {
   companyName     String
   contactPerson   String
   phone           String
-  email           String
+  email           String?
   paymentTerms    String
   status          String            @default("active")
   createdAt       DateTime          @default(now())
@@ -743,6 +743,7 @@ model User {
   branchId            String?
   status              String                @default("ACTIVE")
   emailVerified       Boolean               @default(false)
+  branchLockEnabled   Boolean               @default(false)
   lastLoginAt         DateTime?
   passwordChangedAt   DateTime?
   createdAt           DateTime              @default(now())

@@ -20,8 +20,8 @@ export const salesOrderSchema = z.object({
     ),
   customerEmail: z
     .string()
-    .min(1, 'Customer email is required')
-    .email('Invalid email format'),
+    .email('Invalid email format')
+    .optional(),
   deliveryAddress: z.string().min(1, 'Delivery address is required'),
   warehouseId: z.string().cuid('Invalid warehouse ID'),
   branchId: z.string().cuid('Invalid branch ID'),
