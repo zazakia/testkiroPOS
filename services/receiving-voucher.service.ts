@@ -33,8 +33,13 @@ export class ReceivingVoucherService {
 
     let sequence = 1;
     if (lastRV) {
-      const lastSequence = parseInt(lastRV.rvNumber.split('-')[2]);
-      sequence = lastSequence + 1;
+      const parts = lastRV.rvNumber.split('-');
+      if (parts.length === 3) {
+        const lastSequence = parseInt(parts[2]);
+        if (!isNaN(lastSequence)) {
+          sequence = lastSequence + 1;
+        }
+      }
     }
 
     return `${prefix}${sequence.toString().padStart(4, '0')}`;
@@ -130,7 +135,6 @@ export class ReceivingVoucherService {
           totalOrderedAmount: Number(totalOrderedAmount.toFixed(2)),
           totalReceivedAmount: Number(totalReceivedAmount.toFixed(2)),
           varianceAmount: Number(varianceAmount.toFixed(2)),
-          updatedAt: new Date(),
         },
       });
 
@@ -177,7 +181,6 @@ export class ReceivingVoucherService {
               receivedDate,
               expiryDate,
               status: 'active',
-              updatedAt: new Date(),
             },
           });
 
@@ -289,7 +292,6 @@ export class ReceivingVoucherService {
             balance: Number(totalReceivedAmount.toFixed(2)),
             dueDate,
             status: 'pending',
-            updatedAt: new Date(),
           },
         });
       }

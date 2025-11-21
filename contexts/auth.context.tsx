@@ -35,7 +35,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me');
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include', // Ensure cookies are sent
+        cache: 'no-store', // Prevent caching in Chrome
+      });
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
@@ -95,7 +98,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     try {
       console.log('Starting logout process...');
-      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // Ensure cookies are sent
+      });
       console.log('Logout API response:', response.status, response.statusText);
 
       if (response.ok) {

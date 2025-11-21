@@ -75,6 +75,12 @@ export function ReceivingVoucherDialog({
     setItems(newItems);
   };
 
+  const handleUnitPriceChange = (index: number, value: string) => {
+    const newItems = [...items];
+    newItems[index].unitPrice = parseFloat(value) || 0;
+    setItems(newItems);
+  };
+
   const calculateVariance = (ordered: number, received: number) => {
     return received - ordered;
   };
@@ -214,7 +220,16 @@ export function ReceivingVoucherDialog({
                           />
                         )}
                       </TableCell>
-                      <TableCell className="text-right">₱{item.unitPrice.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={item.unitPrice}
+                          onChange={(e) => handleUnitPriceChange(index, e.target.value)}
+                          className="w-28 text-right"
+                        />
+                      </TableCell>
                       <TableCell className="text-right">
                         ₱{(item.receivedQuantity * item.unitPrice).toFixed(2)}
                       </TableCell>

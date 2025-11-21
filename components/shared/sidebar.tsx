@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/auth.context';
 
@@ -64,7 +65,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary">
             <Package className="h-5 w-5 text-primary-foreground" />
@@ -98,7 +99,7 @@ export function Sidebar() {
       <aside
         className={cn(
           'fixed top-0 left-0 z-40 h-screen transition-transform duration-300',
-          'w-64 bg-white border-r flex flex-col',
+          'w-64 bg-background border-r flex flex-col',
           'lg:translate-x-0',
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         )}
@@ -171,9 +172,18 @@ export function Sidebar() {
 
         {/* Footer */}
         <div className="p-4 border-t space-y-3">
+          {/* Theme Toggle */}
+          <div className="flex justify-center">
+            <ThemeToggle />
+          </div>
+
           {/* User Info */}
           {user && (
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted">
+            <Link
+              href="/profile"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
+            >
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-semibold text-sm">
                 {user.firstName.charAt(0)}{user.lastName.charAt(0)}
               </div>
@@ -185,7 +195,7 @@ export function Sidebar() {
                   {user.email}
                 </p>
               </div>
-            </div>
+            </Link>
           )}
 
           {/* Logout Button */}

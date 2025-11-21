@@ -4,6 +4,7 @@ import { User, Role, Branch } from '@prisma/client';
 export interface LoginInput {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface RegisterInput {

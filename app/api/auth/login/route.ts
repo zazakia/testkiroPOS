@@ -48,13 +48,16 @@ export async function POST(request: NextRequest) {
 
     // Set HTTP-only cookie with the token
     const response = NextResponse.json(result, { status: 200 });
-    
+
     if (result.token) {
+      // Set cookie maxAge based on rememberMe: 30 days or 24 hours
+      const maxAge = body.rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
+
       response.cookies.set('auth-token', result.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24, // 24 hours
+        maxAge,
         path: '/',
       });
     }

@@ -51,7 +51,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.json();
+    console.log('POS sale raw body:', JSON.stringify(rawBody, null, 2));
+
     const body = posSaleSchema.parse(rawBody);
+    console.log('POS sale validated data:', JSON.stringify(body, null, 2));
 
     const sale = await posService.processSale(body);
 
@@ -61,6 +64,8 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('Error processing POS sale:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
 
     // Validation errors from Zod schema
     if (error instanceof ZodError) {
@@ -84,7 +89,11 @@ export async function POST(request: NextRequest) {
 
     // Fallback: unexpected errors
     return NextResponse.json(
-      { success: false, error: 'Failed to process sale' },
+      {
+        success: false,
+        error: 'Failed to process sale',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

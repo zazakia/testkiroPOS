@@ -131,17 +131,21 @@ export class AuthService {
       };
     }
 
+    // Determine session duration based on rememberMe
+    const sessionDuration = credentials.rememberMe ? 30 * 24 : 24; // 30 days or 24 hours
+    const expiresIn = credentials.rememberMe ? '30d' : '24h';
+
     // Generate JWT token
     const token = this.generateToken({
       userId: user.id,
       email: user.email,
       roleId: user.roleId,
       branchId: user.branchId || undefined,
-    });
+    }, expiresIn);
 
     // Create session
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours from now
+    expiresAt.setHours(expiresAt.getHours() + sessionDuration);
 
     await sessionRepository.create({
       userId: user.id,
@@ -304,8 +308,8 @@ export class AuthService {
   /**
    * Generate JWT token
    */
-  private generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
+  private generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>, expiresIn: string = '24h'): string {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn });
   }
 
   /**

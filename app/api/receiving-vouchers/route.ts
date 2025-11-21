@@ -7,9 +7,22 @@ import { AppError } from '@/lib/errors';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('Received receiving voucher data:', JSON.stringify(body, null, 2));
 
     // Validate input
-    const validatedData = createReceivingVoucherSchema.parse(body);
+    const validationResult = createReceivingVoucherSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error.flatten());
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Validation failed',
+          details: validationResult.error.flatten()
+        },
+        { status: 400 }
+      );
+    }
+    const validatedData = validationResult.data;
 
     // Create receiving voucher
     const rv = await receivingVoucherService.createReceivingVoucher(validatedData);
@@ -21,6 +34,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error creating receiving voucher:', error);
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
 
     if (error instanceof AppError) {
       return NextResponse.json(
@@ -30,7 +45,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: false, error: 'Failed to create receiving voucher' },
+      {
+        success: false,
+        error: 'Failed to create receiving voucher',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

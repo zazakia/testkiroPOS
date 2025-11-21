@@ -15,6 +15,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState('cybergada@gmail.com');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,7 +25,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await login({ email, password });
+      const result = await login({ email, password, rememberMe });
 
       if (result.success) {
         router.push('/dashboard');
@@ -82,10 +83,18 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <Link href="/forgot-password" className="text-blue-600 hover:text-blue-500">
-                  Forgot password?
-                </Link>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  disabled={isLoading}
+                />
+                <Label htmlFor="rememberMe" className="text-sm text-gray-700 cursor-pointer">
+                  Remember me for 30 days
+                </Label>
               </div>
               <div className="text-sm">
                 <button
@@ -99,7 +108,8 @@ export default function LoginPage() {
                     try {
                       const result = await login({
                         email: 'cybergada@gmail.com',
-                        password: 'Qweasd145698@'
+                        password: 'Qweasd145698@',
+                        rememberMe: false
                       });
 
                       if (result.success) {
@@ -130,6 +140,12 @@ export default function LoginPage() {
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
+
+            <div className="text-sm text-center text-gray-600">
+              <Link href="/forgot-password" className="text-blue-600 hover:text-blue-500 font-medium">
+                Forgot password?
+              </Link>
+            </div>
 
             <div className="text-sm text-center text-gray-600">
               Don&apos;t have an account?{' '}

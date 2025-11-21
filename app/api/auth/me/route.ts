@@ -14,10 +14,12 @@ export async function GET(request: NextRequest) {
 
     if (!token) {
       console.log('No token found, returning 401');
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, message: 'Not authenticated' },
         { status: 401 }
       );
+      response.headers.set('Cache-Control', 'no-store');
+      return response;
     }
 
     // Verify token
@@ -27,10 +29,12 @@ export async function GET(request: NextRequest) {
 
     if (!payload) {
       console.log('Invalid token, returning 401');
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, message: 'Invalid session' },
         { status: 401 }
       );
+      response.headers.set('Cache-Control', 'no-store');
+      return response;
     }
 
     console.log('Token valid for user:', payload.userId);
@@ -71,11 +75,18 @@ export async function GET(request: NextRequest) {
       } : undefined,
     };
 
-    return NextResponse.json({ 
-      success: true, 
+    const response = NextResponse.json({
+      success: true,
       user: shapedUser,
       permissions: permissionStrings
     }, { status: 200 });
+
+    // Add cache control headers to prevent Chrome from caching auth state
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+
+    return response;
   } catch (error) {
     console.error('Get current user error:', error);
     return NextResponse.json(
