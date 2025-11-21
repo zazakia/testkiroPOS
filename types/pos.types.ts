@@ -6,7 +6,11 @@ export interface POSSaleItemInput {
   productId: string;
   quantity: number;
   uom: string;
+  originalPrice?: number;
   unitPrice: number;
+  discount?: number;
+  discountType?: 'percentage' | 'fixed';
+  discountValue?: number;
   subtotal: number;
   costOfGoodsSold?: number; // Calculated by service
 }
@@ -18,6 +22,10 @@ export interface CreatePOSSaleInput {
   customerId?: string; // Customer ID for credit sales
   customerName?: string; // Customer name for AR records
   subtotal: number;
+  discount?: number;
+  discountType?: 'percentage' | 'fixed';
+  discountValue?: number;
+  discountReason?: string;
   tax: number;
   totalAmount: number;
   paymentMethod: PaymentMethod;

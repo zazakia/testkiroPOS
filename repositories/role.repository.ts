@@ -27,6 +27,44 @@ export class RoleRepository {
   }
 
   /**
+   * Find all roles with permissions
+   */
+  async findAllWithPermissions(filters?: RoleFilters) {
+    const where: Prisma.RoleWhereInput = {};
+
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search } },
+        { description: { contains: filters.search } },
+      ];
+    }
+
+    if (filters?.isSystem !== undefined) {
+      where.isSystem = filters.isSystem;
+    }
+
+    const rows = await prisma.role.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        RolePermission: {
+          include: {
+            Permission: true,
+          },
+        },
+      },
+    });
+
+    return rows.map((row: any) => ({
+      ...row,
+      permissions: row.RolePermission?.map((rp: any) => ({
+        ...rp,
+        permission: rp.Permission,
+      })) || [],
+    }));
+  }
+
+  /**
    * Find role by ID
    */
   async findById(roleId: string) {

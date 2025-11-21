@@ -51,7 +51,7 @@ export function PermissionsDialog({ open, onOpenChange, role }: PermissionsDialo
   // Initialize selected permissions when role changes
   useEffect(() => {
     if (role && open) {
-      const rolePermissionIds = role.permissions.map((rp) => rp.permission.id);
+      const rolePermissionIds = role.permissions?.map((rp) => rp.permission.id) || [];
       setSelectedPermissionIds(rolePermissionIds);
     }
   }, [role, open]);
@@ -207,8 +207,7 @@ export function PermissionsDialog({ open, onOpenChange, role }: PermissionsDialo
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`resource-${resource}`}
-                          checked={isFullySelected}
-                          indeterminate={isPartiallySelected}
+                          checked={isFullySelected ? true : isPartiallySelected ? 'indeterminate' : false}
                           onCheckedChange={() => toggleResourcePermissions(resourcePermissions)}
                           disabled={role.isSystem}
                         />

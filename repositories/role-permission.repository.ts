@@ -93,6 +93,20 @@ export class RolePermissionRepository {
 
     return count > 0;
   }
+
+  /**
+   * Alias for findByRole - for compatibility
+   */
+  async findByRoleId(roleId: string) {
+    return this.findByRole(roleId);
+  }
+
+  /**
+   * Alias for deleteAllByRole - for compatibility
+   */
+  async deleteByRoleId(roleId: string) {
+    return this.deleteAllByRole(roleId);
+  }
 }
 
 export const rolePermissionRepository = new RolePermissionRepository();

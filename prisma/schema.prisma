@@ -140,26 +140,33 @@ model Branch {
 }
 
 model CompanySettings {
-  id                String   @id @default(cuid())
-  companyName       String
-  address           String
-  phone             String?
-  email             String?
-  taxId             String?
-  website           String?
-  logoUrl           String?
-  headerText        String?
-  footerText        String?
-  receiptHeader     String?
-  receiptFooter     String?
-  primaryColor      String   @default("#3b82f6")
-  secondaryColor    String   @default("#1e40af")
-  fontFamily        String   @default("Inter")
-  paperSize         String   @default("A4")
-  thermalPrinter    Boolean  @default(false)
-  autoPrintReceipts Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                        String   @id @default(cuid())
+  companyName               String
+  address                   String
+  phone                     String?
+  email                     String?
+  taxId                     String?
+  website                   String?
+  logoUrl                   String?
+  headerText                String?
+  footerText                String?
+  receiptHeader             String?
+  receiptFooter             String?
+  primaryColor              String   @default("#3b82f6")
+  secondaryColor            String   @default("#1e40af")
+  fontFamily                String   @default("Inter")
+  paperSize                 String   @default("A4")
+  thermalPrinter            Boolean  @default(false)
+  autoPrintReceipts         Boolean  @default(false)
+  vatEnabled                Boolean  @default(false)
+  vatRate                   Float    @default(12.0)
+  vatRegistrationNumber     String?
+  taxInclusive              Boolean  @default(true)
+  maxDiscountPercentage     Float    @default(50.0)
+  requireDiscountApproval   Boolean  @default(false)
+  discountApprovalThreshold Float    @default(20.0)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
 }
 
 model Customer {
@@ -354,7 +361,11 @@ model POSSale {
   receiptNumber           String                   @unique
   branchId                String
   subtotal                Float
-  tax                     Float
+  discount                Float                    @default(0)
+  discountType            String?
+  discountValue           Float?
+  discountReason          String?
+  tax                     Float                    @default(0)
   totalAmount             Float
   paymentMethod           String
   amountReceived          Float?
@@ -381,7 +392,11 @@ model POSSaleItem {
   productId       String
   quantity        Float
   uom             String
+  originalPrice   Float?
   unitPrice       Float
+  discount        Float   @default(0)
+  discountType    String?
+  discountValue   Float?
   subtotal        Float
   costOfGoodsSold Float
   Product         Product @relation(fields: [productId], references: [id])
@@ -864,16 +879,16 @@ model UnitOfMeasure {
 }
 
 model ExpenseVendor {
-  id              String   @id @default(cuid())
-  name            String   @unique
-  contactPerson   String?
-  phone           String?
-  email           String?
-  status          String   @default("active")
-  displayOrder    Int      @default(0)
-  usageCount      Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String   @unique
+  contactPerson String?
+  phone         String?
+  email         String?
+  status        String   @default("active")
+  displayOrder  Int      @default(0)
+  usageCount    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([status])
   @@index([name])

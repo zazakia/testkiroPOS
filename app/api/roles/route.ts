@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const roles = await roleService.getAllRoles();
+    // Fetch all roles with permissions
+    const roles = await roleService.getAllRolesWithPermissions();
 
     return NextResponse.json({ success: true, roles }, { status: 200 });
   } catch (error) {
@@ -61,11 +62,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Validate required fields
-    if (!body.name || !body.code) {
+    if (!body.name) {
       return NextResponse.json(
-        { success: false, message: 'Name and code are required' },
+        { success: false, message: 'Name is required' },
         { status: 400 }
       );
     }

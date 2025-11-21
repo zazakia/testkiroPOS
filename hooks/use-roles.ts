@@ -114,11 +114,11 @@ export function useAssignPermissions() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ roleId, data }: { roleId: string; data: AssignPermissionsInput }) => {
+    mutationFn: async ({ roleId, permissionIds }: { roleId: string; permissionIds: string[] }) => {
       const response = await fetch(`/api/roles/${roleId}/permissions`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ permissionIds }),
       });
 
       const result = await response.json();

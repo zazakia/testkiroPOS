@@ -14,6 +14,13 @@ export class RoleService {
   }
 
   /**
+   * Get all roles with permissions
+   */
+  async getAllRolesWithPermissions() {
+    return await roleRepository.findAllWithPermissions();
+  }
+
+  /**
    * Get role by ID
    */
   async getRoleById(id: string) {
@@ -21,30 +28,29 @@ export class RoleService {
   }
 
   /**
-   * Get role by code
+   * Get role by name
    */
-  async getRoleByCode(code: string) {
-    return await roleRepository.findByCode(code);
+  async getRoleByName(name: string) {
+    return await roleRepository.findByName(name);
   }
 
   /**
    * Create new role
    */
   async createRole(
-    data: { name: string; code: string; description?: string; isSystem?: boolean },
+    data: { name: string; description?: string; isSystem?: boolean },
     createdById: string,
     ipAddress?: string,
     userAgent?: string
   ) {
-    // Check if code already exists
-    const existing = await roleRepository.findByCode(data.code);
+    // Check if name already exists
+    const existing = await roleRepository.findByName(data.name);
     if (existing) {
-      throw new Error('Role code already exists');
+      throw new Error('Role name already exists');
     }
 
     const createData: Prisma.RoleCreateInput = {
       name: data.name,
-      code: data.code,
       description: data.description,
       isSystem: data.isSystem || false,
     };
@@ -59,7 +65,6 @@ export class RoleService {
       resourceId: role.id,
       details: {
         name: role.name,
-        code: role.code,
       },
       ipAddress,
       userAgent,
@@ -73,7 +78,7 @@ export class RoleService {
    */
   async updateRole(
     id: string,
-    data: { name?: string; code?: string; description?: string },
+    data: { name?: string; description?: string },
     updatedById: string,
     ipAddress?: string,
     userAgent?: string
@@ -83,22 +88,21 @@ export class RoleService {
       throw new Error('Role not found');
     }
 
-    // Prevent updating system roles
-    if (existingRole.isSystem) {
-      throw new Error('System roles cannot be updated');
+    // Prevent updating system roles' names
+    if (existingRole.isSystem && data.name && data.name !== existingRole.name) {
+      throw new Error('System role names cannot be changed');
     }
 
-    // Check if code is being changed and if it's already taken
-    if (data.code && data.code !== existingRole.code) {
-      const codeExists = await roleRepository.findByCode(data.code);
-      if (codeExists) {
-        throw new Error('Role code already exists');
+    // Check if name is being changed and if it's already taken
+    if (data.name && data.name !== existingRole.name) {
+      const nameExists = await roleRepository.findByName(data.name);
+      if (nameExists) {
+        throw new Error('Role name already exists');
       }
     }
 
     const updateData: Prisma.RoleUpdateInput = {
       ...(data.name && { name: data.name }),
-      ...(data.code && { code: data.code }),
       ...(data.description !== undefined && { description: data.description }),
     };
 
