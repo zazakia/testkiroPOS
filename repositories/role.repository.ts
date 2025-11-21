@@ -66,6 +66,31 @@ export class RoleRepository {
   }
 
   /**
+   * Find role by code
+   */
+  async findByCode(code: string) {
+    return prisma.role.findUnique({
+      where: { name: code },
+    });
+  }
+
+  /**
+   * Find users with specific role
+   */
+  async findUsersWithRole(roleId: string) {
+    return prisma.user.findMany({
+      where: { roleId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  /**
    * Create new role
    */
   async create(data: Prisma.RoleCreateInput) {

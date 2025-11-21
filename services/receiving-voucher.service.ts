@@ -263,10 +263,10 @@ export class ReceivingVoucherService {
           }
 
           // Update PO item received quantity
-          const poItem = po.PurchaseOrderItem.find((p) => p.productId === item.productId);
-          if (poItem) {
+          const poItemToUpdate = po.PurchaseOrderItem.find((p) => p.productId === item.productId);
+          if (poItemToUpdate) {
             await tx.purchaseOrderItem.update({
-              where: { id: poItem.id },
+              where: { id: poItemToUpdate.id },
               data: {
                 receivedQuantity: {
                   increment: item.receivedQuantity,

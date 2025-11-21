@@ -5,17 +5,19 @@ import { RoleWithPermissions } from '@/types/role.types';
 import { useRoles } from '@/hooks/use-roles';
 import { RoleTable } from '@/components/roles/role-table';
 import { RoleDialog } from '@/components/roles/role-dialog';
+import { PermissionsDialog } from '@/components/roles/permissions-dialog';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search } from 'lucide-react';
 import { TableSkeleton } from '@/components/shared/loading-skeleton';
-import { toast } from 'sonner';
 
 export default function RolesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<RoleWithPermissions | null>(null);
+  const [selectedRoleForPermissions, setSelectedRoleForPermissions] = useState<RoleWithPermissions | null>(null);
 
   const { data, isLoading } = useRoles({ search: searchTerm || undefined });
 
@@ -32,8 +34,8 @@ export default function RolesPage() {
   };
 
   const handleManagePermissions = (role: RoleWithPermissions) => {
-    // TODO: Implement permissions management dialog
-    toast.info('Permissions management coming soon');
+    setSelectedRoleForPermissions(role);
+    setPermissionsDialogOpen(true);
   };
 
   return (
@@ -74,6 +76,12 @@ export default function RolesPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         role={selectedRole}
+      />
+
+      <PermissionsDialog
+        open={permissionsDialogOpen}
+        onOpenChange={setPermissionsDialogOpen}
+        role={selectedRoleForPermissions}
       />
     </div>
   );
