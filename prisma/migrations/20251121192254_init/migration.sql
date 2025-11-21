@@ -1,67 +1,65 @@
 -- CreateTable
 CREATE TABLE "APPayment" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "apId" TEXT NOT NULL,
-    "amount" DOUBLE PRECISION NOT NULL,
+    "amount" REAL NOT NULL,
     "paymentMethod" TEXT NOT NULL,
     "referenceNumber" TEXT,
-    "paymentDate" TIMESTAMP(3) NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "APPayment_pkey" PRIMARY KEY ("id")
+    "paymentDate" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "APPayment_apId_fkey" FOREIGN KEY ("apId") REFERENCES "AccountsPayable" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "ARPayment" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "arId" TEXT NOT NULL,
-    "amount" DOUBLE PRECISION NOT NULL,
+    "amount" REAL NOT NULL,
     "paymentMethod" TEXT NOT NULL,
     "referenceNumber" TEXT,
-    "paymentDate" TIMESTAMP(3) NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "ARPayment_pkey" PRIMARY KEY ("id")
+    "paymentDate" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ARPayment_arId_fkey" FOREIGN KEY ("arId") REFERENCES "AccountsReceivable" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "AccountsPayable" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "branchId" TEXT NOT NULL,
     "supplierId" TEXT NOT NULL,
     "purchaseOrderId" TEXT,
-    "totalAmount" DOUBLE PRECISION NOT NULL,
-    "paidAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "balance" DOUBLE PRECISION NOT NULL,
-    "dueDate" TIMESTAMP(3) NOT NULL,
+    "totalAmount" REAL NOT NULL,
+    "paidAmount" REAL NOT NULL DEFAULT 0,
+    "balance" REAL NOT NULL,
+    "dueDate" DATETIME NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "AccountsPayable_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "AccountsPayable_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "AccountsPayable_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "AccountsReceivable" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "branchId" TEXT NOT NULL,
     "customerId" TEXT,
     "customerName" TEXT NOT NULL,
     "salesOrderId" TEXT,
-    "totalAmount" DOUBLE PRECISION NOT NULL,
-    "paidAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "balance" DOUBLE PRECISION NOT NULL,
-    "dueDate" TIMESTAMP(3) NOT NULL,
+    "totalAmount" REAL NOT NULL,
+    "paidAmount" REAL NOT NULL DEFAULT 0,
+    "balance" REAL NOT NULL,
+    "dueDate" DATETIME NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "AccountsReceivable_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "AccountsReceivable_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "AccountsReceivable_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "AuditLog" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT,
     "action" TEXT NOT NULL,
     "resource" TEXT NOT NULL,
@@ -69,29 +67,26 @@ CREATE TABLE "AuditLog" (
     "details" JSONB,
     "ipAddress" TEXT,
     "userAgent" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "AuditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Branch" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "location" TEXT NOT NULL,
     "manager" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'active',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Branch_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "CompanySettings" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "companyName" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "phone" TEXT,
@@ -109,140 +104,142 @@ CREATE TABLE "CompanySettings" (
     "paperSize" TEXT NOT NULL DEFAULT 'A4',
     "thermalPrinter" BOOLEAN NOT NULL DEFAULT false,
     "autoPrintReceipts" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "CompanySettings_pkey" PRIMARY KEY ("id")
+    "vatEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "vatRate" REAL NOT NULL DEFAULT 12.0,
+    "vatRegistrationNumber" TEXT,
+    "taxInclusive" BOOLEAN NOT NULL DEFAULT true,
+    "maxDiscountPercentage" REAL NOT NULL DEFAULT 50.0,
+    "requireDiscountApproval" BOOLEAN NOT NULL DEFAULT false,
+    "discountApprovalThreshold" REAL NOT NULL DEFAULT 20.0,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "Customer" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "customerCode" TEXT NOT NULL,
     "companyName" TEXT,
     "contactPerson" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "address" TEXT,
     "city" TEXT,
     "region" TEXT,
     "postalCode" TEXT,
     "paymentTerms" TEXT NOT NULL DEFAULT 'Net 30',
-    "creditLimit" DOUBLE PRECISION,
+    "creditLimit" REAL,
     "taxId" TEXT,
     "customerType" TEXT NOT NULL DEFAULT 'regular',
     "notes" TEXT,
     "status" TEXT NOT NULL DEFAULT 'active',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Customer_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "CustomerPurchaseHistory" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "customerId" TEXT NOT NULL,
     "saleId" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
-    "totalAmount" DOUBLE PRECISION NOT NULL,
+    "totalAmount" REAL NOT NULL,
     "itemsCount" INTEGER NOT NULL,
     "paymentMethod" TEXT NOT NULL,
-    "purchaseDate" TIMESTAMP(3) NOT NULL,
+    "purchaseDate" DATETIME NOT NULL,
     "loyaltyPointsEarned" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "CustomerPurchaseHistory_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "CustomerPurchaseHistory_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "POSSale" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "CustomerPurchaseHistory_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "CustomerPurchaseHistory_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "DailySalesSummary" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "branchId" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "totalSales" DOUBLE PRECISION NOT NULL,
+    "date" DATETIME NOT NULL,
+    "totalSales" REAL NOT NULL,
     "totalTransactions" INTEGER NOT NULL,
-    "averageTransaction" DOUBLE PRECISION NOT NULL,
-    "cashSales" DOUBLE PRECISION NOT NULL,
-    "cardSales" DOUBLE PRECISION NOT NULL,
-    "digitalSales" DOUBLE PRECISION NOT NULL,
-    "creditSales" DOUBLE PRECISION NOT NULL,
-    "totalTax" DOUBLE PRECISION NOT NULL,
-    "totalDiscount" DOUBLE PRECISION NOT NULL,
-    "grossProfit" DOUBLE PRECISION NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "DailySalesSummary_pkey" PRIMARY KEY ("id")
+    "averageTransaction" REAL NOT NULL,
+    "cashSales" REAL NOT NULL,
+    "cardSales" REAL NOT NULL,
+    "digitalSales" REAL NOT NULL,
+    "creditSales" REAL NOT NULL,
+    "totalTax" REAL NOT NULL,
+    "totalDiscount" REAL NOT NULL,
+    "grossProfit" REAL NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "DailySalesSummary_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "EmployeePerformance" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "totalSales" DOUBLE PRECISION NOT NULL,
+    "date" DATETIME NOT NULL,
+    "totalSales" REAL NOT NULL,
     "transactionCount" INTEGER NOT NULL,
-    "averageTransaction" DOUBLE PRECISION NOT NULL,
+    "averageTransaction" REAL NOT NULL,
     "itemsSold" INTEGER NOT NULL,
     "returnsHandled" INTEGER NOT NULL DEFAULT 0,
-    "customerSatisfaction" DOUBLE PRECISION,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "EmployeePerformance_pkey" PRIMARY KEY ("id")
+    "customerSatisfaction" REAL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "EmployeePerformance_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "EmployeePerformance_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Expense" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "branchId" TEXT NOT NULL,
-    "expenseDate" TIMESTAMP(3) NOT NULL,
+    "expenseDate" DATETIME NOT NULL,
     "category" TEXT NOT NULL,
-    "amount" DOUBLE PRECISION NOT NULL,
+    "amount" REAL NOT NULL,
     "description" TEXT NOT NULL,
     "paymentMethod" TEXT NOT NULL,
     "vendor" TEXT,
     "receiptUrl" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Expense_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "Expense_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "InventoryBatch" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "batchNumber" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
     "warehouseId" TEXT NOT NULL,
-    "quantity" DOUBLE PRECISION NOT NULL,
-    "unitCost" DOUBLE PRECISION NOT NULL,
-    "expiryDate" TIMESTAMP(3) NOT NULL,
-    "receivedDate" TIMESTAMP(3) NOT NULL,
+    "quantity" REAL NOT NULL,
+    "unitCost" REAL NOT NULL,
+    "expiryDate" DATETIME NOT NULL,
+    "receivedDate" DATETIME NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'active',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "InventoryBatch_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "InventoryBatch_warehouseId_fkey" FOREIGN KEY ("warehouseId") REFERENCES "Warehouse" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "InventoryBatch_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "POSReceipt" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "saleId" TEXT NOT NULL,
     "receiptNumber" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
     "cashierId" TEXT NOT NULL,
     "customerId" TEXT,
-    "subtotal" DOUBLE PRECISION NOT NULL,
-    "tax" DOUBLE PRECISION NOT NULL,
-    "totalAmount" DOUBLE PRECISION NOT NULL,
+    "subtotal" REAL NOT NULL,
+    "tax" REAL NOT NULL,
+    "totalAmount" REAL NOT NULL,
     "paymentMethod" TEXT NOT NULL,
-    "amountReceived" DOUBLE PRECISION NOT NULL,
-    "change" DOUBLE PRECISION NOT NULL,
-    "discountAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "amountReceived" REAL NOT NULL,
+    "change" REAL NOT NULL,
+    "discountAmount" REAL NOT NULL DEFAULT 0,
     "discountReason" TEXT,
     "loyaltyPoints" INTEGER NOT NULL DEFAULT 0,
     "notes" TEXT,
@@ -250,148 +247,155 @@ CREATE TABLE "POSReceipt" (
     "qrCode" TEXT,
     "isPrinted" BOOLEAN NOT NULL DEFAULT false,
     "printCount" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "POSReceipt_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "POSReceipt_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "POSSale" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "POSReceipt_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "POSReceipt_cashierId_fkey" FOREIGN KEY ("cashierId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "POSReceipt_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "POSSale" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "receiptNumber" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
-    "subtotal" DOUBLE PRECISION NOT NULL,
-    "tax" DOUBLE PRECISION NOT NULL,
-    "totalAmount" DOUBLE PRECISION NOT NULL,
+    "subtotal" REAL NOT NULL,
+    "discount" REAL NOT NULL DEFAULT 0,
+    "discountType" TEXT,
+    "discountValue" REAL,
+    "discountReason" TEXT,
+    "tax" REAL NOT NULL DEFAULT 0,
+    "totalAmount" REAL NOT NULL,
     "paymentMethod" TEXT NOT NULL,
-    "amountReceived" DOUBLE PRECISION,
-    "change" DOUBLE PRECISION,
+    "amountReceived" REAL,
+    "change" REAL,
     "convertedFromOrderId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "POSSale_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "POSSale_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "POSSaleItem" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "saleId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "quantity" DOUBLE PRECISION NOT NULL,
+    "quantity" REAL NOT NULL,
     "uom" TEXT NOT NULL,
-    "unitPrice" DOUBLE PRECISION NOT NULL,
-    "subtotal" DOUBLE PRECISION NOT NULL,
-    "costOfGoodsSold" DOUBLE PRECISION NOT NULL,
-
-    CONSTRAINT "POSSaleItem_pkey" PRIMARY KEY ("id")
+    "originalPrice" REAL,
+    "unitPrice" REAL NOT NULL,
+    "discount" REAL NOT NULL DEFAULT 0,
+    "discountType" TEXT,
+    "discountValue" REAL,
+    "subtotal" REAL NOT NULL,
+    "costOfGoodsSold" REAL NOT NULL,
+    CONSTRAINT "POSSaleItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "POSSaleItem_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "POSSale" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "PasswordResetToken" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "token" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "expiresAt" DATETIME NOT NULL,
     "used" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "PasswordResetToken_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "PasswordResetToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Permission" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "resource" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "description" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
 CREATE TABLE "Product" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "category" TEXT NOT NULL,
     "imageUrl" TEXT,
-    "basePrice" DOUBLE PRECISION NOT NULL,
+    "basePrice" REAL NOT NULL,
+    "averageCostPrice" REAL NOT NULL DEFAULT 0,
     "baseUOM" TEXT NOT NULL,
     "minStockLevel" INTEGER NOT NULL,
     "shelfLifeDays" INTEGER NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'active',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "ProductUOM" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "productId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "conversionFactor" DOUBLE PRECISION NOT NULL,
-    "sellingPrice" DOUBLE PRECISION NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "ProductUOM_pkey" PRIMARY KEY ("id")
+    "conversionFactor" REAL NOT NULL,
+    "sellingPrice" REAL NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ProductUOM_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "PromotionUsage" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "promotionName" TEXT NOT NULL,
     "promotionCode" TEXT,
     "saleId" TEXT NOT NULL,
     "customerId" TEXT,
-    "discountAmount" DOUBLE PRECISION NOT NULL,
+    "discountAmount" REAL NOT NULL,
     "discountType" TEXT NOT NULL,
-    "discountValue" DOUBLE PRECISION NOT NULL,
-    "usageDate" TIMESTAMP(3) NOT NULL,
+    "discountValue" REAL NOT NULL,
+    "usageDate" DATETIME NOT NULL,
     "branchId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "PromotionUsage_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "PromotionUsage_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "PromotionUsage_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "PromotionUsage_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "POSSale" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "PurchaseOrder" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "poNumber" TEXT NOT NULL,
     "supplierId" TEXT NOT NULL,
     "warehouseId" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
-    "totalAmount" DOUBLE PRECISION NOT NULL,
+    "totalAmount" REAL NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'draft',
     "receivingStatus" TEXT DEFAULT 'pending',
-    "expectedDeliveryDate" TIMESTAMP(3) NOT NULL,
-    "actualDeliveryDate" TIMESTAMP(3),
+    "expectedDeliveryDate" DATETIME NOT NULL,
+    "actualDeliveryDate" DATETIME,
     "notes" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "PurchaseOrder_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "PurchaseOrder_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "PurchaseOrder_warehouseId_fkey" FOREIGN KEY ("warehouseId") REFERENCES "Warehouse" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "PurchaseOrder_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "PurchaseOrderItem" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "poId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "quantity" DOUBLE PRECISION NOT NULL,
-    "unitPrice" DOUBLE PRECISION NOT NULL,
-    "subtotal" DOUBLE PRECISION NOT NULL,
-    "receivedQuantity" DOUBLE PRECISION NOT NULL DEFAULT 0,
-
-    CONSTRAINT "PurchaseOrderItem_pkey" PRIMARY KEY ("id")
+    "quantity" REAL NOT NULL,
+    "uom" TEXT NOT NULL,
+    "unitPrice" REAL NOT NULL,
+    "subtotal" REAL NOT NULL,
+    "receivedQuantity" REAL NOT NULL DEFAULT 0,
+    CONSTRAINT "PurchaseOrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "PurchaseOrderItem_poId_fkey" FOREIGN KEY ("poId") REFERENCES "PurchaseOrder" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "ReceivingVoucher" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "rvNumber" TEXT NOT NULL,
     "purchaseOrderId" TEXT NOT NULL,
     "warehouseId" TEXT NOT NULL,
@@ -399,35 +403,36 @@ CREATE TABLE "ReceivingVoucher" (
     "receiverName" TEXT NOT NULL,
     "deliveryNotes" TEXT,
     "status" TEXT NOT NULL DEFAULT 'complete',
-    "totalOrderedAmount" DOUBLE PRECISION NOT NULL,
-    "totalReceivedAmount" DOUBLE PRECISION NOT NULL,
-    "varianceAmount" DOUBLE PRECISION NOT NULL,
-    "receivedDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "ReceivingVoucher_pkey" PRIMARY KEY ("id")
+    "totalOrderedAmount" REAL NOT NULL,
+    "totalReceivedAmount" REAL NOT NULL,
+    "varianceAmount" REAL NOT NULL,
+    "receivedDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "ReceivingVoucher_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "ReceivingVoucher_warehouseId_fkey" FOREIGN KEY ("warehouseId") REFERENCES "Warehouse" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "ReceivingVoucher_purchaseOrderId_fkey" FOREIGN KEY ("purchaseOrderId") REFERENCES "PurchaseOrder" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "ReceivingVoucherItem" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "rvId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "orderedQuantity" DOUBLE PRECISION NOT NULL,
-    "receivedQuantity" DOUBLE PRECISION NOT NULL,
-    "varianceQuantity" DOUBLE PRECISION NOT NULL,
-    "variancePercentage" DOUBLE PRECISION NOT NULL,
+    "orderedQuantity" REAL NOT NULL,
+    "receivedQuantity" REAL NOT NULL,
+    "varianceQuantity" REAL NOT NULL,
+    "variancePercentage" REAL NOT NULL,
     "varianceReason" TEXT,
-    "unitPrice" DOUBLE PRECISION NOT NULL,
-    "lineTotal" DOUBLE PRECISION NOT NULL,
-
-    CONSTRAINT "ReceivingVoucherItem_pkey" PRIMARY KEY ("id")
+    "unitPrice" REAL NOT NULL,
+    "lineTotal" REAL NOT NULL,
+    CONSTRAINT "ReceivingVoucherItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "ReceivingVoucherItem_rvId_fkey" FOREIGN KEY ("rvId") REFERENCES "ReceivingVoucher" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "ReportExport" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "reportType" TEXT NOT NULL,
     "reportName" TEXT NOT NULL,
     "format" TEXT NOT NULL,
@@ -437,16 +442,14 @@ CREATE TABLE "ReportExport" (
     "filters" JSONB,
     "errorMessage" TEXT,
     "requestedBy" TEXT NOT NULL,
-    "completedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "ReportExport_pkey" PRIMARY KEY ("id")
+    "completedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "ReportTemplate" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "description" TEXT,
@@ -454,114 +457,107 @@ CREATE TABLE "ReportTemplate" (
     "isDefault" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdBy" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "ReportTemplate_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "Role" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "isSystem" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "RolePermission" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "roleId" TEXT NOT NULL,
     "permissionId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "RolePermission_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "RolePermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "RolePermission_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "SalesOrder" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "orderNumber" TEXT NOT NULL,
     "customerId" TEXT,
     "customerName" TEXT NOT NULL,
     "customerPhone" TEXT NOT NULL,
-    "customerEmail" TEXT NOT NULL,
+    "customerEmail" TEXT,
     "deliveryAddress" TEXT NOT NULL,
     "warehouseId" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
-    "totalAmount" DOUBLE PRECISION NOT NULL,
+    "totalAmount" REAL NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'draft',
     "salesOrderStatus" TEXT NOT NULL DEFAULT 'pending',
-    "deliveryDate" TIMESTAMP(3) NOT NULL,
+    "deliveryDate" DATETIME NOT NULL,
     "convertedToSaleId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "SalesOrder_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "SalesOrder_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "SalesOrder_warehouseId_fkey" FOREIGN KEY ("warehouseId") REFERENCES "Warehouse" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "SalesOrder_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "SalesOrderItem" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "soId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "quantity" DOUBLE PRECISION NOT NULL,
+    "quantity" REAL NOT NULL,
     "uom" TEXT NOT NULL,
-    "unitPrice" DOUBLE PRECISION NOT NULL,
-    "subtotal" DOUBLE PRECISION NOT NULL,
-
-    CONSTRAINT "SalesOrderItem_pkey" PRIMARY KEY ("id")
+    "unitPrice" REAL NOT NULL,
+    "subtotal" REAL NOT NULL,
+    CONSTRAINT "SalesOrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "SalesOrderItem_soId_fkey" FOREIGN KEY ("soId") REFERENCES "SalesOrder" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Session" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "ipAddress" TEXT,
     "userAgent" TEXT,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
+    "expiresAt" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "StockMovement" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "batchId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
-    "quantity" DOUBLE PRECISION NOT NULL,
+    "quantity" REAL NOT NULL,
     "reason" TEXT,
     "referenceId" TEXT,
     "referenceType" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "StockMovement_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "StockMovement_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "InventoryBatch" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Supplier" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "companyName" TEXT NOT NULL,
     "contactPerson" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "paymentTerms" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'active',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Supplier_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
@@ -571,36 +567,103 @@ CREATE TABLE "User" (
     "branchId" TEXT,
     "status" TEXT NOT NULL DEFAULT 'ACTIVE',
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
-    "lastLoginAt" TIMESTAMP(3),
-    "passwordChangedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+    "branchLockEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "lastLoginAt" DATETIME,
+    "passwordChangedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "User_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "UserBranchAccess" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "UserBranchAccess_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UserBranchAccess_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "UserBranchAccess_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Warehouse" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "location" TEXT NOT NULL,
     "manager" TEXT NOT NULL,
     "maxCapacity" INTEGER NOT NULL,
     "branchId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "Warehouse_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
 
-    CONSTRAINT "Warehouse_pkey" PRIMARY KEY ("id")
+-- CreateTable
+CREATE TABLE "ProductCategory" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "description" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "displayOrder" INTEGER NOT NULL DEFAULT 0,
+    "isSystemDefined" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "ExpenseCategory" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "description" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "displayOrder" INTEGER NOT NULL DEFAULT 0,
+    "isSystemDefined" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "PaymentMethod" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "description" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "displayOrder" INTEGER NOT NULL DEFAULT 0,
+    "isSystemDefined" BOOLEAN NOT NULL DEFAULT false,
+    "applicableTo" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "UnitOfMeasure" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "description" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "displayOrder" INTEGER NOT NULL DEFAULT 0,
+    "isSystemDefined" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "ExpenseVendor" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "contactPerson" TEXT,
+    "phone" TEXT,
+    "email" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "displayOrder" INTEGER NOT NULL DEFAULT 0,
+    "usageCount" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateIndex
@@ -1107,158 +1170,62 @@ CREATE INDEX "Warehouse_branchId_name_idx" ON "Warehouse"("branchId", "name");
 -- CreateIndex
 CREATE INDEX "Warehouse_branchId_idx" ON "Warehouse"("branchId");
 
--- AddForeignKey
-ALTER TABLE "APPayment" ADD CONSTRAINT "APPayment_apId_fkey" FOREIGN KEY ("apId") REFERENCES "AccountsPayable"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "ProductCategory_name_key" ON "ProductCategory"("name");
 
--- AddForeignKey
-ALTER TABLE "ARPayment" ADD CONSTRAINT "ARPayment_arId_fkey" FOREIGN KEY ("arId") REFERENCES "AccountsReceivable"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "ProductCategory_code_key" ON "ProductCategory"("code");
 
--- AddForeignKey
-ALTER TABLE "AccountsPayable" ADD CONSTRAINT "AccountsPayable_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ProductCategory_status_idx" ON "ProductCategory"("status");
 
--- AddForeignKey
-ALTER TABLE "AccountsPayable" ADD CONSTRAINT "AccountsPayable_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ProductCategory_displayOrder_idx" ON "ProductCategory"("displayOrder");
 
--- AddForeignKey
-ALTER TABLE "AccountsReceivable" ADD CONSTRAINT "AccountsReceivable_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "ExpenseCategory_name_key" ON "ExpenseCategory"("name");
 
--- AddForeignKey
-ALTER TABLE "AccountsReceivable" ADD CONSTRAINT "AccountsReceivable_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "ExpenseCategory_code_key" ON "ExpenseCategory"("code");
 
--- AddForeignKey
-ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ExpenseCategory_status_idx" ON "ExpenseCategory"("status");
 
--- AddForeignKey
-ALTER TABLE "CustomerPurchaseHistory" ADD CONSTRAINT "CustomerPurchaseHistory_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "POSSale"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ExpenseCategory_displayOrder_idx" ON "ExpenseCategory"("displayOrder");
 
--- AddForeignKey
-ALTER TABLE "CustomerPurchaseHistory" ADD CONSTRAINT "CustomerPurchaseHistory_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "PaymentMethod_name_key" ON "PaymentMethod"("name");
 
--- AddForeignKey
-ALTER TABLE "CustomerPurchaseHistory" ADD CONSTRAINT "CustomerPurchaseHistory_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "PaymentMethod_code_key" ON "PaymentMethod"("code");
 
--- AddForeignKey
-ALTER TABLE "DailySalesSummary" ADD CONSTRAINT "DailySalesSummary_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "PaymentMethod_status_idx" ON "PaymentMethod"("status");
 
--- AddForeignKey
-ALTER TABLE "EmployeePerformance" ADD CONSTRAINT "EmployeePerformance_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "PaymentMethod_displayOrder_idx" ON "PaymentMethod"("displayOrder");
 
--- AddForeignKey
-ALTER TABLE "EmployeePerformance" ADD CONSTRAINT "EmployeePerformance_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "UnitOfMeasure_name_key" ON "UnitOfMeasure"("name");
 
--- AddForeignKey
-ALTER TABLE "Expense" ADD CONSTRAINT "Expense_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "UnitOfMeasure_code_key" ON "UnitOfMeasure"("code");
 
--- AddForeignKey
-ALTER TABLE "InventoryBatch" ADD CONSTRAINT "InventoryBatch_warehouseId_fkey" FOREIGN KEY ("warehouseId") REFERENCES "Warehouse"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "UnitOfMeasure_status_idx" ON "UnitOfMeasure"("status");
 
--- AddForeignKey
-ALTER TABLE "InventoryBatch" ADD CONSTRAINT "InventoryBatch_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "UnitOfMeasure_displayOrder_idx" ON "UnitOfMeasure"("displayOrder");
 
--- AddForeignKey
-ALTER TABLE "POSReceipt" ADD CONSTRAINT "POSReceipt_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "POSSale"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "ExpenseVendor_name_key" ON "ExpenseVendor"("name");
 
--- AddForeignKey
-ALTER TABLE "POSReceipt" ADD CONSTRAINT "POSReceipt_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ExpenseVendor_status_idx" ON "ExpenseVendor"("status");
 
--- AddForeignKey
-ALTER TABLE "POSReceipt" ADD CONSTRAINT "POSReceipt_cashierId_fkey" FOREIGN KEY ("cashierId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ExpenseVendor_name_idx" ON "ExpenseVendor"("name");
 
--- AddForeignKey
-ALTER TABLE "POSReceipt" ADD CONSTRAINT "POSReceipt_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "POSSale" ADD CONSTRAINT "POSSale_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "POSSaleItem" ADD CONSTRAINT "POSSaleItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "POSSaleItem" ADD CONSTRAINT "POSSaleItem_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "POSSale"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PasswordResetToken" ADD CONSTRAINT "PasswordResetToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ProductUOM" ADD CONSTRAINT "ProductUOM_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PromotionUsage" ADD CONSTRAINT "PromotionUsage_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PromotionUsage" ADD CONSTRAINT "PromotionUsage_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PromotionUsage" ADD CONSTRAINT "PromotionUsage_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "POSSale"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PurchaseOrder" ADD CONSTRAINT "PurchaseOrder_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PurchaseOrder" ADD CONSTRAINT "PurchaseOrder_warehouseId_fkey" FOREIGN KEY ("warehouseId") REFERENCES "Warehouse"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PurchaseOrder" ADD CONSTRAINT "PurchaseOrder_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PurchaseOrderItem" ADD CONSTRAINT "PurchaseOrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "PurchaseOrderItem" ADD CONSTRAINT "PurchaseOrderItem_poId_fkey" FOREIGN KEY ("poId") REFERENCES "PurchaseOrder"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ReceivingVoucher" ADD CONSTRAINT "ReceivingVoucher_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ReceivingVoucher" ADD CONSTRAINT "ReceivingVoucher_warehouseId_fkey" FOREIGN KEY ("warehouseId") REFERENCES "Warehouse"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ReceivingVoucher" ADD CONSTRAINT "ReceivingVoucher_purchaseOrderId_fkey" FOREIGN KEY ("purchaseOrderId") REFERENCES "PurchaseOrder"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ReceivingVoucherItem" ADD CONSTRAINT "ReceivingVoucherItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ReceivingVoucherItem" ADD CONSTRAINT "ReceivingVoucherItem_rvId_fkey" FOREIGN KEY ("rvId") REFERENCES "ReceivingVoucher"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "SalesOrder" ADD CONSTRAINT "SalesOrder_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "SalesOrder" ADD CONSTRAINT "SalesOrder_warehouseId_fkey" FOREIGN KEY ("warehouseId") REFERENCES "Warehouse"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "SalesOrder" ADD CONSTRAINT "SalesOrder_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "SalesOrderItem" ADD CONSTRAINT "SalesOrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "SalesOrderItem" ADD CONSTRAINT "SalesOrderItem_soId_fkey" FOREIGN KEY ("soId") REFERENCES "SalesOrder"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "InventoryBatch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "UserBranchAccess" ADD CONSTRAINT "UserBranchAccess_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "UserBranchAccess" ADD CONSTRAINT "UserBranchAccess_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Warehouse" ADD CONSTRAINT "Warehouse_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ExpenseVendor_usageCount_idx" ON "ExpenseVendor"("usageCount");

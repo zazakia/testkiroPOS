@@ -1,10 +1,9 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -855,7 +854,7 @@ model PaymentMethod {
   status          String   @default("active")
   displayOrder    Int      @default(0)
   isSystemDefined Boolean  @default(false)
-  applicableTo    String[] // ["expense", "pos", "ar", "ap"]
+  applicableTo    String // ["expense", "pos", "ar", "ap"] - Stored as comma-separated string for SQLite
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
