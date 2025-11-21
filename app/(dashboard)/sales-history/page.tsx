@@ -2,10 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Download, Eye, TrendingUp, DollarSign, ShoppingCart, CreditCard } from 'lucide-react';
+import { Download, Eye, TrendingUp, DollarSign, ShoppingCart, CreditCard, Search, Filter } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -15,10 +24,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { DateRangeFilter } from '@/components/sales-history/date-range-filter';
+import { SaleDetailModal } from '@/components/sales-history/sale-detail-modal';
 import { DatePreset, SalesHistoryFilters, SalesHistoryResponse, SalesAnalytics } from '@/types/sales-history.types';
 import { POSSaleWithItems } from '@/types/pos.types';
+import { useBranch } from '@/contexts/branch-context';
 
 export default function SalesHistoryPage() {
+  const { selectedBranch } = useBranch();
   const [filters, setFilters] = useState<SalesHistoryFilters>({
     preset: DatePreset.TODAY,
     page: 1,
@@ -27,6 +39,14 @@ export default function SalesHistoryPage() {
   const [salesData, setSalesData] = useState<SalesHistoryResponse | null>(null);
   const [analytics, setAnalytics] = useState<SalesAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<POSSaleWithItems | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Additional filter states
+  const [receiptSearch, setReceiptSearch] = useState('');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('');
+  const [minAmount, setMinAmount] = useState('');
+  const [maxAmount, setMaxAmount] = useState('');
 
   useEffect(() => {
     fetchSalesHistory();
@@ -40,6 +60,11 @@ export default function SalesHistoryPage() {
       if (filters.preset) params.append('preset', filters.preset);
       if (filters.startDate) params.append('startDate', filters.startDate.toISOString());
       if (filters.endDate) params.append('endDate', filters.endDate.toISOString());
+      if (filters.branchId) params.append('branchId', filters.branchId);
+      if (filters.paymentMethod) params.append('paymentMethod', filters.paymentMethod);
+      if (filters.receiptNumber) params.append('receiptNumber', filters.receiptNumber);
+      if (filters.minAmount) params.append('minAmount', filters.minAmount.toString());
+      if (filters.maxAmount) params.append('maxAmount', filters.maxAmount.toString());
       if (filters.page) params.append('page', filters.page.toString());
       if (filters.limit) params.append('limit', filters.limit.toString());
 
@@ -82,6 +107,35 @@ export default function SalesHistoryPage() {
       endDate,
       page: 1, // Reset to first page
     });
+  };
+
+  const handleApplyFilters = () => {
+    setFilters({
+      ...filters,
+      receiptNumber: receiptSearch || undefined,
+      paymentMethod: paymentMethodFilter && paymentMethodFilter !== 'all' ? paymentMethodFilter as any : undefined,
+      minAmount: minAmount ? parseFloat(minAmount) : undefined,
+      maxAmount: maxAmount ? parseFloat(maxAmount) : undefined,
+      branchId: selectedBranch?.id,
+      page: 1, // Reset to first page
+    });
+  };
+
+  const handleClearFilters = () => {
+    setReceiptSearch('');
+    setPaymentMethodFilter('');
+    setMinAmount('');
+    setMaxAmount('');
+    setFilters({
+      preset: DatePreset.TODAY,
+      page: 1,
+      limit: 50,
+    });
+  };
+
+  const handleViewSale = (sale: POSSaleWithItems) => {
+    setSelectedSale(sale);
+    setShowDetailModal(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -186,6 +240,90 @@ export default function SalesHistoryPage() {
             onFilterChange={handleDateFilterChange}
             defaultPreset={filters.preset}
           />
+
+          {/* Additional Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Additional Filters
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Receipt Number Search */}
+              <div className="space-y-2">
+                <Label htmlFor="receiptSearch">Receipt Number</Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="receiptSearch"
+                    placeholder="Search receipt..."
+                    value={receiptSearch}
+                    onChange={(e) => setReceiptSearch(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+
+              {/* Payment Method Filter */}
+              <div className="space-y-2">
+                <Label htmlFor="paymentMethod">Payment Method</Label>
+                <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                  <SelectTrigger id="paymentMethod">
+                    <SelectValue placeholder="All methods" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Methods</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="credit">Credit</SelectItem>
+                    <SelectItem value="ar_credit">AR Credit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Amount Range */}
+              <div className="space-y-2">
+                <Label>Amount Range</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={minAmount}
+                      onChange={(e) => setMinAmount(e.target.value)}
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={maxAmount}
+                      onChange={(e) => setMaxAmount(e.target.value)}
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-2">
+                <Button onClick={handleApplyFilters} className="w-full">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Apply Filters
+                </Button>
+                <Button
+                  onClick={handleClearFilters}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sales Table */}
@@ -236,7 +374,11 @@ export default function SalesHistoryPage() {
                           {formatCurrency(Number(sale.totalAmount))}
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewSale(sale)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -286,6 +428,13 @@ export default function SalesHistoryPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sale Detail Modal */}
+      <SaleDetailModal
+        sale={selectedSale}
+        open={showDetailModal}
+        onOpenChange={setShowDetailModal}
+      />
     </div>
   );
 }
