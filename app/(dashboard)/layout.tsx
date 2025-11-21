@@ -18,7 +18,7 @@ export default function DashboardLayout({
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1">
               <h1 className="text-sm font-medium text-muted-foreground">
-                Welcome to InventoryPro
+                Welcome to Ormoc Buenas Shoppers - Business Management System. powered by www.zapweb.app
               </h1>
             </div>
             <div className="flex items-center gap-2">

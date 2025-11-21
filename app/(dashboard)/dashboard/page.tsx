@@ -47,7 +47,7 @@ export default function DashboardPage() {
     <div className="p-6">
       <PageHeader
         title="Dashboard"
-        description="Welcome to InventoryPro - Your comprehensive inventory management system"
+        description="Welcome to Ormoc Buenas Shoppers - Business Management System. powered by www.zapweb.app"
       />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-6">
