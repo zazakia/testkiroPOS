@@ -594,6 +594,42 @@ export class InventoryService {
   }
 
   /**
+   * Calculate average cost for a product in a specific UOM
+   * Converts base UOM average cost using product's UOM conversion factors
+   */
+  async getAverageCostByUOM(
+    productId: string,
+    warehouseId: string,
+    uom: string
+  ): Promise<number> {
+    const product = await productService.getProductById(productId);
+
+    // If already base UOM, return the weighted average cost directly
+    if (uom.toLowerCase() === product.baseUOM.toLowerCase()) {
+      return await this.calculateWeightedAverageCost(productId, warehouseId);
+    }
+
+    // Find the alternate UOM
+    const alternateUOM = product.alternateUOMs.find(
+      (u: any) => u.name.toLowerCase() === uom.toLowerCase()
+    );
+
+    if (!alternateUOM) {
+      throw new ValidationError(`UOM '${uom}' not found for product ${product.name}`, {
+        uom: 'Invalid UOM for this product',
+      });
+    }
+
+    // Get base UOM average cost
+    const baseAverageCost = await this.calculateWeightedAverageCost(productId, warehouseId);
+
+    // Convert: base cost × conversion factor = cost in selected UOM
+    // Example: if base is "bottles" and alternate is "cases" with factor 12,
+    // then cost per case = cost per bottle × 12
+    return baseAverageCost * Number(alternateUOM.conversionFactor);
+  }
+
+  /**
    * Get total stock for a product across all warehouses or specific warehouse
    */
   async getTotalStock(productId: string, warehouseId?: string): Promise<number> {

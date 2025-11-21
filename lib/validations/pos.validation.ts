@@ -1,7 +1,18 @@
 import { z } from 'zod';
 
+// Custom validation for IDs that can be either CUID or UUID
+const idSchema = z.string().min(1, 'ID is required').refine(
+  (val) => {
+    // Check if it's a valid CUID (starts with 'c' and is 25 chars) or UUID (36 chars with dashes)
+    const isCuid = /^c[a-z0-9]{24}$/.test(val);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+    return isCuid || isUuid;
+  },
+  { message: 'Invalid ID format' }
+);
+
 export const posSaleItemSchema = z.object({
-  productId: z.string().cuid('Invalid product ID'),
+  productId: idSchema,
   quantity: z.number().positive('Quantity must be greater than 0'),
   uom: z.string().min(1, 'UOM is required'),
   unitPrice: z.number().positive('Unit price must be greater than 0'),
@@ -12,9 +23,9 @@ export const posSaleItemSchema = z.object({
 export const posSaleSchema = z
   .object({
     receiptNumber: z.string().optional(),
-    branchId: z.string().cuid('Invalid branch ID'),
-    warehouseId: z.string().cuid('Invalid warehouse ID'),
-    customerId: z.string().cuid('Invalid customer ID').optional(),
+    branchId: idSchema,
+    warehouseId: idSchema,
+    customerId: idSchema.optional(),
     customerName: z.string().min(1, 'Customer name is required for credit sales').optional(),
     subtotal: z.number().positive('Subtotal must be greater than 0'),
     tax: z.number().nonnegative('Tax must be zero or greater'),
@@ -26,7 +37,7 @@ export const posSaleSchema = z
     amountReceived: z.number().optional(),
     partialPayment: z.number().optional(),
     change: z.number().optional(),
-    convertedFromOrderId: z.string().cuid('Invalid order ID').optional(),
+    convertedFromOrderId: idSchema.optional(),
     items: z.array(posSaleItemSchema).min(1, 'At least one item is required'),
   })
   .superRefine((data, ctx) => {

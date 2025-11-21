@@ -516,6 +516,7 @@ model PurchaseOrderItem {
   poId             String
   productId        String
   quantity         Float
+  uom              String
   unitPrice        Float
   subtotal         Float
   receivedQuantity Float         @default(0)

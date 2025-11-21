@@ -5,6 +5,7 @@ export type PurchaseOrderStatus = 'draft' | 'pending' | 'ordered' | 'received' |
 export interface PurchaseOrderItemInput {
   productId: string;
   quantity: number;
+  uom: string;
   unitPrice: number;
 }
 
