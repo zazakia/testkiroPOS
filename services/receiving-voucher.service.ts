@@ -160,6 +160,34 @@ export class ReceivingVoucherService {
           const product = po.PurchaseOrderItem.find((p) => p.productId === item.productId)?.Product;
           if (!product) continue;
 
+          // Get the UOM from the purchase order item
+          const poItem = po.PurchaseOrderItem.find((p) => p.productId === item.productId);
+          if (!poItem) continue;
+
+          // Convert unit price to base UOM if necessary
+          let unitCostInBaseUOM = item.unitPrice;
+
+          // Check if the PO item UOM is different from base UOM
+          if (poItem.uom.toLowerCase() !== product.baseUOM.toLowerCase()) {
+            // Find the conversion factor for this UOM
+            const productWithUOMs = await tx.product.findUnique({
+              where: { id: item.productId },
+              include: { ProductUOM: true },
+            });
+
+            if (productWithUOMs) {
+              const alternateUOM = productWithUOMs.ProductUOM.find(
+                (u) => u.name.toLowerCase() === poItem.uom.toLowerCase()
+              );
+
+              if (alternateUOM) {
+                // Convert: unit price ÷ conversion factor = price per base unit
+                // Example: ₱140 per case ÷ 12 bottles per case = ₱11.67 per bottle
+                unitCostInBaseUOM = item.unitPrice / Number(alternateUOM.conversionFactor);
+              }
+            }
+          }
+
           // Generate batch number
           const batchCount = await tx.inventoryBatch.count();
           const batchNumber = `BATCH-${String(batchCount + 1).padStart(6, '0')}`;
@@ -177,7 +205,7 @@ export class ReceivingVoucherService {
               productId: item.productId,
               warehouseId: po.warehouseId,
               quantity: item.receivedQuantity,
-              unitCost: item.unitPrice,
+              unitCost: Number(unitCostInBaseUOM.toFixed(4)), // Store cost in base UOM with 4 decimal precision
               receivedDate,
               expiryDate,
               status: 'active',
@@ -217,7 +245,7 @@ export class ReceivingVoucherService {
               0
             );
             const currentAvgCost = Number(currentProduct.averageCostPrice || 0);
-            const newCost = Number(item.unitPrice);
+            const newCost = Number(unitCostInBaseUOM); // Use converted cost in base UOM
             const newQty = Number(item.receivedQuantity);
 
             // Calculate new weighted average cost
