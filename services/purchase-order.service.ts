@@ -358,7 +358,6 @@ export class PurchaseOrderService {
           balance: po.totalAmount,
           dueDate,
           status: 'pending',
-          updatedAt: new Date(),
         },
       });
 

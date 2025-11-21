@@ -23,6 +23,7 @@ import {
   UserCog,
   LogOut,
   Settings,
+  History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -41,6 +42,7 @@ const navigation = [
   { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart },
   { name: 'Sales Orders', href: '/sales-orders', icon: FileText },
   { name: 'POS', href: '/pos', icon: Store },
+  { name: 'Sales History', href: '/sales-history', icon: History },
   { name: 'AR/AP', href: '/ar-ap', icon: CreditCard },
   { name: 'Expenses', href: '/expenses', icon: Receipt },
   { name: 'Alerts', href: '/alerts', icon: AlertCircle },

@@ -170,6 +170,12 @@ export function POSPayment({
 
         // Show detailed error if validation errors exist
         let errorMessage = data.error || 'Failed to process sale';
+
+        // Add details if available
+        if (data.details) {
+          errorMessage = `${errorMessage} - Details: ${JSON.stringify(data.details)}`;
+        }
+
         if (data.fields) {
           const fieldErrors = Object.entries(data.fields)
             .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)

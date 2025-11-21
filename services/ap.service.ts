@@ -18,7 +18,6 @@ export class APService {
       balance: balance.toNumber(),
       dueDate: data.dueDate,
       status: 'pending',
-      updatedAt: new Date(),
     });
   }
 

@@ -25,7 +25,6 @@ export class ExpenseService {
       paymentMethod: data.paymentMethod,
       vendor: data.vendor,
       receiptUrl: data.receiptUrl,
-      updatedAt: new Date(),
     });
   }
 

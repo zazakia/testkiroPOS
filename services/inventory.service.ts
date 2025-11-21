@@ -163,7 +163,6 @@ export class InventoryService {
           receivedDate,
           expiryDate,
           status: 'active',
-          updatedAt: new Date(),
         },
       });
 
@@ -376,7 +375,6 @@ export class InventoryService {
           receivedDate,
           expiryDate,
           status: 'active',
-          updatedAt: new Date(),
         },
       });
 
