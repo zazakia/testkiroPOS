@@ -25,20 +25,20 @@ export function ReportTemplatePreview({
   const previewRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
-    content: () => previewRef.current,
-    documentTitle: `${template.name}-preview-${format(new Date(), 'yyyy-MM-dd')}`,
+    contentRef: previewRef,
+    documentTitle: `${template?.name || 'Report'}-preview-${format(new Date(), 'yyyy-MM-dd')}`,
     pageStyle: `
       @page {
-        size: ${template.styling.paperSize.toLowerCase()};
-        margin: ${template.styling.margins.top}mm ${template.styling.margins.right}mm ${template.styling.margins.bottom}mm ${template.styling.margins.left}mm;
-        orientation: ${template.styling.orientation};
+        size: ${template?.styling?.paperSize?.toLowerCase() || 'a4'};
+        margin: ${template?.styling?.margins?.top || 20}mm ${template?.styling?.margins?.right || 20}mm ${template?.styling?.margins?.bottom || 20}mm ${template?.styling?.margins?.left || 20}mm;
+        orientation: ${template?.styling?.orientation || 'portrait'};
       }
       @media print {
         body {
           margin: 0;
           padding: 0;
-          font-family: ${template.styling.fontFamily}, sans-serif;
-          font-size: ${template.styling.fontSize === 'small' ? '10px' : template.styling.fontSize === 'medium' ? '12px' : '14px'};
+          font-family: ${template?.styling?.fontFamily || 'Arial'}, sans-serif;
+          font-size: ${template?.styling?.fontSize === 'small' ? '10px' : template?.styling?.fontSize === 'medium' ? '12px' : '14px'};
           color: #000;
         }
         .no-print {
@@ -49,33 +49,33 @@ export function ReportTemplatePreview({
   });
 
   const getHeaderStyle = () => ({
-    backgroundColor: template.styling.primaryColor,
+    backgroundColor: template?.styling?.primaryColor || '#2563eb',
     color: 'white',
     padding: '20px',
     textAlign: 'center' as const,
-    borderBottom: `2px solid ${template.styling.secondaryColor}`,
+    borderBottom: `2px solid ${template?.styling?.secondaryColor || '#64748b'}`,
   });
 
   const getFooterStyle = () => ({
-    backgroundColor: template.styling.secondaryColor,
+    backgroundColor: template?.styling?.secondaryColor || '#64748b',
     color: 'white',
     padding: '10px',
     textAlign: 'center' as const,
     fontSize: '10px',
-    borderTop: `1px solid ${template.styling.accentColor}`,
+    borderTop: `1px solid ${template?.styling?.accentColor || '#94a3b8'}`,
   });
 
   const getTableStyle = () => ({
     width: '100%',
     borderCollapse: 'collapse' as const,
     marginTop: '20px',
-    ...(template.sections.details.showGrid && {
-      border: `1px solid ${template.styling.secondaryColor}`,
+    ...(template?.sections?.details?.showGrid && {
+      border: `1px solid ${template?.styling?.secondaryColor || '#64748b'}`,
     }),
   });
 
   const getTableHeaderStyle = () => ({
-    backgroundColor: template.styling.primaryColor,
+    backgroundColor: template?.styling?.primaryColor || '#2563eb',
     color: 'white',
     padding: '10px',
     textAlign: 'left' as const,
@@ -84,8 +84,8 @@ export function ReportTemplatePreview({
 
   const getTableCellStyle = (index?: number) => ({
     padding: '8px',
-    borderBottom: `1px solid ${template.styling.secondaryColor}`,
-    ...(template.sections.details.alternatingRows && index !== undefined && index % 2 === 1 && {
+    borderBottom: `1px solid ${template?.styling?.secondaryColor || '#64748b'}`,
+    ...(template?.sections?.details?.alternatingRows && index !== undefined && index % 2 === 1 && {
       backgroundColor: '#f8f9fa',
     }),
   });
@@ -131,57 +131,57 @@ export function ReportTemplatePreview({
       </div>
 
       {/* Report Preview */}
-      <div 
-        ref={previewRef} 
+      <div
+        ref={previewRef}
         className="bg-white text-black shadow-lg"
         style={{
-          fontFamily: `${template.styling.fontFamily}, sans-serif`,
-          fontSize: template.styling.fontSize === 'small' ? '10px' : template.styling.fontSize === 'medium' ? '12px' : '14px',
+          fontFamily: `${template?.styling?.fontFamily || 'Arial'}, sans-serif`,
+          fontSize: template?.styling?.fontSize === 'small' ? '10px' : template?.styling?.fontSize === 'medium' ? '12px' : '14px',
           color: '#000',
           lineHeight: '1.4',
         }}
       >
         {/* Header */}
-        {template.sections.header.enabled && (
+        {template?.sections?.header?.enabled && (
           <div style={getHeaderStyle()}>
-            {template.sections.header.showLogo && template.companySettings.logoUrl && (
+            {template?.sections?.header?.showLogo && template?.companySettings?.logoUrl && (
               <div style={{ marginBottom: '10px' }}>
-                <img 
-                  src={template.companySettings.logoUrl} 
-                  alt="Company Logo" 
+                <img
+                  src={template.companySettings.logoUrl}
+                  alt="Company Logo"
                   style={{ maxHeight: '60px', maxWidth: '200px' }}
                 />
               </div>
             )}
-            {template.sections.header.showCompanyName && (
+            {template?.sections?.header?.showCompanyName && (
               <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0' }}>
-                {template.companySettings.name}
+                {template?.companySettings?.name || 'Company Name'}
               </h1>
             )}
-            {template.sections.header.showAddress && template.companySettings.address && (
+            {template?.sections?.header?.showAddress && template?.companySettings?.address && (
               <p style={{ margin: '0 0 5px 0' }}>{template.companySettings.address}</p>
             )}
-            {template.sections.header.showContact && (template.companySettings.phone || template.companySettings.email) && (
+            {template?.sections?.header?.showContact && (template?.companySettings?.phone || template?.companySettings?.email) && (
               <p style={{ margin: '0 0 5px 0' }}>
-                {template.companySettings.phone && `Tel: ${template.companySettings.phone}`}
-                {template.companySettings.phone && template.companySettings.email && ' | '}
-                {template.companySettings.email && `Email: ${template.companySettings.email}`}
+                {template?.companySettings?.phone && `Tel: ${template.companySettings.phone}`}
+                {template?.companySettings?.phone && template?.companySettings?.email && ' | '}
+                {template?.companySettings?.email && `Email: ${template.companySettings.email}`}
               </p>
             )}
-            {template.companySettings.taxId && (
+            {template?.companySettings?.taxId && (
               <p style={{ margin: '0 0 5px 0' }}>TIN: {template.companySettings.taxId}</p>
             )}
-            {template.sections.header.showDate && (
+            {template?.sections?.header?.showDate && (
               <p style={{ margin: '5px 0 0 0', fontSize: '10px' }}>
                 Generated on: {format(new Date(), 'MMMM dd, yyyy HH:mm:ss')}
               </p>
             )}
-            {template.sections.header.showReportTitle && (
+            {template?.sections?.header?.showReportTitle && (
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: '15px 0 0 0' }}>
                 {sampleReportData.title}
               </h2>
             )}
-            {template.sections.header.customText && (
+            {template?.sections?.header?.customText && (
               <p style={{ margin: '10px 0 0 0', fontStyle: 'italic' }}>
                 {template.sections.header.customText}
               </p>
@@ -192,59 +192,59 @@ export function ReportTemplatePreview({
         {/* Report Content */}
         <div style={{ padding: '20px' }}>
           {/* Date Range */}
-          <p style={{ fontSize: '12px', color: template.styling.secondaryColor, marginBottom: '20px' }}>
+          <p style={{ fontSize: '12px', color: template?.styling?.secondaryColor || '#64748b', marginBottom: '20px' }}>
             Report Period: {sampleReportData.dateRange}
           </p>
 
           {/* Summary Section */}
-          {template.sections.summary.enabled && (
+          {template?.sections?.summary?.enabled && (
             <div style={{ marginBottom: '30px' }}>
-              <h3 style={{ 
-                fontSize: '16px', 
-                fontWeight: 'bold', 
-                color: template.styling.primaryColor,
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: template?.styling?.primaryColor || '#2563eb',
                 marginBottom: '15px',
-                borderBottom: `2px solid ${template.styling.accentColor}`,
+                borderBottom: `2px solid ${template?.styling?.accentColor || '#94a3b8'}`,
                 paddingBottom: '5px'
               }}>
                 Summary
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                {template.sections.summary.showTotals && (
-                  <div style={{ 
-                    backgroundColor: '#f8f9fa', 
-                    padding: '15px', 
+                {template?.sections?.summary?.showTotals && (
+                  <div style={{
+                    backgroundColor: '#f8f9fa',
+                    padding: '15px',
                     borderRadius: '4px',
-                    borderLeft: `4px solid ${template.styling.primaryColor}`
+                    borderLeft: `4px solid ${template?.styling?.primaryColor || '#2563eb'}`
                   }}>
-                    <div style={{ fontSize: '12px', color: template.styling.secondaryColor }}>Total Sales</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: template.styling.primaryColor }}>
+                    <div style={{ fontSize: '12px', color: template?.styling?.secondaryColor || '#64748b' }}>Total Sales</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: template?.styling?.primaryColor || '#2563eb' }}>
                       ₱{sampleReportData.summary.totalSales.toLocaleString()}
                     </div>
                   </div>
                 )}
-                {template.sections.summary.showTotals && (
-                  <div style={{ 
-                    backgroundColor: '#f8f9fa', 
-                    padding: '15px', 
+                {template?.sections?.summary?.showTotals && (
+                  <div style={{
+                    backgroundColor: '#f8f9fa',
+                    padding: '15px',
                     borderRadius: '4px',
-                    borderLeft: `4px solid ${template.styling.accentColor}`
+                    borderLeft: `4px solid ${template?.styling?.accentColor || '#94a3b8'}`
                   }}>
-                    <div style={{ fontSize: '12px', color: template.styling.secondaryColor }}>Total Transactions</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: template.styling.accentColor }}>
+                    <div style={{ fontSize: '12px', color: template?.styling?.secondaryColor || '#64748b' }}>Total Transactions</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: template?.styling?.accentColor || '#94a3b8' }}>
                       {sampleReportData.summary.totalTransactions.toLocaleString()}
                     </div>
                   </div>
                 )}
-                {template.sections.summary.showAverages && (
-                  <div style={{ 
-                    backgroundColor: '#f8f9fa', 
-                    padding: '15px', 
+                {template?.sections?.summary?.showAverages && (
+                  <div style={{
+                    backgroundColor: '#f8f9fa',
+                    padding: '15px',
                     borderRadius: '4px',
-                    borderLeft: `4px solid ${template.styling.secondaryColor}`
+                    borderLeft: `4px solid ${template?.styling?.secondaryColor || '#64748b'}`
                   }}>
-                    <div style={{ fontSize: '12px', color: template.styling.secondaryColor }}>Average Transaction</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: template.styling.secondaryColor }}>
+                    <div style={{ fontSize: '12px', color: template?.styling?.secondaryColor || '#64748b' }}>Average Transaction</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: template?.styling?.secondaryColor || '#64748b' }}>
                       ₱{sampleReportData.summary.averageTransaction.toFixed(2)}
                     </div>
                   </div>
@@ -254,14 +254,14 @@ export function ReportTemplatePreview({
           )}
 
           {/* Details Section */}
-          {template.sections.details.enabled && (
+          {template?.sections?.details?.enabled && (
             <div>
-              <h3 style={{ 
-                fontSize: '16px', 
-                fontWeight: 'bold', 
-                color: template.styling.primaryColor,
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: template?.styling?.primaryColor || '#2563eb',
                 marginBottom: '15px',
-                borderBottom: `2px solid ${template.styling.accentColor}`,
+                borderBottom: `2px solid ${template?.styling?.accentColor || '#94a3b8'}`,
                 paddingBottom: '5px'
               }}>
                 Details
@@ -293,20 +293,20 @@ export function ReportTemplatePreview({
         </div>
 
         {/* Footer */}
-        {template.sections.footer.enabled && (
+        {template?.sections?.footer?.enabled && (
           <div style={getFooterStyle()}>
-            {template.sections.footer.showPageNumbers && (
+            {template?.sections?.footer?.showPageNumbers && (
               <p style={{ margin: '0 0 5px 0' }}>Page 1 of 1</p>
             )}
-            {template.sections.footer.showCompanyInfo && template.companySettings.website && (
+            {template?.sections?.footer?.showCompanyInfo && template?.companySettings?.website && (
               <p style={{ margin: '0 0 5px 0' }}>Website: {template.companySettings.website}</p>
             )}
-            {template.sections.footer.showDisclaimer && (
+            {template?.sections?.footer?.showDisclaimer && (
               <p style={{ margin: '0 0 5px 0' }}>
                 This report is confidential and for internal use only.
               </p>
             )}
-            {template.sections.footer.customText && (
+            {template?.sections?.footer?.customText && (
               <p style={{ margin: '5px 0 0 0', fontStyle: 'italic' }}>
                 {template.sections.footer.customText}
               </p>

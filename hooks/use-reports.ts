@@ -7,8 +7,6 @@ import {
   ProfitLossStatement,
   CashFlowStatement,
   BalanceSheet,
-  CashFlowStatement,
-  BalanceSheet,
   ReportFilters,
   POSReceipt,
   DailySalesSummary,
@@ -35,21 +33,16 @@ export function useStockLevelReport(filters?: ReportFilters) {
       const result = await response.json();
 
       if (result.success) {
-        const mapped = (result.data || []).map((u: any) => ({
-          id: u.id,
-          promotionName: u.promotion?.name ?? u.promotionName ?? '',
-          promotionCode: u.promotion?.code ?? u.promotionCode ?? '',
-          saleId: u.saleId,
-          receiptNumber: u.receiptNumber,
-          customerId: u.customer?.id ?? u.customerId,
-          customerName: u.customer?.name ?? u.customerName ?? '',
-          discountAmount: u.discountAmount,
-          discountType: u.discountType ?? u.promotion?.type ?? '',
-          discountValue: u.discountValue ?? u.promotion?.value ?? 0,
-          usageDate: new Date(u.createdAt ?? u.usageDate),
-          branchId: u.branch?.id ?? u.branchId,
-          branchName: u.branch?.name ?? u.branchName ?? '',
-          createdAt: new Date(u.createdAt)
+        const mapped = (result.data || []).map((item: any) => ({
+          productId: item.productId || item.product?.id,
+          productName: item.productName || item.product?.name || '',
+          category: item.category || item.product?.category || '',
+          warehouseId: item.warehouseId || item.warehouse?.id,
+          warehouseName: item.warehouseName || item.warehouse?.name || '',
+          currentStock: Number(item.currentStock || item.quantity || 0),
+          baseUOM: item.baseUOM || item.uom || item.unit || '',
+          minStockLevel: Number(item.minStockLevel || item.minLevel || 0),
+          status: item.status || (Number(item.currentStock || 0) <= Number(item.minStockLevel || 0) ? 'critical' : 'adequate')
         }));
         setData(mapped);
         setError(null);
