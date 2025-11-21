@@ -60,6 +60,7 @@ export function ProductDialog({
       category: 'Carbonated',
       imageUrl: '',
       basePrice: 0,
+      averageCostPrice: 0,
       baseUOM: 'bottle',
       minStockLevel: 10,
       shelfLifeDays: 365,
@@ -81,6 +82,7 @@ export function ProductDialog({
         category: product.category as any,
         imageUrl: product.imageUrl || '',
         basePrice: Number(product.basePrice),
+        averageCostPrice: Number(product.averageCostPrice || 0),
         baseUOM: product.baseUOM,
         minStockLevel: product.minStockLevel,
         shelfLifeDays: product.shelfLifeDays,
@@ -98,6 +100,7 @@ export function ProductDialog({
         category: 'Carbonated',
         imageUrl: '',
         basePrice: 0,
+        averageCostPrice: 0,
         baseUOM: 'bottle',
         minStockLevel: 10,
         shelfLifeDays: 365,
@@ -279,7 +282,7 @@ export function ProductDialog({
             {/* Pricing and UOM */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Pricing & Unit of Measure</h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -296,11 +299,39 @@ export function ProductDialog({
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
                       </FormControl>
+                      <FormDescription>
+                        Selling price per base unit
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="averageCostPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Average Cost Price (₱)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="18.00"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Average cost per base unit
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="baseUOM"

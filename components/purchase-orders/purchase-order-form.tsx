@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Trash2 } from 'lucide-react';
@@ -50,6 +50,7 @@ export function PurchaseOrderForm({
   onCancel,
 }: PurchaseOrderFormProps) {
   const isEditing = !!purchaseOrder;
+  const [averageCosts, setAverageCosts] = useState<Record<string, Record<string, number>>>({});
 
   const form = useForm<PurchaseOrderFormData>({
     resolver: zodResolver(purchaseOrderSchema),
@@ -59,7 +60,7 @@ export function PurchaseOrderForm({
       branchId: '',
       expectedDeliveryDate: new Date(),
       notes: '',
-      items: [{ productId: '', quantity: 1, unitPrice: 0 }],
+      items: [{ productId: '', quantity: 1, uom: '', unitPrice: 0 }],
     },
   });
 
@@ -76,14 +77,45 @@ export function PurchaseOrderForm({
         branchId: purchaseOrder.branchId,
         expectedDeliveryDate: new Date(purchaseOrder.expectedDeliveryDate),
         notes: purchaseOrder.notes || '',
-        items: purchaseOrder.items.map(item => ({
+        items: purchaseOrder.PurchaseOrderItem.map(item => ({
           productId: item.productId,
           quantity: Number(item.quantity),
+          uom: item.Product.baseUOM,
           unitPrice: Number(item.unitPrice),
         })),
       });
     }
   }, [purchaseOrder, form]);
+
+  // Load average costs when warehouse changes
+  useEffect(() => {
+    const warehouseId = form.watch('warehouseId');
+    if (warehouseId) {
+      const items = form.watch('items');
+      items.forEach((item, index) => {
+        if (item.productId) {
+          loadAverageCosts(item.productId, warehouseId);
+        }
+      });
+    }
+  }, [form.watch('warehouseId')]);
+
+  // Load average costs when product changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name?.startsWith('items.') && name?.endsWith('.productId')) {
+        const index = parseInt(name.split('.')[1]);
+        const productId = value.items?.[index]?.productId;
+        const warehouseId = value.warehouseId;
+
+        if (productId && warehouseId) {
+          loadAverageCosts(productId, warehouseId);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const handleSubmit = async (data: PurchaseOrderFormData) => {
     await onSubmit(data);
@@ -104,6 +136,55 @@ export function PurchaseOrderForm({
       style: 'currency',
       currency: 'PHP',
     }).format(amount);
+  };
+
+  const getAvailableUOMs = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return [];
+
+    const uoms = [{ name: product.baseUOM, conversionFactor: 1 }];
+    uoms.push(...product.alternateUOMs.map(u => ({
+      name: u.name,
+      conversionFactor: Number(u.conversionFactor)
+    })));
+    return uoms;
+  };
+
+  const loadAverageCosts = async (productId: string, warehouseId: string) => {
+    if (!productId || !warehouseId) return;
+
+    try {
+      const uoms = getAvailableUOMs(productId);
+      const costs: Record<string, number> = {};
+
+      for (const uom of uoms) {
+        try {
+          const response = await fetch(`/api/inventory/average-cost?productId=${productId}&warehouseId=${warehouseId}&uom=${uom.name}`);
+          const result = await response.json();
+
+          if (result.success) {
+            costs[uom.name] = result.data;
+          } else {
+            costs[uom.name] = 0;
+          }
+        } catch (error) {
+          // If no inventory data, set to 0
+          costs[uom.name] = 0;
+        }
+      }
+
+      setAverageCosts(prev => ({
+        ...prev,
+        [`${productId}-${warehouseId}`]: costs
+      }));
+    } catch (error) {
+      console.error('Failed to load average costs:', error);
+    }
+  };
+
+  const getAverageCost = (productId: string, warehouseId: string, uom: string) => {
+    const key = `${productId}-${warehouseId}`;
+    return averageCosts[key]?.[uom] || 0;
   };
 
   return (
@@ -285,6 +366,50 @@ export function PurchaseOrderForm({
 
                   <FormField
                     control={form.control}
+                    name={`items.${index}.uom`}
+                    render={({ field }) => {
+                      const productId = form.watch(`items.${index}.productId`);
+                      const warehouseId = form.watch('warehouseId');
+                      const availableUOMs = getAvailableUOMs(productId);
+
+                      return (
+                        <FormItem>
+                          <FormLabel>UOM *</FormLabel>
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              // Auto-populate unit price with average cost
+                              const avgCost = getAverageCost(productId, warehouseId, value);
+                              if (avgCost > 0) {
+                                form.setValue(`items.${index}.unitPrice`, avgCost);
+                              }
+                            }}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select UOM" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {availableUOMs.map((uom) => {
+                                const avgCost = getAverageCost(productId, warehouseId, uom.name);
+                                return (
+                                  <SelectItem key={uom.name} value={uom.name}>
+                                    {uom.name} {avgCost > 0 ? `(${formatCurrency(avgCost)})` : '(No data)'}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name={`items.${index}.unitPrice`}
                     render={({ field }) => (
                       <FormItem>
@@ -327,7 +452,7 @@ export function PurchaseOrderForm({
             <Button
               type="button"
               variant="outline"
-              onClick={() => append({ productId: '', quantity: 1, unitPrice: 0 })}
+              onClick={() => append({ productId: '', quantity: 1, uom: '', unitPrice: 0 })}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Item

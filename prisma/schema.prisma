@@ -425,6 +425,7 @@ model Product {
   category             String
   imageUrl             String?
   basePrice            Float
+  averageCostPrice     Float                  @default(0)
   baseUOM              String
   minStockLevel        Int
   shelfLifeDays        Int

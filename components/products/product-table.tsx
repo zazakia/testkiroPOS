@@ -95,6 +95,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Base Price</TableHead>
+              <TableHead>Avg Cost</TableHead>
               <TableHead>Base UOM</TableHead>
               <TableHead>Min Stock</TableHead>
               <TableHead>Status</TableHead>
@@ -151,6 +152,11 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                   </TableCell>
                   <TableCell>{formatCurrency(Number(product.basePrice))}</TableCell>
                   <TableCell>
+                    <span className="text-sm text-muted-foreground">
+                      {formatCurrency(Number(product.averageCostPrice))}
+                    </span>
+                  </TableCell>
+                  <TableCell>
                     <code className="text-sm bg-muted px-2 py-1 rounded">
                       {product.baseUOM}
                     </code>
@@ -187,7 +193,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                 {/* Expanded row showing alternate UOMs */}
                 {expandedRows.has(product.id) && product.alternateUOMs.length > 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} className="bg-muted/50">
+                    <TableCell colSpan={10} className="bg-muted/50">
                       <div className="py-2 px-4">
                         <div className="text-sm font-medium mb-2">Alternate UOMs:</div>
                         <div className="grid grid-cols-3 gap-4">

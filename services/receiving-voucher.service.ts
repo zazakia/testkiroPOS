@@ -194,6 +194,43 @@ export class ReceivingVoucherService {
             },
           });
 
+          // Update product's weighted average cost price
+          // Formula: ((Current Avg Cost × Current Stock) + (New Cost × New Qty)) / (Current Stock + New Qty)
+          const currentProduct = await tx.product.findUnique({
+            where: { id: item.productId },
+          });
+
+          if (currentProduct) {
+            // Get current total stock for this product across all warehouses
+            const currentBatches = await tx.inventoryBatch.findMany({
+              where: {
+                productId: item.productId,
+                status: 'active',
+              },
+            });
+
+            const currentTotalStock = currentBatches.reduce(
+              (sum, b) => sum + Number(b.quantity),
+              0
+            );
+            const currentAvgCost = Number(currentProduct.averageCostPrice || 0);
+            const newCost = Number(item.unitPrice);
+            const newQty = Number(item.receivedQuantity);
+
+            // Calculate new weighted average cost
+            const totalValue = (currentAvgCost * currentTotalStock) + (newCost * newQty);
+            const totalQty = currentTotalStock + newQty;
+            const newAvgCost = totalQty > 0 ? totalValue / totalQty : newCost;
+
+            // Update product's average cost price
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                averageCostPrice: Number(newAvgCost.toFixed(2)),
+              },
+            });
+          }
+
           // Update PO item received quantity
           const poItem = po.PurchaseOrderItem.find((p) => p.productId === item.productId);
           if (poItem) {

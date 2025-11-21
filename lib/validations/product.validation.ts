@@ -17,6 +17,7 @@ export const productSchema = z.object({
     { message: 'Invalid image URL' }
   ),
   basePrice: z.number().positive('Base price must be greater than zero'),
+  averageCostPrice: z.number().nonnegative('Average cost price cannot be negative').optional().default(0),
   baseUOM: z.string().min(1, 'Base UOM is required').max(50, 'Base UOM is too long'),
   minStockLevel: z.number().int('Minimum stock level must be an integer').positive('Minimum stock level must be greater than zero'),
   shelfLifeDays: z.number().int('Shelf life days must be an integer').positive('Shelf life days must be greater than zero'),

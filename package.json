@@ -16,7 +16,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:integration": "vitest run tests/integration",
     "test:unit": "vitest run tests/unit",
-    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e"
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
