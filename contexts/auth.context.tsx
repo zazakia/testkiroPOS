@@ -40,8 +40,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const data = await response.json();
         setUser(data.user);
         setPermissions(data.permissions || []);
+      } else if (response.status === 401) {
+        // User is not authenticated - this is expected on public pages
+        // Don't log an error, just silently set loading to false
+        setUser(null);
+        setPermissions([]);
       }
     } catch (error) {
+      // Only log unexpected errors (network issues, etc.)
       console.error('Auth check failed:', error);
     } finally {
       setIsLoading(false);
