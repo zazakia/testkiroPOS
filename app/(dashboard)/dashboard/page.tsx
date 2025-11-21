@@ -7,6 +7,9 @@ import { useBranch } from '@/hooks/use-branch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardKPIs } from '@/types/dashboard.types';
 import { Package, TrendingUp, AlertCircle, DollarSign } from 'lucide-react';
+import { SalesTrendsChart } from '@/components/dashboard/sales-trends-chart';
+import { TopProductsChart } from '@/components/dashboard/top-products-chart';
+import { LowStockAlerts } from '@/components/dashboard/low-stock-alerts';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-PH', {
@@ -188,6 +191,16 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Charts and Visualizations */}
+      <div className="grid gap-4 md:grid-cols-8 mt-6">
+        <SalesTrendsChart branchId={selectedBranch?.id} days={7} />
+        <TopProductsChart branchId={selectedBranch?.id} limit={5} />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-8 mt-6">
+        <LowStockAlerts branchId={selectedBranch?.id} limit={10} />
       </div>
     </div>
   );

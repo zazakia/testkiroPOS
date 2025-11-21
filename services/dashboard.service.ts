@@ -307,6 +307,112 @@ export class DashboardService {
 
     return comparisons.sort((a, b) => Number(b.revenue.minus(a.revenue)));
   }
+
+  async getSalesTrends(days: number = 7, branchId?: string): Promise<{ date: string; sales: number; revenue: number }[]> {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - days + 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Get all sales within the date range
+    const sales = await prisma.pOSSale.findMany({
+      where: {
+        createdAt: { gte: startDate, lte: today },
+        ...(branchId ? { branchId } : {}),
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Group by date
+    const trendsMap = new Map<string, { count: number; revenue: Decimal }>();
+
+    // Initialize all dates with zero
+    for (let i = 0; i < days; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      trendsMap.set(dateStr, { count: 0, revenue: new Decimal(0) });
+    }
+
+    // Fill in actual data
+    for (const sale of sales) {
+      const dateStr = sale.createdAt.toISOString().split('T')[0];
+      const existing = trendsMap.get(dateStr);
+      if (existing) {
+        existing.count += 1;
+        existing.revenue = existing.revenue.plus(sale.totalAmount);
+      }
+    }
+
+    // Convert to array
+    return Array.from(trendsMap.entries())
+      .map(([date, data]) => ({
+        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        sales: data.count,
+        revenue: Number(data.revenue),
+      }))
+      .sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateA.getTime() - dateB.getTime();
+      });
+  }
+
+  async getLowStockProducts(limit: number = 10, branchId?: string): Promise<{
+    productId: string;
+    productName: string;
+    currentStock: number;
+    minStockLevel: number;
+    status: 'low' | 'critical';
+  }[]> {
+    const products = await prisma.product.findMany({
+      where: {
+        status: 'active',
+      },
+      include: {
+        InventoryBatch: {
+          where: {
+            status: 'active',
+            ...(branchId ? { Warehouse: { branchId } } : {}),
+          },
+        },
+      },
+    });
+
+    const lowStockProducts = products
+      .map((product) => {
+        const currentStock = product.InventoryBatch.reduce(
+          (sum, batch) => sum + Number(batch.quantity),
+          0
+        );
+
+        let status: 'low' | 'critical' = 'low';
+        if (currentStock === 0 || currentStock < product.minStockLevel * 0.5) {
+          status = 'critical';
+        }
+
+        return {
+          productId: product.id,
+          productName: product.name,
+          currentStock,
+          minStockLevel: product.minStockLevel,
+          status,
+        };
+      })
+      .filter((p) => p.currentStock <= p.minStockLevel)
+      .sort((a, b) => {
+        // Critical first, then by percentage below minimum
+        if (a.status === 'critical' && b.status !== 'critical') return -1;
+        if (a.status !== 'critical' && b.status === 'critical') return 1;
+        const aPercentage = a.currentStock / a.minStockLevel;
+        const bPercentage = b.currentStock / b.minStockLevel;
+        return aPercentage - bPercentage;
+      });
+
+    return lowStockProducts.slice(0, limit);
+  }
 }
 
 export const dashboardService = new DashboardService();

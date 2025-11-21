@@ -40,14 +40,21 @@ export async function POST(request: NextRequest) {
     await authService.logout(token, payload.userId, ipAddress, userAgent);
     console.log('authService.logout completed successfully');
 
-    // Clear the cookie
+    // Clear the cookie with explicit settings
     console.log('Clearing auth-token cookie');
     const response = NextResponse.json(
       { success: true, message: 'Logged out successfully' },
       { status: 200 }
     );
 
-    response.cookies.delete('auth-token');
+    // Delete cookie with the same settings used when setting it
+    response.cookies.set('auth-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0, // Expire immediately
+      path: '/',
+    });
     console.log('Logout API completed successfully');
 
     return response;
