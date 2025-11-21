@@ -10,6 +10,8 @@ import { Package, TrendingUp, AlertCircle, DollarSign } from 'lucide-react';
 import { SalesTrendsChart } from '@/components/dashboard/sales-trends-chart';
 import { TopProductsChart } from '@/components/dashboard/top-products-chart';
 import { LowStockAlerts } from '@/components/dashboard/low-stock-alerts';
+import { BranchComparisonChart } from '@/components/dashboard/branch-comparison-chart';
+import { WarehouseUtilizationChart } from '@/components/dashboard/warehouse-utilization-chart';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-PH', {
@@ -201,6 +203,12 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-8 mt-6">
         <LowStockAlerts branchId={selectedBranch?.id} limit={10} />
+      </div>
+
+      {/* Branch Comparison and Warehouse Utilization */}
+      <div className="grid gap-4 md:grid-cols-2 mt-6">
+        <BranchComparisonChart />
+        <WarehouseUtilizationChart branchId={selectedBranch?.id} />
       </div>
     </div>
   );

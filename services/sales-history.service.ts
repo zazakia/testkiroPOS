@@ -100,13 +100,8 @@ export class SalesHistoryService {
       where.paymentMethod = filters.paymentMethod;
     }
 
-    if (filters.userId) {
-      where.userId = filters.userId;
-    }
-
-    if (filters.customerId) {
-      where.customerId = filters.customerId;
-    }
+    // Note: userId and customerId filters are not supported in current schema
+    // These fields would need to be added to POSSale model if needed
 
     if (filters.receiptNumber) {
       where.receiptNumber = {
@@ -137,16 +132,7 @@ export class SalesHistoryService {
             Product: true,
           },
         },
-        Customer: true,
         Branch: true,
-        User: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -209,7 +195,7 @@ export class SalesHistoryService {
     // Calculate summary metrics
     const totalTransactions = sales.length;
     const totalSales = sales.reduce((sum, sale) => sum + Number(sale.totalAmount), 0);
-    const totalDiscount = sales.reduce((sum, sale) => sum + Number(sale.discount || 0), 0);
+    const totalDiscount = 0; // Discount field not available in current schema
     const totalTax = sales.reduce((sum, sale) => sum + Number(sale.tax || 0), 0);
     const averageTransactionValue = totalTransactions > 0 ? totalSales / totalTransactions : 0;
 
@@ -236,12 +222,12 @@ export class SalesHistoryService {
         const existing = productMap.get(item.productId);
         if (existing) {
           existing.quantity += Number(item.quantity);
-          existing.revenue += Number(item.lineTotal);
+          existing.revenue += Number(item.subtotal); // Using subtotal instead of lineTotal
         } else {
           productMap.set(item.productId, {
             name: item.Product.name,
             quantity: Number(item.quantity),
-            revenue: Number(item.lineTotal),
+            revenue: Number(item.subtotal), // Using subtotal instead of lineTotal
           });
         }
       });

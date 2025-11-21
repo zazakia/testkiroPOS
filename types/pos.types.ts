@@ -29,8 +29,8 @@ export interface CreatePOSSaleInput {
 }
 
 export type POSSaleWithItems = POSSale & {
-  items: (POSSaleItem & {
-    product: {
+  POSSaleItem: (POSSaleItem & {
+    Product: {
       id: string;
       name: string;
       description: string | null;
@@ -46,7 +46,7 @@ export type POSSaleWithItems = POSSale & {
     };
     discountAmount?: number; // Optional discount per item
   })[];
-  branch?: {
+  Branch?: {
     id: string;
     name: string;
     code: string;
@@ -57,15 +57,17 @@ export type POSSaleWithItems = POSSale & {
     createdAt: Date;
     updatedAt: Date;
   } | null;
-  customer?: {
+  Customer?: {
     id: string;
     name: string;
     email?: string;
     phone?: string;
   } | null;
-  user?: {
+  User?: {
     id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
+    email: string;
   } | null;
   loyaltyPointsUsed?: number;
   loyaltyPointsEarned?: number;

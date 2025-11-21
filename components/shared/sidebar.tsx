@@ -24,6 +24,7 @@ import {
   LogOut,
   Settings,
   History,
+  Database,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -52,6 +53,7 @@ const navigation = [
 const settingsNavigation = [
   { name: 'Users', href: '/users', icon: UserCog },
   { name: 'Roles', href: '/roles', icon: Shield },
+  { name: 'Data Maintenance', href: '/data-maintenance', icon: Database },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

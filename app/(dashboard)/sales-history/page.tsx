@@ -27,10 +27,10 @@ import { DateRangeFilter } from '@/components/sales-history/date-range-filter';
 import { SaleDetailModal } from '@/components/sales-history/sale-detail-modal';
 import { DatePreset, SalesHistoryFilters, SalesHistoryResponse, SalesAnalytics } from '@/types/sales-history.types';
 import { POSSaleWithItems } from '@/types/pos.types';
-import { useBranch } from '@/contexts/branch-context';
+import { useBranchContext } from '@/contexts/branch-context';
 
 export default function SalesHistoryPage() {
-  const { selectedBranch } = useBranch();
+  const { selectedBranch } = useBranchContext();
   const [filters, setFilters] = useState<SalesHistoryFilters>({
     preset: DatePreset.TODAY,
     page: 1,
@@ -364,10 +364,10 @@ export default function SalesHistoryPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {sale.customerName || <span className="text-muted-foreground">Walk-in</span>}
+                          <span className="text-muted-foreground">Walk-in</span>
                         </TableCell>
                         <TableCell>
-                          {sale.User ? `${sale.User.firstName} ${sale.User.lastName}` : '-'}
+                          <span className="text-muted-foreground">-</span>
                         </TableCell>
                         <TableCell>{getPaymentMethodBadge(sale.paymentMethod)}</TableCell>
                         <TableCell className="text-right font-medium">
