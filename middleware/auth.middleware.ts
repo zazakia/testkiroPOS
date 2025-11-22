@@ -65,7 +65,7 @@ export async function withAuth(
 export function getUser(request: NextRequest): JWTPayload | null {
   const token = request.cookies.get('auth-token')?.value;
   if (!token) return null;
-  
+
   return authService.verifyToken(token);
 }
 
@@ -75,3 +75,7 @@ export function getUser(request: NextRequest): JWTPayload | null {
 export function isAuthenticated(request: NextRequest): boolean {
   return getUser(request) !== null;
 }
+
+// Export alias for backward compatibility
+export { withAuth as authMiddleware };
+

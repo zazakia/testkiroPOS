@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Skip static optimization for deployment compatibility
+  output: 'standalone',
 };
 
 export default nextConfig;
