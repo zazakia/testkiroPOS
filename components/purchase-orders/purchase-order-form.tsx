@@ -82,7 +82,7 @@ export function PurchaseOrderForm({
         items: purchaseOrder.PurchaseOrderItem.map(item => ({
           productId: item.productId,
           quantity: Number(item.quantity),
-          uom: item.Product.baseUOM,
+          uom: item.uom,
           unitPrice: Number(item.unitPrice),
         })),
       });

@@ -333,7 +333,7 @@ export class PurchaseOrderService {
           productId: item.productId,
           warehouseId: po.warehouseId,
           quantity: Number(item.quantity),
-          uom: item.Product.baseUOM, // PO items are in base UOM
+          uom: item.uom, // Use the UOM from the PO item
           unitCost: Number(item.unitPrice),
           referenceId: po.id,
           referenceType: 'PO',

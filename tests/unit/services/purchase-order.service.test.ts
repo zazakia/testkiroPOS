@@ -139,11 +139,13 @@ describe('PurchaseOrderService', () => {
       branchId: testBranchId,
       supplierId: testSupplierId,
       warehouseId: testWarehouseId,
+      expectedDeliveryDate: new Date(),
       items: [
         {
           productId: testProductId,
           quantity: 100,
           unitPrice: 15.50,
+          uom: 'PCS',
         },
       ],
       notes: 'Test purchase order',
@@ -198,8 +200,8 @@ describe('PurchaseOrderService', () => {
       const multiItemData = {
         ...createPOData,
         items: [
-          { productId: testProductId, quantity: 10, unitPrice: 20.00 },
-          { productId: TestUtils.generate.id(), quantity: 5, unitPrice: 50.00 },
+          { productId: testProductId, quantity: 10, unitPrice: 20.00, uom: 'PCS' },
+          { productId: TestUtils.generate.id(), quantity: 5, unitPrice: 50.00, uom: 'BOX' },
         ],
       };
 
@@ -347,6 +349,7 @@ describe('PurchaseOrderService', () => {
           productId: testProductId,
           quantity: 150,
           unitPrice: 16.00,
+          uom: 'PCS',
         },
       ],
     };
@@ -597,6 +600,7 @@ describe('PurchaseOrderService', () => {
             productId: testProductId,
             quantity: 100,
             unitPrice: 15.50,
+            uom: 'PCS',
             Product: {
               id: testProductId,
               name: 'Test Product',
@@ -688,6 +692,7 @@ describe('PurchaseOrderService', () => {
             productId: testProductId,
             quantity: 50,
             unitPrice: 20.00,
+            uom: 'PCS',
             Product: {
               id: testProductId,
               name: 'Test Product',
