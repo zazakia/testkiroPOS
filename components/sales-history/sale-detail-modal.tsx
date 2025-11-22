@@ -130,6 +130,7 @@ export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalPro
                     <th className="text-left p-3 text-sm font-medium">Product</th>
                     <th className="text-center p-3 text-sm font-medium">Qty</th>
                     <th className="text-right p-3 text-sm font-medium">Price</th>
+                    <th className="text-right p-3 text-sm font-medium">Discount</th>
                     <th className="text-right p-3 text-sm font-medium">Total</th>
                   </tr>
                 </thead>
@@ -148,10 +149,33 @@ export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalPro
                         {Number(item.quantity)}
                       </td>
                       <td className="p-3 text-right">
-                        {formatCurrency(Number(item.unitPrice))}
+                        {item.originalPrice && item.discount > 0 ? (
+                          <div>
+                            <div className="text-xs line-through text-muted-foreground">
+                              {formatCurrency(Number(item.originalPrice))}
+                            </div>
+                            <div>{formatCurrency(Number(item.unitPrice))}</div>
+                          </div>
+                        ) : (
+                          <div>{formatCurrency(Number(item.unitPrice))}</div>
+                        )}
+                      </td>
+                      <td className="p-3 text-right">
+                        {item.discount > 0 ? (
+                          <div className="text-green-600">
+                            -{formatCurrency(Number(item.discount))}
+                            {item.discountType === 'percentage' && item.discountValue && (
+                              <div className="text-xs text-muted-foreground">
+                                ({item.discountValue}%)
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </td>
                       <td className="p-3 text-right font-medium">
-                        {formatCurrency(Number(item.lineTotal))}
+                        {formatCurrency(Number(item.subtotal))}
                       </td>
                     </tr>
                   ))}
@@ -176,17 +200,29 @@ export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalPro
               </div>
 
               {sale.discount && Number(sale.discount) > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Discount</span>
-                  <span className="text-red-600">
-                    -{formatCurrency(Number(sale.discount))}
-                  </span>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Discount
+                      {sale.discountType === 'percentage' && sale.discountValue &&
+                        ` (${sale.discountValue}%)`
+                      }
+                    </span>
+                    <span className="text-green-600 font-medium">
+                      -{formatCurrency(Number(sale.discount))}
+                    </span>
+                  </div>
+                  {sale.discountReason && (
+                    <p className="text-xs text-muted-foreground italic">
+                      Reason: {sale.discountReason}
+                    </p>
+                  )}
                 </div>
               )}
 
               {sale.tax && Number(sale.tax) > 0 && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax</span>
+                  <span className="text-muted-foreground">VAT</span>
                   <span>{formatCurrency(Number(sale.tax))}</span>
                 </div>
               )}

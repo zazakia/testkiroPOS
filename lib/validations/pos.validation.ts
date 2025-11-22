@@ -28,6 +28,10 @@ export const posSaleSchema = z
     customerId: idSchema.optional(),
     customerName: z.string().min(1, 'Customer name is required for credit sales').optional(),
     subtotal: z.number().positive('Subtotal must be greater than 0'),
+    discount: z.number().nonnegative('Discount must be zero or greater').optional(),
+    discountType: z.enum(['percentage', 'fixed']).optional(),
+    discountValue: z.number().optional(),
+    discountReason: z.string().optional(),
     tax: z.number().nonnegative('Tax must be zero or greater'),
     totalAmount: z.number().positive('Total amount must be greater than 0'),
     paymentMethod: z.enum(['cash', 'card', 'check', 'gcash', 'online_transfer', 'credit'], {

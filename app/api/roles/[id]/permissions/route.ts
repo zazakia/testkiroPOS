@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { roleService } from '@/services/role.service';
 import { authService } from '@/services/auth.service';
 import { assignPermissionsSchema } from '@/lib/validations/role.validation';
+import { userHasPermission } from '@/middleware/permission.middleware';
+import { PermissionResource, PermissionAction } from '@prisma/client';
 
 /**
  * GET /api/roles/[id]/permissions
@@ -29,6 +31,24 @@ export async function GET(
       return NextResponse.json(
         { success: false, message: 'Invalid session' },
         { status: 401 }
+      );
+    }
+
+    // Check permission
+    const hasPermission = await userHasPermission(
+      payload.userId,
+      PermissionResource.ROLES,
+      PermissionAction.READ
+    );
+
+    if (!hasPermission) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'You do not have permission to view role permissions',
+          required: 'ROLES:READ'
+        },
+        { status: 403 }
       );
     }
 
@@ -77,6 +97,24 @@ export async function PUT(
       return NextResponse.json(
         { success: false, message: 'Invalid session' },
         { status: 401 }
+      );
+    }
+
+    // Check permission
+    const hasPermission = await userHasPermission(
+      payload.userId,
+      PermissionResource.ROLES,
+      PermissionAction.UPDATE
+    );
+
+    if (!hasPermission) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'You do not have permission to update role permissions',
+          required: 'ROLES:UPDATE'
+        },
+        { status: 403 }
       );
     }
 

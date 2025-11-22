@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Download, Eye, TrendingUp, DollarSign, ShoppingCart, CreditCard, Search, Filter } from 'lucide-react';
+import { Download, Eye, TrendingUp, DollarSign, ShoppingCart, CreditCard, Search, Filter, Tag } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -169,7 +169,7 @@ export default function SalesHistoryPage() {
 
       {/* Analytics Cards */}
       {analytics && (
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
@@ -179,6 +179,21 @@ export default function SalesHistoryPage() {
               <div className="text-2xl font-bold">{formatCurrency(analytics.totalSales)}</div>
               <p className="text-xs text-muted-foreground">
                 {analytics.totalTransactions} transactions
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Discounts</CardTitle>
+              <Tag className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {formatCurrency(analytics.totalDiscount || 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Customer savings
               </p>
             </CardContent>
           </Card>
@@ -345,8 +360,8 @@ export default function SalesHistoryPage() {
                       <TableHead>Receipt #</TableHead>
                       <TableHead>Date & Time</TableHead>
                       <TableHead>Customer</TableHead>
-                      <TableHead>Cashier</TableHead>
                       <TableHead>Payment</TableHead>
+                      <TableHead className="text-right">Discount</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -366,10 +381,23 @@ export default function SalesHistoryPage() {
                         <TableCell>
                           <span className="text-muted-foreground">Walk-in</span>
                         </TableCell>
-                        <TableCell>
-                          <span className="text-muted-foreground">-</span>
-                        </TableCell>
                         <TableCell>{getPaymentMethodBadge(sale.paymentMethod)}</TableCell>
+                        <TableCell className="text-right">
+                          {sale.discount > 0 ? (
+                            <div className="flex flex-col">
+                              <span className="text-green-600 font-medium">
+                                {formatCurrency(Number(sale.discount))}
+                              </span>
+                              {sale.discountType === 'percentage' && sale.discountValue && (
+                                <span className="text-xs text-muted-foreground">
+                                  ({sale.discountValue}%)
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right font-medium">
                           {formatCurrency(Number(sale.totalAmount))}
                         </TableCell>

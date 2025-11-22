@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { roleService } from '@/services/role.service';
 import { authService } from '@/services/auth.service';
 import { updateRoleSchema } from '@/lib/validations/role.validation';
+import { userHasPermission } from '@/middleware/permission.middleware';
+import { PermissionResource, PermissionAction } from '@prisma/client';
 
 /**
  * GET /api/roles/[id]
@@ -29,6 +31,24 @@ export async function GET(
       return NextResponse.json(
         { success: false, message: 'Invalid session' },
         { status: 401 }
+      );
+    }
+
+    // Check permission
+    const hasPermission = await userHasPermission(
+      payload.userId,
+      PermissionResource.ROLES,
+      PermissionAction.READ
+    );
+
+    if (!hasPermission) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'You do not have permission to view roles',
+          required: 'ROLES:READ'
+        },
+        { status: 403 }
       );
     }
 
@@ -83,6 +103,24 @@ export async function PUT(
       return NextResponse.json(
         { success: false, message: 'Invalid session' },
         { status: 401 }
+      );
+    }
+
+    // Check permission
+    const hasPermission = await userHasPermission(
+      payload.userId,
+      PermissionResource.ROLES,
+      PermissionAction.UPDATE
+    );
+
+    if (!hasPermission) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'You do not have permission to update roles',
+          required: 'ROLES:UPDATE'
+        },
+        { status: 403 }
       );
     }
 
@@ -156,6 +194,24 @@ export async function DELETE(
       return NextResponse.json(
         { success: false, message: 'Invalid session' },
         { status: 401 }
+      );
+    }
+
+    // Check permission
+    const hasPermission = await userHasPermission(
+      payload.userId,
+      PermissionResource.ROLES,
+      PermissionAction.DELETE
+    );
+
+    if (!hasPermission) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'You do not have permission to delete roles',
+          required: 'ROLES:DELETE'
+        },
+        { status: 403 }
       );
     }
 

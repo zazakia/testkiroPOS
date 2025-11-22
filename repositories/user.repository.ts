@@ -2,6 +2,25 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { UserFilters } from '@/types/user.types';
 
+// User select without sensitive fields
+const userSelectWithoutPassword = {
+  id: true,
+  email: true,
+  passwordHash: false, // Explicitly exclude
+  firstName: true,
+  lastName: true,
+  phone: true,
+  roleId: true,
+  branchId: true,
+  status: true,
+  emailVerified: true,
+  branchLockEnabled: true,
+  lastLoginAt: true,
+  passwordChangedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 export class UserRepository {
   /**
    * Find all users with optional filters and pagination
@@ -36,7 +55,8 @@ export class UserRepository {
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        include: {
+        select: {
+          ...userSelectWithoutPassword,
           Role: true,
           Branch: true,
         },
@@ -62,7 +82,8 @@ export class UserRepository {
   async findById(userId: string) {
     return prisma.user.findUnique({
       where: { id: userId },
-      include: {
+      select: {
+        ...userSelectWithoutPassword,
         Role: {
           include: {
             RolePermission: {
@@ -109,7 +130,8 @@ export class UserRepository {
   async create(data: Prisma.UserCreateInput) {
     return prisma.user.create({
       data,
-      include: {
+      select: {
+        ...userSelectWithoutPassword,
         Role: true,
         Branch: true,
       },
@@ -123,7 +145,8 @@ export class UserRepository {
     return prisma.user.update({
       where: { id: userId },
       data,
-      include: {
+      select: {
+        ...userSelectWithoutPassword,
         Role: true,
         Branch: true,
       },
@@ -188,7 +211,8 @@ export class UserRepository {
   async findByBranch(branchId: string) {
     return prisma.user.findMany({
       where: { branchId },
-      include: {
+      select: {
+        ...userSelectWithoutPassword,
         Role: true,
       },
     });
@@ -200,7 +224,8 @@ export class UserRepository {
   async findByRole(roleId: string) {
     return prisma.user.findMany({
       where: { roleId },
-      include: {
+      select: {
+        ...userSelectWithoutPassword,
         Branch: true,
       },
     });

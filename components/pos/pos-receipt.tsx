@@ -114,6 +114,16 @@ export function POSReceipt({ sale, open, onClose }: POSReceiptProps) {
               font-size: 9px;
               color: #666;
             }
+            .item-discount {
+              font-size: 9px;
+              color: #16a34a;
+            }
+            .line-through {
+              text-decoration: line-through;
+            }
+            .text-green-600 {
+              color: #16a34a;
+            }
             .totals {
               margin-top: 12px;
             }
@@ -233,10 +243,27 @@ export function POSReceipt({ sale, open, onClose }: POSReceiptProps) {
                       <div>
                         <div className="item-name font-medium">{item.product.name}</div>
                         <div className="item-uom text-xs text-muted-foreground">{item.uom}</div>
+                        {item.discount > 0 && (
+                          <div className="text-xs text-green-600">
+                            Discount: -₱{Number(item.discount).toFixed(2)}
+                            {item.discountType === 'percentage' && ` (${item.discountValue}%)`}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="center text-center">{Number(item.quantity)}</td>
-                    <td className="right text-right">₱{Number(item.unitPrice).toFixed(2)}</td>
+                    <td className="right text-right">
+                      {item.originalPrice && item.discount > 0 ? (
+                        <div>
+                          <div className="text-xs line-through text-muted-foreground">
+                            ₱{Number(item.originalPrice).toFixed(2)}
+                          </div>
+                          <div>₱{Number(item.unitPrice).toFixed(2)}</div>
+                        </div>
+                      ) : (
+                        <div>₱{Number(item.unitPrice).toFixed(2)}</div>
+                      )}
+                    </td>
                     <td className="right text-right font-medium">
                       ₱{Number(item.subtotal).toFixed(2)}
                     </td>
@@ -256,10 +283,27 @@ export function POSReceipt({ sale, open, onClose }: POSReceiptProps) {
               <span className="text-muted-foreground">Subtotal:</span>
               <span>₱{Number(sale.subtotal).toFixed(2)}</span>
             </div>
-            <div className="total-row flex justify-between">
-              <span className="text-muted-foreground">Tax (12%):</span>
-              <span>₱{Number(sale.tax).toFixed(2)}</span>
-            </div>
+
+            {/* Show discount if present */}
+            {sale.discount > 0 && (
+              <div className="total-row flex justify-between text-green-600">
+                <span>
+                  Discount
+                  {sale.discountType === 'percentage' && ` (${sale.discountValue}%)`}
+                  {sale.discountReason && `:  ${sale.discountReason}`}
+                </span>
+                <span>-₱{Number(sale.discount).toFixed(2)}</span>
+              </div>
+            )}
+
+            {/* Show VAT if present */}
+            {sale.tax > 0 && (
+              <div className="total-row flex justify-between">
+                <span className="text-muted-foreground">VAT:</span>
+                <span>₱{Number(sale.tax).toFixed(2)}</span>
+              </div>
+            )}
+
             <div className="separator my-2">
               <Separator />
             </div>
@@ -267,6 +311,14 @@ export function POSReceipt({ sale, open, onClose }: POSReceiptProps) {
               <span>Total:</span>
               <span>₱{Number(sale.totalAmount).toFixed(2)}</span>
             </div>
+
+            {/* Show total savings if discounts applied */}
+            {sale.discount > 0 && (
+              <div className="total-row flex justify-between text-green-600 text-xs">
+                <span>You saved:</span>
+                <span>₱{Number(sale.discount).toFixed(2)}</span>
+              </div>
+            )}
 
             {/* Cash Payment Details */}
             {sale.paymentMethod === 'cash' && sale.amountReceived && (

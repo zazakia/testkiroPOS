@@ -2,6 +2,7 @@
 import { roleRepository } from '@/repositories/role.repository';
 import { rolePermissionRepository } from '@/repositories/role-permission.repository';
 import { auditLogRepository } from '@/repositories/audit-log.repository';
+import { sessionRepository } from '@/repositories/session.repository';
 import { AuditAction, AuditResource } from '@/types/audit.types';
 import { Prisma } from '@prisma/client';
 
@@ -159,7 +160,6 @@ export class RoleService {
       resourceId: id,
       details: {
         name: role.name,
-        code: role.code,
       },
       ipAddress,
       userAgent,
@@ -197,6 +197,10 @@ export class RoleService {
       });
     }
 
+    // Invalidate all sessions for users with this role
+    // This forces users to re-authenticate and get updated permissions
+    await sessionRepository.deleteByRoleId(roleId);
+
     // Log the action
     await auditLogRepository.create({
       userId: assignedById,
@@ -206,6 +210,7 @@ export class RoleService {
       details: {
         action: 'permissions_updated',
         permissionIds,
+        sessionsInvalidated: true,
       },
       ipAddress,
       userAgent,

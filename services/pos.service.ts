@@ -4,6 +4,8 @@ import { inventoryService } from '@/services/inventory.service';
 import { salesOrderService } from '@/services/sales-order.service';
 import { productService } from '@/services/product.service';
 import { arService } from '@/services/ar.service';
+import { companySettingsService } from '@/services/company-settings.service';
+import { discountExpenseService } from '@/services/discount-expense.service';
 import { prisma } from '@/lib/prisma';
 import {
   CreatePOSSaleInput,
@@ -13,6 +15,11 @@ import {
   ProductWithStock,
 } from '@/types/pos.types';
 import { ValidationError, NotFoundError } from '@/lib/errors';
+import {
+  calculateItemDiscount,
+  calculateTotalDiscounts,
+  calculateVAT
+} from '@/lib/discount-calculator';
 
 export class POSService {
   /**
@@ -150,22 +157,12 @@ export class POSService {
       }
     }
 
-    // Validate payment method
-    if (data.paymentMethod === 'cash') {
-      if (!data.amountReceived) {
-        throw new ValidationError('Amount received is required for cash payment', {
-          amountReceived: 'Required for cash payment',
-        });
-      }
-
-      if (data.amountReceived < data.totalAmount) {
-        throw new ValidationError('Amount received is less than total amount', {
-          amountReceived: `Must be at least ${data.totalAmount}`,
-        });
-      }
-
-      // Calculate change
-      data.change = data.amountReceived - data.totalAmount;
+    // Note: Payment validation will happen after discount/VAT calculation
+    // For now, just validate that amountReceived is provided for cash
+    if (data.paymentMethod === 'cash' && !data.amountReceived) {
+      throw new ValidationError('Amount received is required for cash payment', {
+        amountReceived: 'Required for cash payment',
+      });
     }
 
     // Generate receipt number if not provided
@@ -181,11 +178,26 @@ export class POSService {
       });
     }
 
+    // Get company settings for VAT calculation
+    const settings = await companySettingsService.getSettings();
+
     // Process sale in transaction
     return await prisma.$transaction(async (tx) => {
-      // Process each item: calculate COGS and deduct inventory
+      // Process each item: calculate COGS, apply discounts, and deduct inventory
       const itemsWithCOGS = await Promise.all(
         data.items.map(async (item) => {
+          // Calculate item discount if not already calculated
+          const originalPrice = item.originalPrice || item.unitPrice;
+          const itemDiscount = item.discount || calculateItemDiscount(
+            originalPrice,
+            item.discountType,
+            item.discountValue
+          );
+
+          // Calculate discounted price
+          const discountedPrice = originalPrice - itemDiscount;
+          const subtotal = discountedPrice * item.quantity;
+
           // Get weighted average cost
           const avgCost = await inventoryService.calculateWeightedAverageCost(
             item.productId,
@@ -215,16 +227,62 @@ export class POSService {
 
           return {
             ...item,
+            originalPrice,
+            unitPrice: discountedPrice,
+            discount: itemDiscount,
+            subtotal,
             costOfGoodsSold,
           };
         })
       );
 
-      // Create POS sale with COGS
-      const sale = await posRepository.create({
-        ...data,
-        items: itemsWithCOGS,
+      // Calculate total discounts
+      const discountCalc = calculateTotalDiscounts(
+        itemsWithCOGS,
+        data.discountType,
+        data.discountValue
+      );
+
+      // Calculate VAT based on settings
+      const vatCalc = calculateVAT(discountCalc.subtotalAfterDiscount, {
+        vatEnabled: settings.vatEnabled,
+        vatRate: settings.vatRate,
+        taxInclusive: settings.taxInclusive,
       });
+
+      // Validate payment amount (now that we know final total)
+      if (data.paymentMethod === 'cash') {
+        if (data.amountReceived! < vatCalc.finalTotal) {
+          throw new ValidationError('Amount received is less than total amount', {
+            amountReceived: `Must be at least ${vatCalc.finalTotal.toFixed(2)}`,
+          });
+        }
+        // Calculate change
+        data.change = data.amountReceived! - vatCalc.finalTotal;
+      }
+
+      // Update data with calculated values
+      const saleData = {
+        ...data,
+        subtotal: discountCalc.subtotalAfterDiscount,
+        discount: discountCalc.totalDiscount,
+        tax: vatCalc.vatAmount,
+        totalAmount: vatCalc.finalTotal,
+        items: itemsWithCOGS,
+      };
+
+      // Create POS sale with COGS, discounts, and VAT
+      const sale = await posRepository.create(saleData);
+
+      // Create discount expense record if there are discounts
+      if (discountCalc.totalDiscount > 0) {
+        await discountExpenseService.createDiscountExpense(
+          discountCalc.totalDiscount,
+          data.receiptNumber!,
+          data.branchId,
+          data.discountReason
+        );
+      }
 
       // If converted from sales order, mark it as converted
       if (data.convertedFromOrderId) {

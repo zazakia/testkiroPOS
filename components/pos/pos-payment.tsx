@@ -1,12 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard, Banknote, FileText, Smartphone, Globe, ArrowLeft, User as UserIcon } from 'lucide-react';
+import { CreditCard, Banknote, FileText, Smartphone, Globe, ArrowLeft, User as UserIcon, Percent, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { CartItem } from '@/app/(dashboard)/pos/page';
 import { PaymentMethod } from '@/types/pos.types';
@@ -49,10 +57,31 @@ export function POSPayment({
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithRelations | null>(null);
   const [processing, setProcessing] = useState(false);
 
+  // Transaction-level discount
+  const [transactionDiscountType, setTransactionDiscountType] = useState<'percentage' | 'fixed' | 'none'>('none');
+  const [transactionDiscountValue, setTransactionDiscountValue] = useState<string>('0');
+  const [discountReason, setDiscountReason] = useState<string>('');
+
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
-  const tax = subtotal * 0.12; // 12% VAT
-  const total = subtotal + tax;
+
+  // Calculate transaction discount
+  let transactionDiscount = 0;
+  if (transactionDiscountType !== 'none' && transactionDiscountValue) {
+    const discountVal = parseFloat(transactionDiscountValue);
+    if (!isNaN(discountVal) && discountVal > 0) {
+      if (transactionDiscountType === 'percentage') {
+        transactionDiscount = subtotal * (discountVal / 100);
+      } else {
+        transactionDiscount = Math.min(discountVal, subtotal);
+      }
+    }
+  }
+
+  const subtotalAfterDiscount = subtotal - transactionDiscount;
+  // Note: VAT will be calculated by backend based on company settings
+  const total = subtotalAfterDiscount;
+
   const change = selectedMethod === 'cash' && amountReceived
     ? parseFloat(amountReceived) - total
     : 0;
@@ -129,7 +158,9 @@ export function POSPayment({
         customerId: selectedCustomer?.id,
         customerName: selectedCustomer ? (selectedCustomer.companyName || selectedCustomer.contactPerson) : undefined,
         subtotal,
-        tax,
+        discountType: transactionDiscountType !== 'none' ? transactionDiscountType : undefined,
+        discountValue: transactionDiscountType !== 'none' ? parseFloat(transactionDiscountValue) : undefined,
+        discountReason: discountReason || undefined,
         totalAmount: total,
         paymentMethod: selectedMethod,
         amountReceived: selectedMethod === 'cash' ? parseFloat(amountReceived) : undefined,
@@ -140,7 +171,11 @@ export function POSPayment({
           productId: item.productId,
           quantity: item.quantity,
           uom: item.uom,
+          originalPrice: item.originalPrice,
           unitPrice: item.unitPrice,
+          discount: item.discount,
+          discountType: item.discountType,
+          discountValue: item.discountValue,
           subtotal: item.subtotal,
         })),
       };
@@ -222,22 +257,90 @@ export function POSPayment({
         <Separator />
 
         {/* Order Summary */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <h3 className="font-semibold">Order Summary</h3>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
               <span>₱{subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Tax (12%)</span>
-              <span>₱{tax.toFixed(2)}</span>
+          </div>
+
+          {/* Transaction Discount */}
+          <div className="space-y-2 p-3 bg-muted rounded-lg">
+            <Label className="text-xs">Transaction Discount (Optional)</Label>
+            <div className="flex items-center gap-2">
+              <Select
+                value={transactionDiscountType}
+                onValueChange={(value) => {
+                  setTransactionDiscountType(value as 'percentage' | 'fixed' | 'none');
+                  if (value === 'none') {
+                    setTransactionDiscountValue('0');
+                    setDiscountReason('');
+                  }
+                }}
+              >
+                <SelectTrigger className="h-9 w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Discount</SelectItem>
+                  <SelectItem value="percentage">
+                    <div className="flex items-center gap-1">
+                      <Percent className="h-3 w-3" />
+                      <span>Percentage</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="fixed">
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-3 w-3" />
+                      <span>Fixed</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {transactionDiscountType !== 'none' && (
+                <Input
+                  type="number"
+                  min={0}
+                  step={transactionDiscountType === 'percentage' ? 1 : 0.01}
+                  max={transactionDiscountType === 'percentage' ? 100 : subtotal}
+                  value={transactionDiscountValue}
+                  onChange={(e) => setTransactionDiscountValue(e.target.value)}
+                  placeholder={transactionDiscountType === 'percentage' ? '0%' : '₱0.00'}
+                  className="h-9 flex-1"
+                />
+              )}
             </div>
+
+            {transactionDiscountType !== 'none' && (
+              <Textarea
+                value={discountReason}
+                onChange={(e) => setDiscountReason(e.target.value)}
+                placeholder="Reason for discount (optional)"
+                className="text-sm resize-none"
+                rows={2}
+              />
+            )}
+          </div>
+
+          {/* Final Totals */}
+          <div className="space-y-1 text-sm">
+            {transactionDiscount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Transaction Discount</span>
+                <span>-₱{transactionDiscount.toFixed(2)}</span>
+              </div>
+            )}
             <Separator className="my-2" />
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
               <span className="text-primary">₱{total.toFixed(2)}</span>
             </div>
+            <p className="text-xs text-muted-foreground pt-1">
+              VAT will be calculated based on company settings
+            </p>
           </div>
         </div>
 

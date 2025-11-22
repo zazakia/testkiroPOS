@@ -77,6 +77,19 @@ export class SessionRepository {
   }
 
   /**
+   * Delete all sessions for users with a specific role
+   */
+  async deleteByRoleId(roleId: string) {
+    return prisma.session.deleteMany({
+      where: {
+        User: {
+          roleId,
+        },
+      },
+    });
+  }
+
+  /**
    * Delete expired sessions
    */
   async deleteExpired() {

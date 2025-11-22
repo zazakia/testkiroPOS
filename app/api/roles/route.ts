@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roleService } from '@/services/role.service';
 import { authService } from '@/services/auth.service';
+import { userHasPermission } from '@/middleware/permission.middleware';
+import { PermissionResource, PermissionAction } from '@prisma/client';
 
 // GET /api/roles - Get all roles
 export async function GET(request: NextRequest) {
   try {
     // Get token from cookie
     const token = request.cookies.get('auth-token')?.value;
-    
+
     if (!token) {
       return NextResponse.json(
         { success: false, message: 'Authentication required' },
@@ -17,11 +19,29 @@ export async function GET(request: NextRequest) {
 
     // Verify token
     const payload = authService.verifyToken(token);
-    
+
     if (!payload) {
       return NextResponse.json(
         { success: false, message: 'Invalid session' },
         { status: 401 }
+      );
+    }
+
+    // Check permission
+    const hasPermission = await userHasPermission(
+      payload.userId,
+      PermissionResource.ROLES,
+      PermissionAction.READ
+    );
+
+    if (!hasPermission) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'You do not have permission to view roles',
+          required: 'ROLES:READ'
+        },
+        { status: 403 }
       );
     }
 
@@ -43,7 +63,7 @@ export async function POST(request: NextRequest) {
   try {
     // Get token from cookie
     const token = request.cookies.get('auth-token')?.value;
-    
+
     if (!token) {
       return NextResponse.json(
         { success: false, message: 'Authentication required' },
@@ -53,11 +73,29 @@ export async function POST(request: NextRequest) {
 
     // Verify token
     const payload = authService.verifyToken(token);
-    
+
     if (!payload) {
       return NextResponse.json(
         { success: false, message: 'Invalid session' },
         { status: 401 }
+      );
+    }
+
+    // Check permission
+    const hasPermission = await userHasPermission(
+      payload.userId,
+      PermissionResource.ROLES,
+      PermissionAction.CREATE
+    );
+
+    if (!hasPermission) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'You do not have permission to create roles',
+          required: 'ROLES:CREATE'
+        },
+        { status: 403 }
       );
     }
 

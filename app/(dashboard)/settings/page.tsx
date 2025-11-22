@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -16,13 +20,31 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Trash2, Database, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Loader2, Trash2, Database, AlertTriangle, BarChart3, Settings as SettingsIcon, Save } from 'lucide-react';
 import { DatabaseStats } from '@/types/settings.types';
+
+interface CompanySettings {
+  id: string;
+  companyName: string;
+  address: string;
+  vatEnabled: boolean;
+  vatRate: number;
+  vatRegistrationNumber: string;
+  taxInclusive: boolean;
+  maxDiscountPercentage: number;
+  requireDiscountApproval: boolean;
+  discountApprovalThreshold: number;
+}
 
 export default function SettingsPage() {
   const [isClearing, setIsClearing] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [stats, setStats] = useState<DatabaseStats | null>(null);
+
+  // Company Settings State
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settings, setSettings] = useState<CompanySettings | null>(null);
 
   const handleClearDatabase = async () => {
     setIsClearing(true);
@@ -87,11 +109,261 @@ export default function SettingsPage() {
     }
   };
 
+  const loadCompanySettings = async () => {
+    setIsLoadingSettings(true);
+
+    try {
+      const response = await fetch('/api/settings/company');
+      const data = await response.json();
+
+      if (data.success) {
+        setSettings(data.data);
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to load company settings',
+          variant: 'destructive',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to load company settings',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!settings) return;
+
+    setIsSavingSettings(true);
+
+    try {
+      const response = await fetch(`/api/settings/company/${settings.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSettings(data.data);
+        toast({
+          title: 'Settings Saved',
+          description: 'Company settings have been updated successfully',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to save company settings',
+          variant: 'destructive',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to save company settings',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCompanySettings();
+  }, []);
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Settings</h1>
       </div>
+
+      {/* Company Settings Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <SettingsIcon className="h-5 w-5" />
+            Company Settings
+          </CardTitle>
+          <CardDescription>
+            Configure company information, tax settings, and discount policies
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingSettings ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : settings ? (
+            <div className="space-y-6">
+              {/* Company Information */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Company Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Input
+                      id="companyName"
+                      value={settings.companyName}
+                      onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input
+                      id="address"
+                      value={settings.address}
+                      onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* VAT Settings */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Tax Configuration</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="vatEnabled">Enable VAT</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Enable Value Added Tax on all sales transactions
+                      </p>
+                    </div>
+                    <Switch
+                      id="vatEnabled"
+                      checked={settings.vatEnabled}
+                      onCheckedChange={(checked) => setSettings({ ...settings, vatEnabled: checked })}
+                    />
+                  </div>
+
+                  {settings.vatEnabled && (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="vatRate">VAT Rate (%)</Label>
+                          <Input
+                            id="vatRate"
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.01}
+                            value={settings.vatRate}
+                            onChange={(e) => setSettings({ ...settings, vatRate: parseFloat(e.target.value) })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="vatRegistrationNumber">VAT Registration Number</Label>
+                          <Input
+                            id="vatRegistrationNumber"
+                            value={settings.vatRegistrationNumber || ''}
+                            onChange={(e) => setSettings({ ...settings, vatRegistrationNumber: e.target.value })}
+                            placeholder="000-000-000-000"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="taxInclusive">Tax Inclusive Pricing</Label>
+                          <p className="text-sm text-muted-foreground">
+                            When enabled, prices include VAT. When disabled, VAT is added on top.
+                          </p>
+                        </div>
+                        <Switch
+                          id="taxInclusive"
+                          checked={settings.taxInclusive}
+                          onCheckedChange={(checked) => setSettings({ ...settings, taxInclusive: checked })}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Discount Settings */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Discount Policies</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="maxDiscountPercentage">Maximum Discount (%)</Label>
+                      <Input
+                        id="maxDiscountPercentage"
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.01}
+                        value={settings.maxDiscountPercentage}
+                        onChange={(e) => setSettings({ ...settings, maxDiscountPercentage: parseFloat(e.target.value) })}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Maximum percentage discount allowed on sales
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="discountApprovalThreshold">Approval Threshold (%)</Label>
+                      <Input
+                        id="discountApprovalThreshold"
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.01}
+                        value={settings.discountApprovalThreshold}
+                        onChange={(e) => setSettings({ ...settings, discountApprovalThreshold: parseFloat(e.target.value) })}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Discounts above this threshold require approval
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="requireDiscountApproval">Require Discount Approval</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Require manager approval for discounts exceeding threshold
+                      </p>
+                    </div>
+                    <Switch
+                      id="requireDiscountApproval"
+                      checked={settings.requireDiscountApproval}
+                      onCheckedChange={(checked) => setSettings({ ...settings, requireDiscountApproval: checked })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="flex justify-end pt-4">
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={isSavingSettings}
+                  size="lg"
+                >
+                  {isSavingSettings && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Settings
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted-foreground py-8">
+              Failed to load company settings
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Database Management Section */}
       <Card>

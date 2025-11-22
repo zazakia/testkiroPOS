@@ -27,7 +27,11 @@ export interface CartItem {
   productName: string;
   quantity: number;
   uom: string;
+  originalPrice: number;
   unitPrice: number;
+  discount: number;
+  discountType?: 'percentage' | 'fixed';
+  discountValue?: number;
   subtotal: number;
   availableStock: number;
   availableUOMs: Array<{
@@ -97,8 +101,10 @@ export default function POSPage() {
       // Update existing item
       const updatedCart = [...cart];
       updatedCart[existingItemIndex].quantity += quantity;
-      updatedCart[existingItemIndex].subtotal =
-        updatedCart[existingItemIndex].quantity * updatedCart[existingItemIndex].unitPrice;
+      const item = updatedCart[existingItemIndex];
+      const discountedPrice = item.originalPrice - item.discount;
+      updatedCart[existingItemIndex].unitPrice = discountedPrice;
+      updatedCart[existingItemIndex].subtotal = item.quantity * discountedPrice;
       setCart(updatedCart);
     } else {
       // Add new item
@@ -107,7 +113,11 @@ export default function POSPage() {
         productName: product.name,
         quantity,
         uom,
+        originalPrice: unitPrice,
         unitPrice,
+        discount: 0,
+        discountType: undefined,
+        discountValue: undefined,
         subtotal: quantity * unitPrice,
         availableStock: product.currentStock,
         availableUOMs: [
@@ -150,6 +160,32 @@ export default function POSPage() {
 
   const handleRemoveItem = (index: number) => {
     const updatedCart = cart.filter((_, i) => i !== index);
+    setCart(updatedCart);
+  };
+
+  const handleItemDiscount = (
+    index: number,
+    discountType: 'percentage' | 'fixed',
+    discountValue: number
+  ) => {
+    const updatedCart = [...cart];
+    const item = updatedCart[index];
+
+    // Calculate discount amount
+    let discountAmount = 0;
+    if (discountType === 'percentage') {
+      discountAmount = item.originalPrice * (discountValue / 100);
+    } else {
+      discountAmount = Math.min(discountValue, item.originalPrice);
+    }
+
+    // Update item
+    item.discount = discountAmount;
+    item.discountType = discountType;
+    item.discountValue = discountValue;
+    item.unitPrice = item.originalPrice - discountAmount;
+    item.subtotal = item.quantity * item.unitPrice;
+
     setCart(updatedCart);
   };
 
@@ -349,6 +385,7 @@ export default function POSPage() {
                 items={cart}
                 onUpdateQuantity={handleUpdateQuantity}
                 onUpdateUOM={handleUpdateUOM}
+                onItemDiscount={handleItemDiscount}
                 onRemoveItem={handleRemoveItem}
                 onClearCart={handleClearCart}
                 onCheckout={handleCheckout}
