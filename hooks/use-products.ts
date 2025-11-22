@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ProductWithUOMs, ProductFilters } from '@/types/product.types';
 
 export function useProducts(filters?: ProductFilters) {
@@ -8,22 +8,22 @@ export function useProducts(filters?: ProductFilters) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Build query string from filters
       const params = new URLSearchParams();
       if (filters?.category) params.append('category', filters.category);
       if (filters?.status) params.append('status', filters.status);
       if (filters?.search) params.append('search', filters.search);
-      
+
       const queryString = params.toString();
       const url = `/api/products${queryString ? `?${queryString}` : ''}`;
-      
+
       const response = await fetch(url);
       const data = await response.json();
-      
+
       if (data.success) {
         setProducts(data.data);
         setError(null);
@@ -36,11 +36,16 @@ export function useProducts(filters?: ProductFilters) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters?.category, filters?.status, filters?.search]);
 
   useEffect(() => {
-    fetchProducts();
-  }, [filters?.category, filters?.status, filters?.search]);
+    // Debounce search to avoid excessive API calls
+    const debounceTimer = setTimeout(() => {
+      fetchProducts();
+    }, filters?.search ? 300 : 0); // 300ms delay for search, immediate for other filters
+
+    return () => clearTimeout(debounceTimer);
+  }, [fetchProducts, filters?.search]);
 
   const createProduct = async (data: any) => {
     const response = await fetch('/api/products', {
@@ -48,13 +53,13 @@ export function useProducts(filters?: ProductFilters) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    
+
     const result = await response.json();
-    
+
     if (result.success) {
       await fetchProducts();
     }
-    
+
     return result;
   };
 
@@ -64,13 +69,13 @@ export function useProducts(filters?: ProductFilters) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    
+
     const result = await response.json();
-    
+
     if (result.success) {
       await fetchProducts();
     }
-    
+
     return result;
   };
 
@@ -78,13 +83,13 @@ export function useProducts(filters?: ProductFilters) {
     const response = await fetch(`/api/products/${id}`, {
       method: 'DELETE',
     });
-    
+
     const result = await response.json();
-    
+
     if (result.success) {
       await fetchProducts();
     }
-    
+
     return result;
   };
 

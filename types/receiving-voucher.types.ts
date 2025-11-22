@@ -30,6 +30,7 @@ export interface CreateReceivingVoucherInput {
 
 export interface CreateReceivingVoucherItemInput {
   productId: string;
+  uom: string;
   orderedQuantity: number;
   receivedQuantity: number;
   varianceReason?: string;

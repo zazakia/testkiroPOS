@@ -207,6 +207,7 @@ export function PurchaseOrderTable({
                 name: item.Product.name,
                 baseUOM: item.Product.baseUOM,
               },
+              uom: item.uom,
               quantity: Number(item.quantity),
               unitPrice: Number(item.unitPrice),
             })),

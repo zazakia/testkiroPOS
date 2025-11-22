@@ -109,6 +109,7 @@ export class ReceivingVoucherService {
         return {
           id: randomUUID(),
           productId: item.productId,
+          uom: item.uom,
           orderedQuantity: orderedQty,
           receivedQuantity: receivedQty,
           varianceQuantity: varianceQty,
@@ -144,6 +145,7 @@ export class ReceivingVoucherService {
           id: randomUUID(),
           rvId: rv.id,
           productId: item.productId,
+          uom: item.uom,
           orderedQuantity: item.orderedQuantity,
           receivedQuantity: item.receivedQuantity,
           varianceQuantity: item.varianceQuantity,

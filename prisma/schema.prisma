@@ -576,6 +576,7 @@ model ReceivingVoucherItem {
   id                 String           @id @default(cuid())
   rvId               String
   productId          String
+  uom                String
   orderedQuantity    Float
   receivedQuantity   Float
   varianceQuantity   Float

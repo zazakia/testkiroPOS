@@ -36,6 +36,7 @@ interface ReceivingVoucherDialogProps {
       id: string;
       productId: string;
       product: { name: string; baseUOM: string };
+      uom: string;
       quantity: number;
       unitPrice: number;
     }>;
@@ -53,7 +54,7 @@ export function ReceivingVoucherDialog({
     purchaseOrder.items.map((item) => ({
       productId: item.productId,
       productName: item.product.name,
-      baseUOM: item.product.baseUOM,
+      uom: item.uom,
       orderedQuantity: Number(item.quantity),
       receivedQuantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
@@ -112,6 +113,7 @@ export function ReceivingVoucherDialog({
       deliveryNotes: deliveryNotes.trim() || undefined,
       items: items.map((item) => ({
         productId: item.productId,
+        uom: item.uom,
         orderedQuantity: item.orderedQuantity,
         receivedQuantity: item.receivedQuantity,
         unitPrice: item.unitPrice,
@@ -190,7 +192,7 @@ export function ReceivingVoucherDialog({
                     <TableRow key={index}>
                       <TableCell className="font-medium">{item.productName}</TableCell>
                       <TableCell className="text-right">
-                        {item.orderedQuantity} {item.baseUOM}
+                        {item.orderedQuantity} {item.uom}
                       </TableCell>
                       <TableCell>
                         <Input
