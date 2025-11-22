@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmationDialog } from '@/components/shared/confirmation-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/auth.context';
 
 interface ProductTableProps {
   products: ProductWithUOMs[];
@@ -25,6 +26,7 @@ interface ProductTableProps {
 
 export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<ProductWithUOMs | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -51,7 +53,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
     setDeleting(true);
     try {
       const result = await onDelete(productToDelete.id);
-      
+
       if (result.success) {
         toast({
           title: 'Success',
@@ -182,14 +184,14 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteClick(product)}
-                        disabled={product.status === 'active'}
+                        disabled={product.status === 'active' || (user?.Role?.name !== 'Super Admin' && user?.Role?.name !== 'Branch Manager')}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
-                
+
                 {/* Expanded row showing alternate UOMs */}
                 {expandedRows.has(product.id) && product.alternateUOMs.length > 0 && (
                   <TableRow>

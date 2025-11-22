@@ -32,7 +32,7 @@ export const posSaleSchema = z
     discountType: z.enum(['percentage', 'fixed']).optional(),
     discountValue: z.number().optional(),
     discountReason: z.string().optional(),
-    tax: z.number().nonnegative('Tax must be zero or greater'),
+    tax: z.number().nonnegative('Tax must be zero or greater').optional().default(0),
     totalAmount: z.number().positive('Total amount must be greater than 0'),
     paymentMethod: z.enum(['cash', 'card', 'check', 'gcash', 'online_transfer', 'credit'], {
       required_error: 'Payment method is required',
