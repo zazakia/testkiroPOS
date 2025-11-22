@@ -158,7 +158,8 @@ export class PurchaseOrderService {
    */
   async updatePurchaseOrder(
     id: string,
-    data: UpdatePurchaseOrderInput
+    data: UpdatePurchaseOrderInput,
+    isSuperAdmin: boolean = false
   ): Promise<PurchaseOrderWithDetails> {
     // Check if PO exists
     const existingPO = await purchaseOrderRepository.findById(id);
@@ -168,8 +169,13 @@ export class PurchaseOrderService {
 
     // If only updating status (e.g., draft -> ordered), allow it
     const isStatusOnlyUpdate = Object.keys(data).length === 1 && data.status !== undefined;
-    
+
     if (isStatusOnlyUpdate) {
+      // If Super Admin, allow any status change
+      if (isSuperAdmin) {
+        return await purchaseOrderRepository.update(id, { status: data.status });
+      }
+
       // Validate status transition
       if (data.status === 'ordered' && (existingPO.status === 'draft' || existingPO.status === 'pending')) {
         // Allow draft/pending -> ordered transition
@@ -180,8 +186,8 @@ export class PurchaseOrderService {
       });
     }
 
-    // For other updates, only allow updates for Draft and Pending status
-    if (existingPO.status !== 'draft' && existingPO.status !== 'pending') {
+    // For other updates, only allow updates for Draft and Pending status (unless Super Admin)
+    if (!isSuperAdmin && existingPO.status !== 'draft' && existingPO.status !== 'pending') {
       throw new ValidationError('Cannot update purchase order', {
         status: 'Only Draft and Pending purchase orders can be updated',
       });
@@ -273,10 +279,10 @@ export class PurchaseOrderService {
 
     // Update status to cancelled and add reason to notes
     const cancelNote = `CANCELLED: ${data.reason}${existingPO.notes ? `\n\nOriginal Notes: ${existingPO.notes}` : ''}`;
-    
+
     // Update status using the repository method
     await purchaseOrderRepository.updateStatus(id, 'cancelled');
-    
+
     // Update notes separately
     return await purchaseOrderRepository.update(id, {
       notes: cancelNote,

@@ -33,6 +33,14 @@ import { TableSkeleton } from '@/components/shared/loading-skeleton';
 import { toast } from '@/hooks/use-toast';
 import { ReceivingVoucherDialog } from '@/components/receiving-vouchers/receiving-voucher-dialog';
 import { PurchaseOrderPrint } from '@/components/purchase-orders/purchase-order-print';
+import { useAuth } from '@/contexts/auth.context';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function PurchaseOrderDetailPage({
   params,
@@ -41,6 +49,7 @@ export default function PurchaseOrderDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { user } = useAuth();
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrderWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [receivingVoucherDialogOpen, setReceivingVoucherDialogOpen] = useState(false);
@@ -158,6 +167,39 @@ export default function PurchaseOrderDetailPage({
     }
   };
 
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      const response = await fetch(`/api/purchase-orders/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: 'Purchase order status updated successfully',
+        });
+        await fetchPurchaseOrder();
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to update status',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update status',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       draft: 'outline',
@@ -270,7 +312,27 @@ export default function PurchaseOrderDetailPage({
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Status</div>
-                <div>{getStatusBadge(purchaseOrder.status)}</div>
+                <div>
+                  {user?.Role?.name === 'Super Admin' ? (
+                    <Select
+                      value={purchaseOrder.status}
+                      onValueChange={handleStatusChange}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="ordered">Ordered</SelectItem>
+                        <SelectItem value="received">Received</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    getStatusBadge(purchaseOrder.status)
+                  )}
+                </div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Supplier</div>
@@ -405,6 +467,7 @@ export default function PurchaseOrderDetailPage({
                 name: item.Product.name,
                 baseUOM: item.Product.baseUOM,
               },
+              uom: item.uom,
               quantity: Number(item.quantity),
               unitPrice: Number(item.unitPrice),
             })),

@@ -38,6 +38,7 @@ interface PurchaseOrderFormProps {
   products: ProductWithUOMs[];
   onSubmit: (data: PurchaseOrderFormData) => Promise<any>;
   onCancel: () => void;
+  isCopy?: boolean;
 }
 
 export function PurchaseOrderForm({
@@ -48,8 +49,9 @@ export function PurchaseOrderForm({
   products,
   onSubmit,
   onCancel,
+  isCopy = false,
 }: PurchaseOrderFormProps) {
-  const isEditing = !!purchaseOrder;
+  const isEditing = !!purchaseOrder && !isCopy;
   const [averageCosts, setAverageCosts] = useState<Record<string, Record<string, number>>>({});
 
   const form = useForm<PurchaseOrderFormData>({
@@ -75,7 +77,7 @@ export function PurchaseOrderForm({
         supplierId: purchaseOrder.supplierId,
         warehouseId: purchaseOrder.warehouseId,
         branchId: purchaseOrder.branchId,
-        expectedDeliveryDate: new Date(purchaseOrder.expectedDeliveryDate),
+        expectedDeliveryDate: isCopy ? new Date() : new Date(purchaseOrder.expectedDeliveryDate),
         notes: purchaseOrder.notes || '',
         items: purchaseOrder.PurchaseOrderItem.map(item => ({
           productId: item.productId,
@@ -85,7 +87,7 @@ export function PurchaseOrderForm({
         })),
       });
     }
-  }, [purchaseOrder, form]);
+  }, [purchaseOrder, form, isCopy]);
 
   // Load average costs when warehouse changes
   useEffect(() => {

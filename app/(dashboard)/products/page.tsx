@@ -57,18 +57,6 @@ export default function ProductsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-6">
-        <PageHeader
-          title="Products"
-          description="Manage your product catalog"
-        />
-        <TableSkeleton />
-      </div>
-    );
-  }
-
   return (
     <div className="p-6">
       <PageHeader
@@ -97,7 +85,7 @@ export default function ProductsPage() {
             className="pl-10"
           />
         </div>
-        
+
         <Select
           value={categoryFilter}
           onValueChange={(value) => setCategoryFilter(value as ProductCategory | 'all')}
@@ -131,7 +119,9 @@ export default function ProductsPage() {
       </div>
 
       {/* Product Table */}
-      {products.length === 0 && searchQuery === '' && categoryFilter === 'all' && statusFilter === 'all' ? (
+      {loading ? (
+        <TableSkeleton />
+      ) : products.length === 0 && searchQuery === '' && categoryFilter === 'all' && statusFilter === 'all' ? (
         <EmptyState
           icon={Package}
           title="No products yet"

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreHorizontal, Eye, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { MoreHorizontal, Eye, Edit, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Table,
@@ -173,6 +173,10 @@ export function PurchaseOrderTable({
                             Receive
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem onClick={() => window.location.href = `/purchase-orders/new?copyFrom=${po.id}`}>
+                          <FileText className="mr-2 h-4 w-4" />
+                          Copy
+                        </DropdownMenuItem>
                         {po.status !== 'received' && po.status !== 'cancelled' && (
                           <DropdownMenuItem
                             onClick={() => handleCancelClick(po)}

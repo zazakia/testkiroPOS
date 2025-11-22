@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PurchaseOrderService } from '@/services/purchase-order.service';
 import { purchaseOrderRepository } from '@/repositories/purchase-order.repository';
 import { productRepository } from '@/repositories/product.repository';
@@ -464,6 +464,27 @@ describe('PurchaseOrderService', () => {
       await expect(
         poService.updatePurchaseOrder(testPOId, updateData)
       ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should allow any status change for Super Admin', async () => {
+      const mockExistingPO = {
+        id: testPOId,
+        status: 'draft',
+      };
+
+      const mockFindById = vi.mocked(purchaseOrderRepository.findById);
+      mockFindById.mockResolvedValue(mockExistingPO as any);
+
+      const mockUpdate = vi.mocked(purchaseOrderRepository.update);
+      mockUpdate.mockResolvedValue({
+        ...mockExistingPO,
+        status: 'received',
+      } as any);
+
+      const result = await poService.updatePurchaseOrder(testPOId, { status: 'received' }, true);
+
+      expect(mockUpdate).toHaveBeenCalledWith(testPOId, { status: 'received' });
+      expect(result.status).toBe('received');
     });
   });
 
