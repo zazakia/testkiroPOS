@@ -85,13 +85,13 @@ export class InventoryService {
     const product = await productService.getProductById(productId);
 
     // If already base UOM, return as-is
-    if (uom.toLowerCase() === product.baseUOM.toLowerCase()) {
+    if (uom.trim().toLowerCase() === product.baseUOM.trim().toLowerCase()) {
       return quantity;
     }
 
     // Find the alternate UOM
     const alternateUOM = product.alternateUOMs.find(
-      (u: any) => u.name.toLowerCase() === uom.toLowerCase()
+      (u: any) => u.name.trim().toLowerCase() === uom.trim().toLowerCase()
     );
 
     if (!alternateUOM) {
@@ -109,7 +109,7 @@ export class InventoryService {
    */
   async getCurrentStockLevel(productId: string, warehouseId: string): Promise<number> {
     const batches = await inventoryRepository.findActiveBatches(productId, warehouseId);
-    
+
     return batches.reduce((sum, batch) => sum + Number(batch.quantity), 0);
   }
 
@@ -512,10 +512,10 @@ export class InventoryService {
           totalCost: 0,
         };
       }
-      
+
       const quantity = Number(batch.quantity);
       const unitCost = Number(batch.unitCost);
-      
+
       acc[key].batches.push({
         batchNumber: batch.batchNumber,
         quantity,
@@ -523,10 +523,10 @@ export class InventoryService {
         expiryDate: batch.expiryDate,
         status: batch.status,
       });
-      
+
       acc[key].totalQuantity += quantity;
       acc[key].totalCost += quantity * unitCost;
-      
+
       return acc;
     }, {} as Record<string, any>);
 
@@ -603,13 +603,13 @@ export class InventoryService {
     const product = await productService.getProductById(productId);
 
     // If already base UOM, return the weighted average cost directly
-    if (uom.toLowerCase() === product.baseUOM.toLowerCase()) {
+    if (uom.trim().toLowerCase() === product.baseUOM.trim().toLowerCase()) {
       return await this.calculateWeightedAverageCost(productId, warehouseId);
     }
 
     // Find the alternate UOM
     const alternateUOM = product.alternateUOMs.find(
-      (u: any) => u.name.toLowerCase() === uom.toLowerCase()
+      (u: any) => u.name.trim().toLowerCase() === uom.trim().toLowerCase()
     );
 
     if (!alternateUOM) {

@@ -178,7 +178,7 @@ export class ProductService {
 
     // Check alternate UOMs
     const alternateUOM = product.alternateUOMs.find(
-      uom => uom.name.toLowerCase() === uomName.toLowerCase()
+      uom => uom.name.trim().toLowerCase() === uomName.trim().toLowerCase()
     );
 
     if (!alternateUOM) {
