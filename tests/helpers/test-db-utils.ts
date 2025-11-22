@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
-// Create a separate Prisma client for testing
+// Separate Prisma client for tests
 const prisma = new PrismaClient({
   datasourceUrl: process.env.DATABASE_URL,
 });
@@ -22,118 +22,69 @@ export interface TestDataIds {
   ap: string[];
 }
 
-/**
- * Clean up all test data created during tests
- */
+/** Clean up all test data created during tests */
 export async function cleanupTestData(testIds: TestDataIds): Promise<void> {
   try {
     // Delete in reverse order of dependencies
     if (testIds.ar.length > 0) {
-      await prisma.accountsReceivable.deleteMany({
-        where: { id: { in: testIds.ar } }
-      });
+      await prisma.accountsReceivable.deleteMany({ where: { id: { in: testIds.ar } } });
     }
-
     if (testIds.ap.length > 0) {
-      await prisma.accountsPayable.deleteMany({
-        where: { id: { in: testIds.ap } }
-      });
+      await prisma.accountsPayable.deleteMany({ where: { id: { in: testIds.ap } } });
     }
-
     if (testIds.expenses.length > 0) {
-      await prisma.expense.deleteMany({
-        where: { id: { in: testIds.expenses } }
-      });
+      await prisma.expense.deleteMany({ where: { id: { in: testIds.expenses } } });
     }
-
     if (testIds.salesOrders.length > 0) {
-      await prisma.salesOrderItem.deleteMany({
-        where: { soId: { in: testIds.salesOrders } }
-      });
-      await prisma.salesOrder.deleteMany({
-        where: { id: { in: testIds.salesOrders } }
-      });
+      await prisma.salesOrderItem.deleteMany({ where: { soId: { in: testIds.salesOrders } } });
+      await prisma.salesOrder.deleteMany({ where: { id: { in: testIds.salesOrders } } });
     }
-
     if (testIds.inventoryBatches.length > 0) {
-      await prisma.inventoryBatch.deleteMany({
-        where: { id: { in: testIds.inventoryBatches } }
-      });
+      await prisma.inventoryBatch.deleteMany({ where: { id: { in: testIds.inventoryBatches } } });
     }
-
     if (testIds.receivingVouchers.length > 0) {
-      await prisma.receivingVoucherItem.deleteMany({
-        where: { rvId: { in: testIds.receivingVouchers } }
-      });
-      await prisma.receivingVoucher.deleteMany({
-        where: { id: { in: testIds.receivingVouchers } }
-      });
+      await prisma.receivingVoucherItem.deleteMany({ where: { rvId: { in: testIds.receivingVouchers } } });
+      await prisma.receivingVoucher.deleteMany({ where: { id: { in: testIds.receivingVouchers } } });
     }
-
     if (testIds.purchaseOrders.length > 0) {
-      await prisma.purchaseOrderItem.deleteMany({
-        where: { poId: { in: testIds.purchaseOrders } }
-      });
-      await prisma.purchaseOrder.deleteMany({
-        where: { id: { in: testIds.purchaseOrders } }
-      });
+      await prisma.purchaseOrderItem.deleteMany({ where: { poId: { in: testIds.purchaseOrders } } });
+      await prisma.purchaseOrder.deleteMany({ where: { id: { in: testIds.purchaseOrders } } });
     }
-
     if (testIds.products.length > 0) {
-      await prisma.product.deleteMany({
-        where: { id: { in: testIds.products } }
-      });
+      await prisma.product.deleteMany({ where: { id: { in: testIds.products } } });
     }
-
     if (testIds.customers.length > 0) {
-      await prisma.customer.deleteMany({
-        where: { id: { in: testIds.customers } }
-      });
+      await prisma.customer.deleteMany({ where: { id: { in: testIds.customers } } });
     }
-
     if (testIds.suppliers.length > 0) {
-      await prisma.supplier.deleteMany({
-        where: { id: { in: testIds.suppliers } }
-      });
+      await prisma.supplier.deleteMany({ where: { id: { in: testIds.suppliers } } });
     }
-
     if (testIds.warehouses.length > 0) {
-      await prisma.warehouse.deleteMany({
-        where: { id: { in: testIds.warehouses } }
-      });
+      await prisma.warehouse.deleteMany({ where: { id: { in: testIds.warehouses } } });
     }
-
     if (testIds.branches.length > 0) {
-      await prisma.branch.deleteMany({
-        where: { id: { in: testIds.branches } }
-      });
+      await prisma.branch.deleteMany({ where: { id: { in: testIds.branches } } });
     }
-
     if (testIds.users.length > 0) {
-      await prisma.user.deleteMany({
-        where: { id: { in: testIds.users } }
-      });
+      await prisma.user.deleteMany({ where: { id: { in: testIds.users } } });
     }
-
   } catch (error) {
     console.error('Error cleaning up test data:', error);
     throw error;
   }
 }
 
-/**
- * Create test user with admin role
- */
 export async function createTestUser(overrides: Partial<any> = {}): Promise<any> {
   const userId = randomUUID();
+  const role = await prisma.role.findFirst({ where: { name: 'Super Admin' } });
   const user = await prisma.user.create({
     data: {
       id: userId,
       email: `test-${userId}@example.com`,
       firstName: 'Test',
       lastName: 'User',
-      passwordHash: '$2a$10$hashedpassword', // bcrypt hash for 'password'
-      roleId: 'admin-role-id', // This should be a valid role ID
+      passwordHash: '$2a$10$hashedpassword',
+      roleId: role?.id ?? '',
       status: 'ACTIVE',
       emailVerified: true,
       ...overrides,
@@ -142,9 +93,6 @@ export async function createTestUser(overrides: Partial<any> = {}): Promise<any>
   return user;
 }
 
-/**
- * Create test branch
- */
 export async function createTestBranch(overrides: Partial<any> = {}): Promise<any> {
   const branchId = randomUUID();
   const branch = await prisma.branch.create({
@@ -162,9 +110,6 @@ export async function createTestBranch(overrides: Partial<any> = {}): Promise<an
   return branch;
 }
 
-/**
- * Create test warehouse
- */
 export async function createTestWarehouse(branchId: string, overrides: Partial<any> = {}): Promise<any> {
   const warehouseId = randomUUID();
   const warehouse = await prisma.warehouse.create({
@@ -181,9 +126,6 @@ export async function createTestWarehouse(branchId: string, overrides: Partial<a
   return warehouse;
 }
 
-/**
- * Create test supplier
- */
 export async function createTestSupplier(overrides: Partial<any> = {}): Promise<any> {
   const supplierId = randomUUID();
   const supplier = await prisma.supplier.create({
@@ -201,31 +143,6 @@ export async function createTestSupplier(overrides: Partial<any> = {}): Promise<
   return supplier;
 }
 
-/**
- * Create test product
- */
-export async function createTestProduct(overrides: Partial<any> = {}): Promise<any> {
-  const productId = randomUUID();
-  const product = await prisma.product.create({
-    data: {
-      id: productId,
-      name: `Test Product ${productId.slice(0, 8)}`,
-      description: 'Test product description',
-      category: 'Test Category',
-      basePrice: 15.00,
-      baseUOM: 'PCS',
-      minStockLevel: 5,
-      shelfLifeDays: 365,
-      status: 'active',
-      ...overrides,
-    },
-  });
-  return product;
-}
-
-/**
- * Create test customer
- */
 export async function createTestCustomer(overrides: Partial<any> = {}): Promise<any> {
   const customerId = randomUUID();
   const customer = await prisma.customer.create({
@@ -245,9 +162,26 @@ export async function createTestCustomer(overrides: Partial<any> = {}): Promise<
   return customer;
 }
 
-/**
- * Initialize test database with basic data
- */
+export async function createTestProduct(overrides: Partial<any> = {}): Promise<any> {
+  const productId = randomUUID();
+  const product = await prisma.product.create({
+    data: {
+      id: productId,
+      name: `Test Product ${productId.slice(0, 8)}`,
+      description: 'Test product description',
+      category: 'Test Category',
+      basePrice: 15.0,
+      baseUOM: 'PCS',
+      minStockLevel: 5,
+      shelfLifeDays: 365,
+      status: 'active',
+      ...overrides,
+    },
+  });
+  return product;
+}
+
+/** Initialize test database with basic data */
 export async function initializeTestDatabase(): Promise<TestDataIds> {
   const testIds: TestDataIds = {
     users: [],
@@ -264,32 +198,19 @@ export async function initializeTestDatabase(): Promise<TestDataIds> {
     ar: [],
     ap: [],
   };
-
   try {
-    // Create test user
     const user = await createTestUser();
     testIds.users.push(user.id);
-
-    // Create test branch
     const branch = await createTestBranch();
     testIds.branches.push(branch.id);
-
-    // Create test warehouse
     const warehouse = await createTestWarehouse(branch.id);
     testIds.warehouses.push(warehouse.id);
-
-    // Create test supplier
     const supplier = await createTestSupplier();
     testIds.suppliers.push(supplier.id);
-
-    // Create test customer
     const customer = await createTestCustomer();
     testIds.customers.push(customer.id);
-
-    // Create test product
     const product = await createTestProduct();
     testIds.products.push(product.id);
-
     return testIds;
   } catch (error) {
     console.error('Error initializing test database:', error);
@@ -298,12 +219,9 @@ export async function initializeTestDatabase(): Promise<TestDataIds> {
   }
 }
 
-/**
- * Reset database to clean state (use with caution!)
- */
+/** Reset database to clean state (use with caution!) */
 export async function resetTestDatabase(): Promise<void> {
   try {
-    // Clear all data in reverse dependency order
     await prisma.accountsReceivable.deleteMany();
     await prisma.accountsPayable.deleteMany();
     await prisma.expense.deleteMany();

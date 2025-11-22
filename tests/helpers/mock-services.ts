@@ -1,8 +1,6 @@
-import { vi } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 
-/**
- * Mock external services and APIs for testing
- */
+/** Mock external services and APIs for testing */
 
 // Mock fetch for API calls
 export const mockFetch = (responseData: any, status: number = 200) => {
@@ -25,7 +23,6 @@ export const mockFetchError = (error: any = 'Network error') => {
 // Mock localStorage
 export const mockLocalStorage = () => {
   const store: Record<string, string> = {};
-
   Object.defineProperty(window, 'localStorage', {
     value: {
       getItem: vi.fn((key: string) => store[key] || null),
@@ -36,7 +33,7 @@ export const mockLocalStorage = () => {
         delete store[key];
       }),
       clear: vi.fn(() => {
-        Object.keys(store).forEach(key => delete store[key]);
+        Object.keys(store).forEach((key) => delete store[key]);
       }),
       key: vi.fn((index: number) => Object.keys(store)[index] || null),
       get length() {
@@ -50,7 +47,6 @@ export const mockLocalStorage = () => {
 // Mock sessionStorage
 export const mockSessionStorage = () => {
   const store: Record<string, string> = {};
-
   Object.defineProperty(window, 'sessionStorage', {
     value: {
       getItem: vi.fn((key: string) => store[key] || null),
@@ -61,7 +57,7 @@ export const mockSessionStorage = () => {
         delete store[key];
       }),
       clear: vi.fn(() => {
-        Object.keys(store).forEach(key => delete store[key]);
+        Object.keys(store).forEach((key) => delete store[key]);
       }),
       key: vi.fn((index: number) => Object.keys(store)[index] || null),
       get length() {
@@ -70,31 +66,6 @@ export const mockSessionStorage = () => {
     },
     writable: true,
   });
-};
-
-// Mock console methods to reduce noise in tests
-export const mockConsole = () => {
-  const originalConsole = { ...console };
-
-  beforeEach(() => {
-    console.log = vi.fn();
-    console.warn = vi.fn();
-    console.error = vi.fn();
-    console.info = vi.fn();
-    console.debug = vi.fn();
-  });
-
-  afterEach(() => {
-    Object.assign(console, originalConsole);
-  });
-};
-
-// Mock timers
-export const mockTimers = () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -122,7 +93,7 @@ export const mockResizeObserver = () => {
 export const mockMatchMedia = (matches: boolean = false) => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: vi.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation((query) => ({
       matches,
       media: query,
       onchange: null,
@@ -136,18 +107,14 @@ export const mockMatchMedia = (matches: boolean = false) => {
 };
 
 // Mock geolocation
-export const mockGeolocation = (position: {
-  coords: {
-    latitude: number;
-    longitude: number;
-    accuracy?: number;
-  };
-} = { coords: { latitude: 0, longitude: 0, accuracy: 100 } }) => {
+export const mockGeolocation = (
+  position: { coords: { latitude: number; longitude: number; accuracy?: number } } = {
+    coords: { latitude: 0, longitude: 0, accuracy: 100 },
+  }
+) => {
   Object.defineProperty(navigator, 'geolocation', {
     value: {
-      getCurrentPosition: vi.fn().mockImplementation(success =>
-        success(position)
-      ),
+      getCurrentPosition: vi.fn().mockImplementation((success) => success(position)),
       watchPosition: vi.fn(),
       clearWatch: vi.fn(),
     },
@@ -206,22 +173,42 @@ export const mockFormData = () => {
 
 // Mock URL.createObjectURL
 export const mockCreateObjectURL = () => {
+  const originalConsole = { ...console };
+  beforeEach(() => {
+    console.log = vi.fn();
+    console.warn = vi.fn();
+    console.error = vi.fn();
+    console.info = vi.fn();
+    console.debug = vi.fn();
+  });
+  afterEach(() => {
+    Object.assign(console, originalConsole);
+  });
   global.URL.createObjectURL = vi.fn(() => 'mock-object-url');
   global.URL.revokeObjectURL = vi.fn();
 };
 
-// Setup all common mocks
-export const setupCommonMocks = () => {
-  mockLocalStorage();
-  mockSessionStorage();
-  mockIntersectionObserver();
-  mockResizeObserver();
-  mockMatchMedia();
-  mockGeolocation();
-  mockNotifications();
-  mockWebSocket();
-  mockFormData();
-  mockCreateObjectURL();
+// Mock console (simple version)
+export const mockConsole = () => {
+  const originalConsole = { ...console };
+  beforeEach(() => {
+    console.log = vi.fn();
+    console.warn = vi.fn();
+    console.error = vi.fn();
+    console.info = vi.fn();
+    console.debug = vi.fn();
+  });
+  afterEach(() => {
+    Object.assign(console, originalConsole);
+  });
+};
+
+// Mock jsonwebtoken
+export const mockJwt = () => {
+  vi.mock('jsonwebtoken', () => ({
+    verify: vi.fn(),
+    sign: vi.fn(),
+  }));
 };
 
 // Mock Prisma client for unit tests
@@ -243,7 +230,6 @@ export const mockPrismaClient = () => {
     },
     // Add other models as needed
   };
-
   return mockPrisma;
 };
 
@@ -263,7 +249,6 @@ export const mockNextRouter = () => {
     locales: ['en'],
     defaultLocale: 'en',
   };
-
   return mockRouter;
 };
 
@@ -286,4 +271,19 @@ export const mockReactHooks = () => {
       hasPermission: vi.fn(() => true),
     }),
   }));
+};
+
+// Setup all common mocks
+export const setupCommonMocks = () => {
+  mockLocalStorage();
+  mockSessionStorage();
+  mockIntersectionObserver();
+  mockResizeObserver();
+  mockMatchMedia();
+  mockGeolocation();
+  mockNotifications();
+  mockWebSocket();
+  mockJwt();
+  mockFormData();
+  mockCreateObjectURL();
 };

@@ -100,6 +100,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
               <TableHead>Avg Cost</TableHead>
               <TableHead>Base UOM</TableHead>
               <TableHead>Min Stock</TableHead>
+              <TableHead>Date Created</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -165,6 +166,9 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                   </TableCell>
                   <TableCell>{product.minStockLevel}</TableCell>
                   <TableCell>
+                    {new Date(product.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
                     <Badge
                       variant={product.status === 'active' ? 'default' : 'secondary'}
                     >
@@ -184,7 +188,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteClick(product)}
-                        disabled={product.status === 'active' || (user?.Role?.name !== 'Super Admin' && user?.Role?.name !== 'Branch Manager')}
+                        disabled={user?.Role?.name !== 'Super Admin' && user?.Role?.name !== 'Branch Manager'}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>

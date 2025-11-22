@@ -894,3 +894,26 @@ model ExpenseVendor {
   @@index([name])
   @@index([usageCount])
 }
+
+enum PermissionResource {
+  USERS
+  ROLES
+  PRODUCTS
+  INVENTORY
+  SALES
+  PURCHASES
+  CUSTOMERS
+  SUPPLIERS
+  REPORTS
+  SETTINGS
+  ACCOUNTING
+  BRANCHES
+}
+
+enum PermissionAction {
+  READ
+  CREATE
+  UPDATE
+  DELETE
+  MANAGE
+}

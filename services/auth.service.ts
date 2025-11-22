@@ -4,10 +4,10 @@ import { randomUUID } from 'crypto';
 import { userRepository } from '@/repositories/user.repository';
 import { sessionRepository } from '@/repositories/session.repository';
 import { auditLogRepository } from '@/repositories/audit-log.repository';
-import { 
-  LoginInput, 
-  RegisterInput, 
-  AuthResponse, 
+import {
+  LoginInput,
+  RegisterInput,
+  AuthResponse,
   JWTPayload,
   ResetPasswordInput,
   ForgotPasswordInput,
@@ -77,7 +77,7 @@ export class AuthService {
     }
     // Find user by email
     const user = await userRepository.findByEmail(credentials.email);
-    
+
     if (!user) {
       // Log failed attempt
       await auditLogRepository.create({
@@ -112,7 +112,7 @@ export class AuthService {
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
-    
+
     if (!isPasswordValid) {
       // Log failed attempt
       await auditLogRepository.create({
@@ -169,7 +169,7 @@ export class AuthService {
     });
 
     // Get user permissions
-    const permissions = (user.Role?.RolePermission || []).map(rp => 
+    const permissions = (user.Role?.RolePermission || []).map(rp =>
       `${rp.Permission.resource}:${rp.Permission.action}`
     );
 
@@ -226,7 +226,7 @@ export class AuthService {
    */
   async validateSession(token: string) {
     const session = await sessionRepository.findByToken(token);
-    
+
     if (!session) {
       return null;
     }
@@ -256,7 +256,7 @@ export class AuthService {
     userAgent?: string
   ): Promise<{ success: boolean; message: string }> {
     const user = await userRepository.findByEmail((await userRepository.findById(userId))!.email);
-    
+
     if (!user) {
       return { success: false, message: 'User not found' };
     }
@@ -317,8 +317,9 @@ export class AuthService {
    */
   verifyToken(token: string): JWTPayload | null {
     try {
-      if (!JWT_SECRET) return null;
-      return jwt.verify(token, JWT_SECRET) as JWTPayload;
+      const secret = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? 'your-secret-key-change-in-production' : '');
+      if (!secret) return null;
+      return jwt.verify(token, secret) as JWTPayload;
     } catch (error) {
       return null;
     }

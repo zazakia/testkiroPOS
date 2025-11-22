@@ -1,10 +1,10 @@
 import { Product } from '@prisma/client';
 import { productRepository } from '@/repositories/product.repository';
-import { 
-  CreateProductInput, 
-  UpdateProductInput, 
-  ProductWithUOMs, 
-  ProductFilters 
+import {
+  CreateProductInput,
+  UpdateProductInput,
+  ProductWithUOMs,
+  ProductFilters
 } from '@/types/product.types';
 import { ValidationError, NotFoundError } from '@/lib/errors';
 import { productSchema, updateProductSchema } from '@/lib/validations/product.validation';
@@ -37,15 +37,15 @@ export class ProductService {
     // Check if product name already exists
     const existingProduct = await productRepository.findByName(data.name);
     if (existingProduct) {
-      throw new ValidationError('Product name already exists', { 
-        name: 'Product name must be unique' 
+      throw new ValidationError('Product name already exists', {
+        name: 'Product name must be unique'
       });
     }
 
     // Validate that alternate UOM names don't conflict with base UOM
     if (data.alternateUOMs && data.alternateUOMs.length > 0) {
       const uomNames = data.alternateUOMs.map(uom => uom.name.toLowerCase());
-      
+
       // Check if base UOM is in alternate UOMs
       if (uomNames.includes(data.baseUOM.toLowerCase())) {
         throw new ValidationError('Invalid UOM configuration', {
@@ -83,8 +83,8 @@ export class ProductService {
     if (data.name && data.name !== existingProduct.name) {
       const productWithName = await productRepository.findByName(data.name);
       if (productWithName) {
-        throw new ValidationError('Product name already exists', { 
-          name: 'Product name must be unique' 
+        throw new ValidationError('Product name already exists', {
+          name: 'Product name must be unique'
         });
       }
     }
@@ -92,10 +92,10 @@ export class ProductService {
     // Validate UOM configuration if being updated
     if (data.alternateUOMs !== undefined) {
       const baseUOM = data.baseUOM || existingProduct.baseUOM;
-      
+
       if (data.alternateUOMs.length > 0) {
         const uomNames = data.alternateUOMs.map(uom => uom.name.toLowerCase());
-        
+
         // Check if base UOM is in alternate UOMs
         if (uomNames.includes(baseUOM.toLowerCase())) {
           throw new ValidationError('Invalid UOM configuration', {
@@ -116,17 +116,19 @@ export class ProductService {
     return await productRepository.update(id, validationResult.data);
   }
 
-  async deleteProduct(id: string): Promise<void> {
+  async deleteProduct(id: string, userRole?: string): Promise<void> {
     // Check if product exists
     const product = await productRepository.findById(id);
     if (!product) {
       throw new NotFoundError('Product');
     }
 
-    // Only allow deletion of inactive products
-    if (product.status === 'active') {
+    // Only allow deletion of inactive products, unless user is Super Admin or Branch Manager
+    const isAuthorizedRole = userRole === 'Super Admin' || userRole === 'Branch Manager';
+
+    if (product.status === 'active' && !isAuthorizedRole) {
       throw new ValidationError('Cannot delete active product', {
-        status: 'Product must be inactive before deletion'
+        status: 'Product must be inactive before deletion, or you must be a Super Admin/Branch Manager'
       });
     }
 
@@ -148,7 +150,7 @@ export class ProductService {
    */
   async getProductUOMs(productId: string): Promise<Array<{ name: string; sellingPrice: number }>> {
     const product = await this.getProductById(productId);
-    
+
     const uoms = [
       {
         name: product.baseUOM,
@@ -168,7 +170,7 @@ export class ProductService {
    */
   async getUOMSellingPrice(productId: string, uomName: string): Promise<number> {
     const product = await this.getProductById(productId);
-    
+
     // Check if it's the base UOM
     if (uomName === product.baseUOM) {
       return Number(product.basePrice);
